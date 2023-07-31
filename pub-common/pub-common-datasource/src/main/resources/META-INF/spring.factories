@@ -1,0 +1,6 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.pub.datasource.druid.DruidConfig,\
+  com.pub.datasource.aspect.DataSourceAspect,\
+  com.pub.datasource.properties.DruidProperties
+
+  

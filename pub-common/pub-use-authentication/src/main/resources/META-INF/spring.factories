@@ -1,0 +1,5 @@
+org.springframework.boot.autoconfigure.EnableAutoConfiguration=\
+  com.cn.auth.config.jwt.TokenProvider,\
+  com.cn.auth.security.ApplicationContextHolder,\
+  com.cn.auth.security.ServletInterceptorConfig,\
+  com.cn.auth.config.AuthorityInterceptor

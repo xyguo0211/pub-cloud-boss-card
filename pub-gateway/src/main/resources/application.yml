@@ -1,0 +1,40 @@
+server:
+  port: 1088
+spring:
+  application:
+    name: pub-gateway
+  cloud:
+    nacos:
+      discovery:
+        server-addr: 10.1.0.100:8848
+#        namespace: 2d44ec5b-f925-4fa5-bb5a-34be70d1261a
+    sentinel:
+      transport:
+        dashboard: 47.115.23.123:1080
+    gateway:
+      discovery:
+        locator:
+          enabled: true
+      routes:
+        - id: user-boss   #设置路由id，没有固定规则，要求唯一，建设配合服务名
+          uri: lb://user-boss #设置路由的uri，可以是调用的服务名，也可以请求的地址，当predicates匹配成功后，使用该路由的uri进行服务调用
+        #uri: http://blog.yuqiyu.com
+          predicates:
+           - Path=/gateway_user/**  #设置路由断言，即调用的地址匹配的规则
+          filters:
+           - StripPrefix=1   #转发之前去掉1层路径
+        - id: shop-boss   #设置路由id，没有固定规则，要求唯一，建设配合服务名
+          uri: lb://shop-boss #设置路由的uri，可以是调用的服务名，也可以请求的地址，当predicates匹配成功后，使用该路由的uri进行服务调用
+        #uri: http://blog.yuqiyu.com
+          predicates:
+           - Path=/gateway_shop/**  #设置路由断言，即调用的地址匹配的规则
+          filters:
+           - StripPrefix=1   #转发之前去掉1层路径
+           - name: BlackListUrlAbstractGatewayFilter
+             args:
+               blacklistUrl:
+                 - 127.0.0.2
+ignore:
+ whites:
+  - 127.0.0.2
+  - 127.2.2.3
