@@ -49,13 +49,6 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
         long beginTime = System.currentTimeMillis();//1、开始时间
         startTimeThreadLocal.set(beginTime);//线程绑定变量（该数据只有当前请求的线程可见）
         if (handler.getClass().isAssignableFrom(HandlerMethod.class)) {
-            String referer = request.getHeader("referer");
-            if (null != referer && referer.toLowerCase().contains("swagger-ui".toLowerCase())) {
-                request.setAttribute("MANAGE_REQUEST_DEPART_CODE", "1");
-                request.setAttribute("MANAGE_REQUEST_USER_ID", 1);
-                return true;
-            }
-
             String jwt = resolveToken(request);
             User user = null;
             String userId = null;

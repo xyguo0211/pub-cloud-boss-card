@@ -7,7 +7,11 @@ import com.pub.core.web.domain.AjaxResult;
 import com.pub.core.web.page.TableDataInfo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
 import java.beans.PropertyEditorSupport;
 import java.util.Date;
 import java.util.List;
@@ -120,5 +124,13 @@ public class BaseController
     protected AjaxResult toAjax(boolean result)
     {
         return result ? success() : error();
+    }
+
+
+    public HttpServletRequest getRequest(){
+        return  ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getRequest();
+    }
+    public HttpServletResponse getResponse(){
+        return  ((ServletRequestAttributes) RequestContextHolder.getRequestAttributes()).getResponse();
     }
 }

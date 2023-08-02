@@ -1,4 +1,4 @@
-package com.sn.shop;
+package com.sn.online;
 
 import org.mybatis.spring.annotation.MapperScan;
 import org.springframework.boot.SpringApplication;
@@ -13,7 +13,7 @@ import springfox.documentation.swagger2.annotations.EnableSwagger2;
 @EnableAsync // 启动异步调用
 @SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
 @EnableSwagger2
-@MapperScan(value = "com.sn.shop.mapper")
+@MapperScan(value = "com.sn.online.mapper")
 public class ShopApplication {
 
     public static void main(String[] args) {

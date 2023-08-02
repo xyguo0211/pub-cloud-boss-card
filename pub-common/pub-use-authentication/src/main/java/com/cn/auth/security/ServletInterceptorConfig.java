@@ -1,6 +1,7 @@
 package com.cn.auth.security;
 
 import com.cn.auth.config.AuthorityInterceptor;
+import com.cn.auth.config.OnlineAuthorityInterceptor;
 import com.cn.auth.config.jwt.TokenProvider;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,21 +44,27 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
     }
 
     /** 不需要拦截地址 */
-    public static final String[] excludeUrls = { "/login", "/logout", "/refresh" };
+    public static final String[] excludeUrls_offline = {"/online/userDo/login", "/userDo/logout", "/refresh" , "/online/userDo/register"};
+    public static final String[] excludeUrls_online = {"/online/userDo/login", "/userDo/logout", "/refresh" , "/online/userDo/register","/online/userDo/sendEmail"};
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
+        /**
+         * 离线的拦截器
+         */
         registry.addInterceptor(new AuthorityInterceptor(tokenProvider))
-                .excludePathPatterns(excludeUrls)
+                .excludePathPatterns("/online/**")
+                .excludePathPatterns(excludeUrls_offline)
                 .addPathPatterns("/**");
 
-        /*registry.addInterceptor(new VerifySignInterceptor())
-                .addPathPatterns("/api/order/fy/regain/**")
-                .addPathPatterns("/api/pc/dispatch/getLuckContainerFy")
-                .addPathPatterns("/api/base/harborLog/update")
-                .addPathPatterns("/api/base/quoteLog/saveQuoteLog")
-                .addPathPatterns("/api/base/quote/addQuote")
-                .addPathPatterns("/api/wechat/order/getFyCabinetDetailByCabinetId");*/
+        /**
+         * 在线的拦截器
+         */
+        registry.addInterceptor(new OnlineAuthorityInterceptor(tokenProvider))
+
+                .excludePathPatterns("/offline/**")
+                .excludePathPatterns(excludeUrls_online)
+                .addPathPatterns("/**");
 
 
 
