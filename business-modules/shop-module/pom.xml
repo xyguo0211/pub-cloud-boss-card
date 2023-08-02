@@ -15,7 +15,7 @@
     </properties>
     <dependencies>
         <!--配置redis-->
-        <dependency>
+        <!--<dependency>
             <groupId>org.example</groupId>
             <artifactId>pub-common-cloud-redis</artifactId>
             <exclusions>
@@ -24,7 +24,7 @@
                     <groupId>org.projectlombok</groupId>
                 </exclusion>
             </exclusions>
-        </dependency>
+        </dependency>-->
         <!--配置druid数据库连接池-->
         <dependency>
             <groupId>org.example</groupId>
@@ -110,28 +110,7 @@
                 </configuration>
             </plugin>
 
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-assembly-plugin</artifactId>
-                <configuration>
-                    <finalName>${project.artifactId}</finalName>
-                    <appendAssemblyId>false</appendAssemblyId>
-                </configuration>
-                <executions>
-                    <execution>
-                        <id>make-dir</id>
-                        <phase>package</phase>
-                        <goals>
-                            <goal>single</goal>
-                        </goals>
-                        <configuration>
-                            <descriptors>
-                                <descriptor>src/assembly/assembly.xml</descriptor>
-                            </descriptors>
-                        </configuration>
-                    </execution>
-                </executions>
-            </plugin>
+
 
         </plugins>
     </build>

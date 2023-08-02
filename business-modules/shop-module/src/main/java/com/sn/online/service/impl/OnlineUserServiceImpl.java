@@ -113,8 +113,27 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
             throw new BusinessException("The user does not exists！");
         }
         String pwd = req.getPwd();
+        String err_count_name="login_err_count_" + name;
+        String cache_str = redisCache.getStringCache(err_count_name);
+        if(StringUtils.isNotBlank(cache_str)){
+           int  cache=Integer.valueOf(cache_str);
+            if(5==cache){
+                //如果是第五次输入密码错误
+                throw new BusinessException("Password input error for five consecutive times, account locked for 20 minutes！");
+            }
+        }
         if(!one_db_name.getPwd().equals(req.getPwd())){
+            /**
+             * 如果连续输入密码错误，账号必须锁定10分钟
+             */
+            Integer cache=1;
+            if(StringUtils.isNotBlank(cache_str)){
+                cache=Integer.valueOf(cache_str)+1;
+            }
+            redisCache.putCacheWithExpireTime(err_count_name,cache,60*20);
             throw new BusinessException("Login password error！");
+        }else{
+            redisCache.deleteCache(err_count_name);
         }
         Integer isBlack = req.getIsBlack();
         if(OnlineConstants.blockStatus.block==isBlack){
@@ -125,7 +144,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
          */
         User mUser=new User();
         Integer id = one_db_name.getId();
-        mUser.setId(Long.valueOf(id));
+        mUser.setId(id);
         mUser.setLoginName(one_db_name.getName());
         mUser.setPassword(one_db_name.getPwd());
         String jwt ="Bearer " +  tokenProvider.createTokenNewONline(mUser);
@@ -151,7 +170,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
 
     public void changePassword(JSONObject req) throws Exception{
         User currentUser = UserContext.getCurrentUser();
-        Long id = currentUser.getId();
+        Integer id = currentUser.getId();
         OnlineUserDo byId = getById(id);
         String oldPwd = req.getString("oldPwd");
         if(!byId.getPwd().equals(oldPwd)){
@@ -165,48 +184,37 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
 
     public JSONObject refreshToken(String old_jwt) {
         JSONObject jsonObject=new JSONObject();
-        String js_redis_str = redisCache.getStringCache(old_jwt);
-        if(StringUtils.isBlank(js_redis_str)){
+        User muser = redisCache.getCache(old_jwt,User.class);
+        if(muser==null){
             //说明需要重新登录
             log.info("redis的token已过期，请重新登录  ===实际传参传参{}",old_jwt);
             return null;
         }
-
         //更换token
-        JSONObject jsonObject_redis = JSONObject.parseObject(js_redis_str);
         QueryWrapper<OnlineUserDo> qw=new QueryWrapper<>();
-        Object user_id = jsonObject_redis.get("user_id");
-        qw.eq("id", user_id);
+        qw.eq("id", muser.getId());
         OnlineUserDo user = getOne(qw);
         if(user==null){
             //不存在,需要重新登录
             log.info("jwt的userid,查询不到用户id，请重新登录  ===实际传参传参{}",old_jwt);
             return null;
         }
-        User mUser=new User();
-        mUser.setId(Long.valueOf(user.getId()));
-        mUser.setLoginName(user.getName());
-        //生成新的token,然后将旧的数据放回
-        String jwt = "Bearer " + tokenProvider.createTokenNewONline(mUser);
-        //这个时间一定要大于token自己过期时间
-        Integer flag = jsonObject_redis.getInteger("flag");
-        jsonObject.put("flag",flag);
-        if(Constant.Online.LoginTimeOut.long_time==flag){
-            //获取过期时间
-            Long expire = RedisCacheUtils.getExpire(old_jwt);
-            RedisCacheUtils.putStringExpires(jwt,js_redis_str,expire,TimeUnit.SECONDS);
-            long l = new Date().getTime() + expire-2000;
-            jsonObject.put("expire_time",l);
-        }else{
-            RedisCacheUtils.putStringExpires(jwt,js_redis_str,short_token_redis_cache_time,TimeUnit.SECONDS);
+        Integer isBlack = user.getIsBlack();
+        if(isBlack!=null&&isBlack==OnlineConstants.blockStatus.block){
+            //不存在,需要重新登录
+            log.info("jwt的userid,查询到用户id，用户已被拉黑{}",old_jwt);
+            return null;
         }
+        //生成新的token,然后将旧的数据放回
+        String jwt = "Bearer " + tokenProvider.createTokenNewONline(muser);
+        redisCache.putCacheWithExpireTime(jwt,muser,short_token_redis_cache_time);
         //删掉过期token
-        RedisCacheUtils.removeKey(old_jwt);
+        redisCache.deleteCache(old_jwt);
         jsonObject.put("token",jwt);
         jsonObject.put("user",user);
         //##缓存一段时间,避免高并发重复请求,因为会出现并发请求拿新的token来换token情况,缓存30秒
         String online_cache_jwt="online_Cache_" + jwt;
-        RedisCacheUtils.putStringExpires(online_cache_jwt,jsonObject.toJSONString(),30,TimeUnit.SECONDS);
+        redisCache.putCacheWithExpireTime(online_cache_jwt,jsonObject.toJSONString(),30);
         return jsonObject;
     }
 }

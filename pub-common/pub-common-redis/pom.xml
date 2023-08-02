@@ -25,5 +25,4 @@
             <artifactId>pub-comom-cloud-core</artifactId>
         </dependency>
     </dependencies>
-    <packaging>jar</packaging>
 </project>

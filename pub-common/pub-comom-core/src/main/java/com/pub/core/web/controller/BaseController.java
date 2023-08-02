@@ -2,6 +2,7 @@ package com.pub.core.web.controller;
 
 import com.github.pagehelper.PageInfo;
 import com.pub.core.constant.HttpStatus;
+import com.pub.core.exception.BusinessException;
 import com.pub.core.utils.PageUtils;
 import com.pub.core.web.domain.AjaxResult;
 import com.pub.core.web.page.TableDataInfo;
@@ -29,8 +30,7 @@ public class BaseController
     /**
      * 设置请求分页数据
      */
-    public void startPage()
-    {
+    public static void startPage()  {
         PageUtils.startPage();
     }
 

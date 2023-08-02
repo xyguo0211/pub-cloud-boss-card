@@ -3,8 +3,11 @@ package com.cn.auth.security;
 import com.cn.auth.config.AuthorityInterceptor;
 import com.cn.auth.config.OnlineAuthorityInterceptor;
 import com.cn.auth.config.jwt.TokenProvider;
+import com.pub.redis.service.RedisService;
+import com.pub.redis.util.RedisCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.ApplicationEvent;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.annotation.Bean;
@@ -35,6 +38,9 @@ import java.util.List;
 @EnableWebMvc
 public class ServletInterceptorConfig implements WebMvcConfigurer {
 
+    @Autowired
+    private RedisCache redisCache;
+
     private final Logger log = LoggerFactory.getLogger(ServletInterceptorConfig.class);
 
     private  TokenProvider tokenProvider;
@@ -44,27 +50,24 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
     }
 
     /** 不需要拦截地址 */
-    public static final String[] excludeUrls_offline = {"/online/userDo/login", "/userDo/logout", "/refresh" , "/online/userDo/register"};
-    public static final String[] excludeUrls_online = {"/online/userDo/login", "/userDo/logout", "/refresh" , "/online/userDo/register","/online/userDo/sendEmail"};
+    public static final String[] excludeUrls_offline = {"/online/userDo/login", "/userDo/logout", "/online/userDo/refreshToken" , "/online/userDo/register"};
+    public static final String[] excludeUrls_online = {"/online/userDo/login", "/userDo/logout", "/online/userDo/refreshToken" , "/online/userDo/register","/online/userDo/sendEmail"};
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
         /**
          * 离线的拦截器
          */
-        registry.addInterceptor(new AuthorityInterceptor(tokenProvider))
-                .excludePathPatterns("/online/**")
+        registry.addInterceptor(new AuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_offline)
-                .addPathPatterns("/**");
+                .addPathPatterns("/onfline/**");
 
         /**
          * 在线的拦截器
          */
-        registry.addInterceptor(new OnlineAuthorityInterceptor(tokenProvider))
-
-                .excludePathPatterns("/offline/**")
+        registry.addInterceptor(new OnlineAuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_online)
-                .addPathPatterns("/**");
+                .addPathPatterns("/online/**");
 
 
 

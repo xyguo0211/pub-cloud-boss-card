@@ -21,7 +21,6 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-@Component
 public class AuthorityInterceptor extends HandlerInterceptorAdapter {
 
     protected Logger logger = LoggerFactory.getLogger(AuthorityInterceptor.class);
@@ -29,11 +28,19 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
     private UserContext userContext;
     private NamedThreadLocal<Long> startTimeThreadLocal = new NamedThreadLocal<Long>("StopWatch-StartTime");
 
-    @Autowired
+    /**
+     * 注意这里不能够使用Autowired，因为使用的时候是用new的
+     * @param tokenProvider
+     * @param redisCache
+     */
+    /*@Autowired
+    private RedisCache redisCache;*/
+
     private RedisCache redisCache;
 
-    public AuthorityInterceptor(TokenProvider tokenProvider) {
+    public AuthorityInterceptor(TokenProvider tokenProvider,RedisCache redisCache) {
         this.tokenProvider = tokenProvider;
+        this.redisCache=redisCache;
     }
 
     private void responseMessage(HttpServletResponse response, Object obj) throws Exception {

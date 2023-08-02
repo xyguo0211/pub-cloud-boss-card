@@ -32,18 +32,7 @@ public class RedisCache {
 
 	@Autowired
 	private RedisTemplate<String, String> redisTemplate;
-	
-	@Autowired
-	private RedisTemplate<String, String> redisTemplate_read;
 
-	public void setRedisTemplate(RedisTemplate<String, String> redisTemplate) {
-		this.redisTemplate = redisTemplate;
-	}
-
-	public void setRedisTemplate_read(
-			RedisTemplate<String, String> redisTemplate_read) {
-		this.redisTemplate_read = redisTemplate_read;
-	}
 
 	public <T> boolean putCache(String key, T obj) {
 		final byte[] bkey = key.getBytes();
@@ -160,7 +149,7 @@ public class RedisCache {
 	public <T> T getCache(final String key, Class<T> targetClass) {
 		byte[] result = null;
 		try {
-			result = redisTemplate_read.execute(new RedisCallback<byte[]>() {
+			result = redisTemplate.execute(new RedisCallback<byte[]>() {
 				@Override
 				public byte[] doInRedis(RedisConnection connection) throws DataAccessException {
 					return connection.get(key.getBytes());
@@ -190,7 +179,7 @@ public class RedisCache {
 		final byte[] bkey = key.getBytes();
 		Long result;
 		try {
-			result = redisTemplate_read.execute(new RedisCallback<Long>(){
+			result = redisTemplate.execute(new RedisCallback<Long>(){
 				@Override
 				public Long doInRedis(RedisConnection redisConnection) throws DataAccessException {
 					return redisConnection.ttl(bkey);
@@ -229,7 +218,7 @@ public class RedisCache {
 	public <T> List<T> getListCache(final String key, Class<T> targetClass) {
 		byte[] result = null;
 		try {
-			result = redisTemplate_read.execute(new RedisCallback<byte[]>() {
+			result = redisTemplate.execute(new RedisCallback<byte[]>() {
 				@Override
 				public byte[] doInRedis(RedisConnection connection) throws DataAccessException {
 					return connection.get(key.getBytes());
@@ -255,7 +244,7 @@ public class RedisCache {
 		List<byte[]> result = null;
 		
 		try {
-			result = redisTemplate_read.execute(new RedisCallback<List<byte[]>>() {
+			result = redisTemplate.execute(new RedisCallback<List<byte[]>>() {
 				@Override
 				public List<byte[]> doInRedis(RedisConnection connection) throws DataAccessException {
 					byte[][] keyArr = new byte[keys.size()][];
@@ -309,7 +298,7 @@ public class RedisCache {
 		Map<byte[], byte[]> result = null;
 		
 		try {
-			result = redisTemplate_read.execute(new RedisCallback<Map<byte[], byte[]>>() {
+			result = redisTemplate.execute(new RedisCallback<Map<byte[], byte[]>>() {
 				@Override
 				public Map<byte[], byte[]> doInRedis(RedisConnection connection) throws DataAccessException {
 					return connection.hGetAll(key.getBytes());
@@ -331,7 +320,7 @@ public class RedisCache {
 		Cursor<Map.Entry<byte[],byte[]>> result = null;
 		ScanOptions options = ScanOptions.scanOptions().count(count).build();
 		try {
-			result = redisTemplate_read.execute(new RedisCallback<Cursor<Map.Entry<byte[],byte[]>>>() {
+			result = redisTemplate.execute(new RedisCallback<Cursor<Map.Entry<byte[],byte[]>>>() {
 				@Override
 				public Cursor<Map.Entry<byte[],byte[]>> doInRedis(RedisConnection connection) throws DataAccessException {
 					return connection.hScan(key.getBytes(),options);
@@ -507,7 +496,7 @@ public class RedisCache {
 	 */
 	public  <T>Set<T>  zRange(String key,final long min,final long max,Class<T> targetClass){
 		final byte[] bkey = key.getBytes();
-		Set<byte[]> result = redisTemplate_read.execute(new RedisCallback<Set<byte[]>>(){
+		Set<byte[]> result = redisTemplate.execute(new RedisCallback<Set<byte[]>>(){
 			@Override
 			public Set<byte[]> doInRedis(RedisConnection redisConnection) throws DataAccessException {
 				return redisConnection.zRange(bkey,min,max);
@@ -539,7 +528,7 @@ public class RedisCache {
 	}
 	public <T>Set<T>  zRangeByScore(String key,final double min,final double max,Class<T> targetClass){
 		final byte[] bkey = key.getBytes();
-		Set<byte[]> result = redisTemplate_read.execute(new RedisCallback<Set<byte[]>>(){
+		Set<byte[]> result = redisTemplate.execute(new RedisCallback<Set<byte[]>>(){
 			@Override
 			public Set<byte[]> doInRedis(RedisConnection redisConnection) throws DataAccessException {
 
@@ -559,7 +548,7 @@ public class RedisCache {
 	public <T>Long  zRank(String key,T member){
 		final byte[] bkey = key.getBytes();
 		final byte[] bmember = ProtoStuffSerializerUtil.serialize(member);
-		Long result = redisTemplate_read.execute(new RedisCallback<Long>(){
+		Long result = redisTemplate.execute(new RedisCallback<Long>(){
 			@Override
 			public Long doInRedis(RedisConnection redisConnection) throws DataAccessException {
 				return redisConnection.zRank(bkey,bmember);
@@ -600,7 +589,7 @@ public class RedisCache {
 
 	public Long lLen(String key){
 		final byte[] bkey = key.getBytes();
-		return  redisTemplate_read.execute(new RedisCallback<Long>(){
+		return  redisTemplate.execute(new RedisCallback<Long>(){
 			@Override
 			public Long doInRedis(RedisConnection redisConnection) throws DataAccessException {
 				return redisConnection.lLen(bkey);
@@ -631,7 +620,7 @@ public class RedisCache {
 
 	public boolean exists(String key){
 		final byte[] bkey = key.getBytes();
-		return  redisTemplate_read.execute(new RedisCallback<Boolean>(){
+		return  redisTemplate.execute(new RedisCallback<Boolean>(){
 			@Override
 			public Boolean doInRedis(RedisConnection redisConnection) throws DataAccessException {
 				return redisConnection.exists(bkey);
@@ -707,7 +696,7 @@ public class RedisCache {
 	 */
 	public <T>Set<T>  zRevRangeByScore(String key, Range score, Limit nums, Class<T> targetClass){
 		final byte[] bkey = key.getBytes();
-		Set<byte[]> result = redisTemplate_read.execute(new RedisCallback<Set<byte[]>>(){
+		Set<byte[]> result = redisTemplate.execute(new RedisCallback<Set<byte[]>>(){
 			@Override
 			public Set<byte[]> doInRedis(RedisConnection redisConnection) throws DataAccessException {
 				return redisConnection.zRevRangeByScore(bkey,score,nums);

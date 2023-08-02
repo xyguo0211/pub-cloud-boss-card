@@ -19,7 +19,7 @@ public class MybatisAutoCodeUtils {
 
         //需要生成的表
         String[] tables = new String[]{
-                "sys_data_dictionary"
+                "online_order_info","online_order_info_image"
         };
         //数据库连接url
         String url = "jdbc:mysql://10.1.1.120:3306/xhx_card?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai";

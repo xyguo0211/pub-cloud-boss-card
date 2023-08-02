@@ -6,13 +6,16 @@ import com.alibaba.fastjson.JSONObject;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.ResultMessageConstants;
 import com.cn.auth.entity.User;
+import com.cn.auth.security.ApplicationContextHolder;
 import com.cn.auth.util.UserContext;
 import com.pub.core.web.domain.AjaxResult;
+import com.pub.redis.service.RedisService;
 import com.pub.redis.util.RedisCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.NamedThreadLocal;
+import org.springframework.data.redis.cache.RedisCacheManager;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
@@ -28,18 +31,21 @@ import java.util.Map;
 /**
  *
  */
-@Component
 public class OnlineAuthorityInterceptor extends HandlerInterceptorAdapter {
-    @Autowired
+
     private RedisCache redisCache;
+
+    @Autowired
+    private RedisService redisService;
 
     protected Logger logger = LoggerFactory.getLogger(OnlineAuthorityInterceptor.class);
     private TokenProvider tokenProvider;
     private UserContext userContext;
     private NamedThreadLocal<Long> startTimeThreadLocal = new NamedThreadLocal<Long>("StopWatch-StartTime");
 
-    public OnlineAuthorityInterceptor(TokenProvider tokenProvider) {
+    public OnlineAuthorityInterceptor(TokenProvider tokenProvider,RedisCache redisCache) {
         this.tokenProvider = tokenProvider;
+        this.redisCache=redisCache;
     }
 
     private void responseMessage(HttpServletResponse response, Object obj) throws Exception {
@@ -86,13 +92,12 @@ public class OnlineAuthorityInterceptor extends HandlerInterceptorAdapter {
             responseMessage(response, AjaxResult.error(ResultMessageConstants.B00008.message()));
             return false;
         }
-        String js_redis_str = redisCache.getStringCache(jwt);
-        if(!StringUtils.hasText(js_redis_str)){
+        User cache = redisCache.getCache(jwt, User.class);
+        if(cache==null){
             responseMessage(response, AjaxResult.error(ResultMessageConstants.B00003.message()));
             return false;
         }else{
-            User user = JSONObject.parseObject(js_redis_str, User.class);
-            userContext = new UserContext(user);
+            userContext = new UserContext(cache);
             return true;
         }
     }

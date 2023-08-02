@@ -26,7 +26,7 @@ public class User extends Model<User> {
      * 编号
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private Integer id;
 
     /**
      * 登录名
@@ -69,11 +69,11 @@ public class User extends Model<User> {
     private Integer status;
 
 
-    public Long getId() {
+    public Integer getId() {
         return id;
     }
 
-    public void setId(Long id) {
+    public void setId(Integer id) {
         this.id = id;
     }
 
