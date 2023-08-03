@@ -66,6 +66,6 @@ public class OnlineUserDo extends Model<OnlineUserDo> {
      */
     private Integer role;
 
-
+    private String nikeName;
 
 }

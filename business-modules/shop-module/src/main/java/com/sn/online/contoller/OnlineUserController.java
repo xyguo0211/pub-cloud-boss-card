@@ -6,8 +6,10 @@ import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
-import com.pub.core.web.controller.BaseController;
-import com.pub.core.web.domain.AjaxResult;
+import com.pub.core.util.controller.BaseController;
+import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.utils.AESUtil;
+
 import com.pub.redis.util.RedisCache;
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.entity.dto.OnlineUserRegisterDto;
@@ -53,6 +55,23 @@ public class OnlineUserController extends BaseController {
         }
 
     }
+
+    /*@TimingLog
+    @RequestMapping(value = "/login", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult login(@RequestParam String aes){
+        try{
+            String aes_json = AESUtil.decryptStandingBook(aes);
+            OnlineUserDo req=JSONObject.parseObject(aes_json,OnlineUserDo.class);
+            JSONObject login = onlineUserServiceImpl.login(req);
+            String rtn_aes = AESUtil.encryptStandingBook(login.toJSONString());
+            return AjaxResult.success(rtn_aes,"操作成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }*/
     @TimingLog
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     @ResponseBody
@@ -135,6 +154,20 @@ public class OnlineUserController extends BaseController {
             return AjaxResult.error("请重新登录");
         }
         return AjaxResult.success(new_token);
+    }
+
+    @TimingLog
+    @RequestMapping(value = "/testAES", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult testAES(@RequestBody OnlineUserDo req){
+        try{
+            String rtn_aes = AESUtil.encryptStandingBook(JSONObject.toJSONString(req));
+            return AjaxResult.success(rtn_aes,"操作成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
     }
 
 }

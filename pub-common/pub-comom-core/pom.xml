@@ -115,6 +115,12 @@
             <artifactId>reactor-core</artifactId>
             <version>3.4.26</version>
         </dependency>
+        <!-- AES加密解密 -->
+        <dependency>
+            <groupId>cn.hutool</groupId>
+            <artifactId>hutool-all</artifactId>
+            <version>5.8.5</version>
+        </dependency>
     </dependencies>
     <packaging>jar</packaging>
 </project>

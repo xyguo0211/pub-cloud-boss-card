@@ -47,6 +47,11 @@ public class OnlineUserRegisterDto {
      */
     @NotBlank(message = "  Email verification code cannot be empty  !")
     private String emailCode;
+    /**
+     * 昵称不能为空
+     */
+    @NotBlank(message = "   Nickname cannot be empty   !")
+    private String nikeName;
 
 
 }

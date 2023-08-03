@@ -12,6 +12,7 @@
         <module>pub-api</module>
         <module>business-modules</module>
         <module>pub-gateway</module>
+        <module>pub-common</module>
     </modules>
     <name>pub-cloud-boss</name>
     <description>boss系统springcloud框架</description>

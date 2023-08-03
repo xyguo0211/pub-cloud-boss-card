@@ -60,14 +60,14 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
          */
         registry.addInterceptor(new AuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_offline)
-                .addPathPatterns("/onfline/**");
+                .addPathPatterns("/onfline/ganyongheng/**");
 
         /**
          * 在线的拦截器
          */
         registry.addInterceptor(new OnlineAuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_online)
-                .addPathPatterns("/online/**");
+                .addPathPatterns("/online/ganyongheng/**");
 
 
 

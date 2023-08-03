@@ -7,17 +7,18 @@ import com.cn.auth.config.Constant;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.pub.core.common.OnlineConstants;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.utils.StringUtils;
 import com.pub.redis.util.RedisCache;
-import com.sn.online.common.OnlineConstants;
-import com.sn.online.common.SendGmail;
-import com.sn.online.common.SendGmailUtil;
+
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.entity.dto.OnlineUserRegisterDto;
 import com.sn.online.mapper.OnlineUserMapper;
 import com.sn.online.service.IOnlineUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sn.online.utils.SendGmail;
+import com.sn.online.utils.SendGmailUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.BeanUtils;
@@ -87,7 +88,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
             //说明不存在
             throw new BusinessException(" Verification code error！");
         }*/
-        Date createTime = new java.util.Date();
+        Date createTime = new Date();
         OnlineUserDo onlineUserDo_save=new OnlineUserDo();
         BeanUtils.copyProperties(req,onlineUserDo_save);
         onlineUserDo_save.setCreateTime(createTime);

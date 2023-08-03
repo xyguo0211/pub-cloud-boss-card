@@ -2,7 +2,7 @@ package com.sn.online.contoller;
 
 
 import com.alibaba.fastjson.JSONObject;
-import com.pub.core.web.domain.AjaxResult;
+import com.pub.core.util.domain.AjaxResult;
 import com.sn.online.service.impl.SysDataDictionaryServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;

@@ -1,10 +1,9 @@
 package com.pub.core.utils;
 
 import com.github.pagehelper.PageHelper;
-import com.pub.core.exception.BusinessException;
 import com.pub.core.utils.sql.SqlUtil;
-import com.pub.core.web.page.PageDomain;
-import com.pub.core.web.page.TableSupport;
+import com.pub.core.util.page.PageDomain;
+import com.pub.core.util.page.TableSupport;
 
 /**
  * 分页工具类

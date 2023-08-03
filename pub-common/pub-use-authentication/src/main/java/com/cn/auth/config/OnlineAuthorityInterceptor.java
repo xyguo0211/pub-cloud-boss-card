@@ -1,22 +1,18 @@
 package com.cn.auth.config;
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.ResultMessageConstants;
 import com.cn.auth.entity.User;
-import com.cn.auth.security.ApplicationContextHolder;
 import com.cn.auth.util.UserContext;
-import com.pub.core.web.domain.AjaxResult;
+import com.pub.core.util.domain.AjaxResult;
 import com.pub.redis.service.RedisService;
 import com.pub.redis.util.RedisCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.NamedThreadLocal;
-import org.springframework.data.redis.cache.RedisCacheManager;
-import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.method.HandlerMethod;
 import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
@@ -24,9 +20,6 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
 
 /**
  *
