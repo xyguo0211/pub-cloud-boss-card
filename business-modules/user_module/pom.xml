@@ -95,7 +95,7 @@
                         <index>true</index>
                         <manifest>
                             <addClasspath>false</addClasspath>
-                            <mainClass>com.cn.user.UserApplication</mainClass>
+                            <mainClass>com.cn.offline.UserApplication</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                             <addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
                         </manifest>
