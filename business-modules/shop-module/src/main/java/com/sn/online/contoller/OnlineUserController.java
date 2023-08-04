@@ -142,8 +142,7 @@ public class OnlineUserController extends BaseController {
             return AjaxResult.error(" Informal token does not start with Bearer !");
         }
         //##缓存一段时间,避免高并发重复请求,因为会出现并发请求拿新的token来换token情况,缓存30秒
-        String[] bearer_s = bearerToken.split("Bearer ");
-        String online_cache_jwt="online_Cache_" + bearer_s[1].trim();
+        String online_cache_jwt="online_Cache_" + bearerToken;
         String redis_cache = redisCache.getStringCache(online_cache_jwt);
         if(StringUtils.isNotBlank(redis_cache)){
             JSONObject jsonObject1 = JSONObject.parseObject(redis_cache);

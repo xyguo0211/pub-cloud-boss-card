@@ -57,10 +57,10 @@ public class OnlineAuthorityInterceptor extends HandlerInterceptorAdapter {
             //判断handler是不是指定类HandlerMethod
             return true;
         }
-        String Inner_token = request.getHeader(Constant.Online.fegin_key);
+       /* String Inner_token = request.getHeader(Constant.Online.fegin_key);
         if(StringUtils.hasText(Inner_token)&&Constant.Online.fegin_token.equals(Inner_token)){
             return true;
-        }
+        }*/
         String jwt = request.getHeader(TokenProvider.AUTHORIZATION_HEADER_ONLINE);
         if(!StringUtils.hasText(jwt)){
             //未携带token
@@ -79,7 +79,10 @@ public class OnlineAuthorityInterceptor extends HandlerInterceptorAdapter {
         if(!Constant.Online.Jwt.sucess_code.equals(code)){
             if(Constant.Online.Jwt.ExpiredJwtException_err_code.equals(code)){
                 //说明AUTHORIZATION_HEADER_ONLINE已超时 ,通知前端刷新AUTHORIZATION_HEADER_ONLINE
-                responseMessage(response, AjaxResult.error(ResultMessageConstants.B00010.message()));
+                JSONObject token_json=new JSONObject();
+                token_json.put("code","0");
+                token_json.put("message","请刷新token!");
+                responseMessage(response, token_json);
                 return false;
             }
             responseMessage(response, AjaxResult.error(ResultMessageConstants.B00008.message()));

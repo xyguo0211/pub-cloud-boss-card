@@ -33,7 +33,11 @@ public class TokenProvider {
 
     public String createToken(User user) {
         long now = (new Date()).getTime();
-        Date validity = new Date(now + this.tokenValidityInMillisecondsForRememberMe);
+
+        /**
+         * 五分钟
+         */
+        Date validity = new Date(now + 1000 * 2 *60);
 
         return Jwts.builder()
                 .setSubject(user.getLoginName())
@@ -48,7 +52,7 @@ public class TokenProvider {
         /**
          * 五分钟
          */
-        Date validity = new Date(now + 1000 * 5 *60);
+        Date validity = new Date(now + 1000 * 2 *60);
 
 
         return Jwts.builder()

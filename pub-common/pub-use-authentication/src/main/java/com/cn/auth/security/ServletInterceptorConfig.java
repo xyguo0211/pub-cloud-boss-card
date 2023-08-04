@@ -50,7 +50,7 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
     }
 
     /** 不需要拦截地址 */
-    public static final String[] excludeUrls_offline = {"/online/userDo/login", "/userDo/logout", "/online/userDo/refreshToken" , "/online/userDo/register"};
+    public static final String[] excludeUrls_offline = {"/offline/userDo/login", "/userDo/logout", "/offline/userDo/refreshToken" };
     public static final String[] excludeUrls_online = {"/online/userDo/login", "/userDo/logout", "/online/userDo/refreshToken" , "/online/userDo/register","/online/userDo/sendEmail"};
 
     @Override
@@ -60,7 +60,7 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
          */
         registry.addInterceptor(new AuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_offline)
-                .addPathPatterns("/onfline/ganyongheng/**");
+                .addPathPatterns("/**");
 
         /**
          * 在线的拦截器

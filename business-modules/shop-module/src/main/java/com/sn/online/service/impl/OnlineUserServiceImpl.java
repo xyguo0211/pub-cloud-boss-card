@@ -51,6 +51,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
 
     @Autowired
     private RedisCache redisCache;
+
     @Autowired
     private SendGmail sendGmail;
 
@@ -113,6 +114,10 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         if(one_db_name==null){
             throw new BusinessException("The user does not exists！");
         }
+        Integer isBlack = one_db_name.getIsBlack();
+        if(OnlineConstants.blockStatus.block==isBlack){
+            throw new BusinessException("User has been blacklisted！");
+        }
         String pwd = req.getPwd();
         String err_count_name="login_err_count_" + name;
         String cache_str = redisCache.getStringCache(err_count_name);
@@ -136,10 +141,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         }else{
             redisCache.deleteCache(err_count_name);
         }
-        Integer isBlack = req.getIsBlack();
-        if(OnlineConstants.blockStatus.block==isBlack){
-            throw new BusinessException("User has been blacklisted！");
-        }
+
         /**
          * 生成token
          */
@@ -147,9 +149,9 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         Integer id = one_db_name.getId();
         mUser.setId(id);
         mUser.setLoginName(one_db_name.getName());
-        mUser.setPassword(one_db_name.getPwd());
         String jwt ="Bearer " +  tokenProvider.createTokenNewONline(mUser);
         redisCache.putCacheWithExpireTime(jwt,mUser,short_token_redis_cache_time);
+        one_db_name.setPwd(null);
         js.put("user",one_db_name);
         js.put("token",jwt);
         return js;
@@ -212,6 +214,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         //删掉过期token
         redisCache.deleteCache(old_jwt);
         jsonObject.put("token",jwt);
+        user.setPwd(null);
         jsonObject.put("user",user);
         //##缓存一段时间,避免高并发重复请求,因为会出现并发请求拿新的token来换token情况,缓存30秒
         String online_cache_jwt="online_Cache_" + jwt;

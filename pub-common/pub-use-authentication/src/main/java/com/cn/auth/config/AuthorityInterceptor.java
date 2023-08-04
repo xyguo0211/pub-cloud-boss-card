@@ -2,8 +2,12 @@ package com.cn.auth.config;
 
 import com.alibaba.fastjson.JSONObject;
 import com.cn.auth.config.jwt.TokenProvider;
+import com.cn.auth.entity.ResultMessageConstants;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.pub.core.common.OfflineConstants;
+import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.utils.DateUtils;
 import com.pub.redis.util.RedisCache;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -17,9 +21,7 @@ import org.springframework.web.servlet.handler.HandlerInterceptorAdapter;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import java.io.PrintWriter;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class AuthorityInterceptor extends HandlerInterceptorAdapter {
 
@@ -56,88 +58,75 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
         long beginTime = System.currentTimeMillis();//1、开始时间
         startTimeThreadLocal.set(beginTime);//线程绑定变量（该数据只有当前请求的线程可见）
         if (handler.getClass().isAssignableFrom(HandlerMethod.class)) {
-            String jwt = resolveToken(request);
-            User user = null;
-            String userId = null;
-            boolean isValidatePermission = true;//是否需要验证权限
+            String jwt = request.getHeader(TokenProvider.AUTHORIZATION_HEADER);
             //登录认证
-            if (StringUtils.hasText(jwt) && this.tokenProvider.validateToken(jwt)) {
-                userId = this.tokenProvider.getUserId(jwt);
-                user = redisCache.getCache(
-                        Constant.REDIS_USER_CACHE_KEY+
-                        Constant.REDIS_USER_CACHE_ID_ + userId, User.class
-                );
-                if (null == user) {
+            if (StringUtils.hasText(jwt) ) {
+                //校验jwt是否合法
+                if (!jwt.startsWith("Bearer_offline")) {
+                    //格式不对
+                    responseMessage(response, AjaxResult.error(ResultMessageConstants.B00011.message()));
+                    return false;
+                }
+                String  jwt_check= jwt.substring(14, jwt.length());
+                /**
+                 * 这里是需要更换token的异常情况
+                 */
+                if(!this.tokenProvider.validateToken(jwt_check)){
                     JSONObject jsonObject=new JSONObject();
                     jsonObject.put("code","0");
-                    jsonObject.put("message","未登录用户，请先登录");
+                    jsonObject.put("message","请刷新token!");
                     responseMessage(response, jsonObject);
                     return false;
                 }
-                if (user.getStatus() == Constant.MUSER_STATUS_NO) {
-                    JSONObject jsonObject=new JSONObject();
-                    jsonObject.put("code","0");
-                    jsonObject.put("message","用户已被禁用,请联系管理员!");
-                    responseMessage(response, jsonObject);
-                    redisCache.del(Constant.REDIS_USER_CACHE_KEY+Constant.REDIS_USER_CACHE_ID_ + userId);
-                    return false;
-                }
+                User cache_User = redisCache.getCache(jwt, User.class);
+                Integer userType = cache_User.getUserType();
+                if(userType!=OfflineConstants.offlineRole.system){
+                    //如果不是管理员，那么必须控制登录在线时间
+                    Date startDate = cache_User.getStartDate();
+                    Date endDate = cache_User.getEndDate();
+                    if(startDate==null||endDate==null){
+                        logger.info("非管理员角色，请申请在线时间!");
+                        responseMessage(response, AjaxResult.error(ResultMessageConstants.B00012.message()));
+                        return  false;
 
-                userContext = new UserContext(user);
-
-               /* request.setAttribute(Constant.MANAGE_REQUEST_DEPART_CODE, user.getDepartCode());*/
-                request.setAttribute(Constant.MANAGE_REQUEST_USER_ID, user.getId());
-
-            } else {
-                // token有问题
-                if (isNotValidatePermission(request, jwt)) {
-                    return true;
-                }
-                JSONObject jsonObject=new JSONObject();
-                jsonObject.put("code","0");
-                jsonObject.put("message","认证未通过,token异常!");
-                responseMessage(response, jsonObject);
-                return false;
-            }
-            //权限认证
-
-            Authentication auth = ((HandlerMethod) handler).getMethodAnnotation(Authentication.class);
-            // 没有声明需要权限,或者声明不验证权限 或者是服务端接口调用也不验证权限
-            if (auth == null || !auth.validate() || isNotValidatePermission(request, jwt))
-                return true;
-            else {
-                if (!Constant.SYSTEM_SUPER_USER.equals(user.getId())) {
-                    AuthorityType[] auths = auth.type();
-                    if (auths.length == 1 && auths[0].equals(AuthorityType.NON)) {
-                        return true;
-                    }
-                    String menuUrl = auth.menu();
-                    request.setAttribute(Constant.MANAGE_REQ_MENUURL, menuUrl);
-                    Map<String, String> permission = redisCache.getCache(
-                            Constant.REDIS_PERMISSION_CACHE_KEY+
-                            Constant.REDIS_PERMISSION_CACHE_ID_ + userId,
-                            Map.class
-                    );
-                    String jurisd = permission.get(menuUrl);
-                    if (jurisd != null) {
-                        List<String> jurisdList = Arrays.asList(jurisd.split(","));
-                        for (AuthorityType at : auths) {
-                             if (jurisdList.contains(String.valueOf(at.getLevel())))
-                                return true;
+                    }else{
+                        Date date=new Date();
+                        if(!date.after(startDate)||!date.before(endDate)){
+                            logger.info("非管理员角色，禁止在非指定时间内使用系统!");
+                            responseMessage(response, AjaxResult.error(ResultMessageConstants.B00013.message()));
+                            return  false;
                         }
                     }
-                    JSONObject jsonObject=new JSONObject();
-                    jsonObject.put("code","0");
-                    jsonObject.put("message","没有权限!");
-                    responseMessage(response, jsonObject);
+
+                }
+                userContext = new UserContext(cache_User);
+                //权限认证
+                Authentication auth = ((HandlerMethod) handler).getMethodAnnotation(Authentication.class);
+                if(auth==null){
+                    return true;
+                }
+                if (!Constant.SYSTEM_SUPER_USER.equals(cache_User.getId())) {
+                    String menuUrl = auth.menu();
+                    String permission_str = redisCache.getCache(Constant.REDIS_PERMISSION_CACHE_KEY+ jwt, String.class);
+                    Set permission = JSONObject.parseObject(permission_str, Set.class);
+                    if (permission.contains(menuUrl)) {
+                        return true;
+                    }
+                    logger.info("没有权限!");
+                    responseMessage(response, AjaxResult.error(ResultMessageConstants.B00006.message()));
                     return false;
                 } else {
                     return true;
                 }
+            } else {
+                return true;
             }
         } else {
-            return true;
+            logger.info("认证未通过,未知的接口!");
+            responseMessage(response, AjaxResult.error(ResultMessageConstants.B00011.message()));
+            return false;
         }
+
     }
 
     @Override
@@ -163,13 +152,10 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
 
     private String resolveToken(HttpServletRequest request) {
         String bearerToken = request.getHeader(TokenProvider.AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer ")) {
+        if (StringUtils.hasText(bearerToken) && bearerToken.startsWith("Bearer_offline")) {
             return bearerToken.substring(7, bearerToken.length());
         }
-        String pathToken = request.getParameter(TokenProvider.AUTHORIZATION_HEADER);
-        if (StringUtils.hasText(pathToken) && pathToken.startsWith("Bearer ")) {
-            return pathToken.substring(7, pathToken.length());
-        }
+
         return null;
     }
 

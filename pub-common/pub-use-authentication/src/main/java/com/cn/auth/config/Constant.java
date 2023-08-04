@@ -9,7 +9,7 @@ public class Constant {
 	public static List<String> subOrgCodeList = Arrays.asList("GZYHG","NSYHG","QZ(A)");
 
 	//超级用户id
-	public static final Long SYSTEM_SUPER_USER = 1L;
+	public static final Integer SYSTEM_SUPER_USER = 1;
 	//角色常量
 	//司机角色编码
 	public static final String DRIVER_ROLE_CODE = "DRIVER";
