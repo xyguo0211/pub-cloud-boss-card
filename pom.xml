@@ -8,7 +8,6 @@
     <artifactId>pub-cloud-boss</artifactId>
     <version>1.0-SNAPSHOT</version>
     <modules>
-        <module>pub-common</module>
         <module>pub-api</module>
         <module>business-modules</module>
         <module>pub-gateway</module>

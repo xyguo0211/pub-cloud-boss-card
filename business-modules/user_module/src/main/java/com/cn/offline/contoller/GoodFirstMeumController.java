@@ -20,7 +20,7 @@ import org.springframework.web.multipart.MultipartFile;
  * @since 2023-08-02
  */
 @Controller
-@RequestMapping("/online/goodFirstMeumDo")
+@RequestMapping("/offline/goodFirstMeumDo")
 public class GoodFirstMeumController {
 
     @Autowired

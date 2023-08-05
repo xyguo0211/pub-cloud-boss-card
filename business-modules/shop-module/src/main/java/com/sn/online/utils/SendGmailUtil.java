@@ -1,6 +1,5 @@
 package com.sn.online.utils;
 
-import com.sun.xml.internal.messaging.saaj.packaging.mime.MessagingException;
 
 import javax.mail.*;
 import javax.mail.internet.AddressException;

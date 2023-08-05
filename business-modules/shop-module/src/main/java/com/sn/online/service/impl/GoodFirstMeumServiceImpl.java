@@ -1,5 +1,6 @@
 package com.sn.online.service.impl;
 
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.entity.User;
@@ -98,17 +99,27 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
 
     public String uploadImage(MultipartFile file) throws Exception {
         //存储文件路径
-        long time = new Date().getTime();
-        String shipDfsPath = getDfsPath(filePathOnlineConfig.getRoot(), "online_card",time+"identitycarddowm");
+        String root = filePathOnlineConfig.getRoot();
+        String shipDfsPath = getDfsPath(root);
         File extracted = extracted(file, shipDfsPath);
         String absolutePath = extracted.getAbsolutePath();
-        return absolutePath;
+        String[] split = absolutePath.split(root);
+        if(split.length>1){
+            return split[1];
+        }
+       return null;
     }
 
-    public static String getDfsPath(String service, String module, String path) {
 
-        return "/" + service + "/" + module + "/"+ "/" + path + "/"
-                + UUID.randomUUID().toString().replace("-", "")+"/"
+    public static void main(String[] args) {
+        String str="/home/image/card/af53a382ee0447caa2e7be7ee3180a03/询价请求参数确认.xls";
+        String[] split = str.split("/home/image/card");
+        System.out.println(split[1]);
+    }
+
+    public static String getDfsPath(String service) {
+
+        return  service + "/" + UUID.randomUUID().toString().replace("-", "")+"/"
                 ;
 
     }
