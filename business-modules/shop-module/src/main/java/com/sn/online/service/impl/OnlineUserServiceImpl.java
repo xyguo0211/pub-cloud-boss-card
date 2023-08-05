@@ -84,11 +84,11 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
             throw new BusinessException(" The invitation code does not exist ！");
         }
         String emailCode = req.getEmailCode();
-        /*String stringCache = redisCache.getStringCache(name);
+        String stringCache = redisCache.getStringCache(name);
         if(StringUtils.isBlank(stringCache)||!emailCode.equals(stringCache)){
             //说明不存在
             throw new BusinessException(" Verification code error！");
-        }*/
+        }
         Date createTime = new Date();
         OnlineUserDo onlineUserDo_save=new OnlineUserDo();
         BeanUtils.copyProperties(req,onlineUserDo_save);
@@ -163,12 +163,12 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
     public void sendEmail(String emailAddress) {
         Random random = new Random();
         int randomNumber = random.nextInt(900000) + 100000;
-        SendGmailUtil.gmailSender(emailAddress);
+      /*  SendGmailUtil.gmailSender(emailAddress);*/
        /* sendGmail.sendEmai(randomNumber,emailAddress);*/
         /**
          * 10分钟过期
          */
-        redisCache.putCacheWithExpireTime(emailAddress,randomNumber,1000*60*10);
+        redisCache.putCacheWithExpireTime(emailAddress,"1111",1000*60*10);
     }
 
     public void changePassword(JSONObject req) throws Exception{

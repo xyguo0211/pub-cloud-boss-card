@@ -9,6 +9,7 @@ import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
 import com.pub.core.utils.StringUtils;
 import com.pub.core.util.controller.BaseController;
+import com.sn.online.config.FilePathOnlineConfig;
 import com.sn.online.entity.*;
 import com.sn.online.entity.dto.OnlineOrderSubmitDto;
 import com.sn.online.mapper.OnlineOrderInfoMapper;
@@ -50,6 +51,9 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
     @Autowired
     private OnlineOrderInfoReplyImageServiceImpl  onlineOrderInfoReplyImageServiceImpl;
 
+    @Autowired
+    private FilePathOnlineConfig filePathOnlineConfig;
+
     public List<OnlineOrderInfoDo> getPageList(JSONObject req) {
         QueryWrapper<OnlineOrderInfoDo> wq=new QueryWrapper<>();
         String startTime = req.getString("startTime");
@@ -72,6 +76,10 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         wq.eq("order_id",id);
         List<OnlineOrderInfoImageDo> list = onlineOrderInfoImageServiceImpl.list(wq);
         if(list!=null&&list.size()>0){
+            for (OnlineOrderInfoImageDo onlineOrderInfoImageDo : list) {
+                String imageUrl = onlineOrderInfoImageDo.getImageUrl();
+                onlineOrderInfoImageDo.setImageUrl(filePathOnlineConfig.getBaseUrl()+imageUrl);
+            }
             onlineOrderInfoDo.setListOrderInfoImage(list);
         }
         QueryWrapper<OnlineOrderInfoReplyDo> wq_reply=new QueryWrapper<>();
@@ -82,7 +90,11 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
             QueryWrapper<OnlineOrderInfoReplyImageDo> wq_OrderInfoReplyImage=new QueryWrapper<>();
             wq_OrderInfoReplyImage.eq("reply_id",onlineOrderInfoReplyDo.getId());
             List<OnlineOrderInfoReplyImageDo> list_OnlineOrderInfoReplyImageDo = onlineOrderInfoReplyImageServiceImpl.list(wq_OrderInfoReplyImage);
-            if(list_OnlineOrderInfoReplyImageDo!=null){
+            if(list_OnlineOrderInfoReplyImageDo!=null&&list_OnlineOrderInfoReplyImageDo.size()>0){
+                for (OnlineOrderInfoReplyImageDo onlineOrderInfoReplyImageDo : list_OnlineOrderInfoReplyImageDo) {
+                    String imageUrl = onlineOrderInfoReplyImageDo.getImageUrl();
+                    onlineOrderInfoReplyImageDo.setImageUrl(filePathOnlineConfig.getBaseUrl()+imageUrl);
+                }
                 onlineOrderInfoReplyDo.setListOnlineOrderInfoReplyImageDo(list_OnlineOrderInfoReplyImageDo);
             }
             onlineOrderInfoDo.setOnlineOrderInfoReplyDo(onlineOrderInfoReplyDo);

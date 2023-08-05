@@ -6,6 +6,8 @@ package com.cn.offline.config;
 public final class OfflineAuthMenuKeyConstant {
     //地区管理
     public final static String BASE_USER_CENTER="/main/user";
+    public final static String BASE_ROLE_CENTER="/main/role";
+    public final static String SELL_GIFT_CARD="/main/card";
 
 
 

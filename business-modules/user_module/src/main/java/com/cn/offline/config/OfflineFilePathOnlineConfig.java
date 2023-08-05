@@ -16,6 +16,7 @@ public class OfflineFilePathOnlineConfig {
 
     private  String  image;
 
+    private  String  baseUrl;
 
 
 }

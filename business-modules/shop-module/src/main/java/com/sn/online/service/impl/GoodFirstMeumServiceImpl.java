@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.exception.BusinessException;
+import com.pub.core.utils.StringUtils;
 import com.sn.online.config.FilePathOnlineConfig;
 import com.sn.online.entity.*;
 import com.sn.online.entity.dto.OnlineOrderSubmitDto;
@@ -60,6 +61,10 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
             for (GoodFirstMeumDo goodFirstMeumDo : list) {
                 QueryWrapper<GoodFirstMeumEquirementsDo> wq_equirements=new QueryWrapper<>();
                 wq_equirements.eq("first_id",goodFirstMeumDo.getId());
+                String cardImgeUrl = goodFirstMeumDo.getCardImgeUrl();
+                if(StringUtils.isNotBlank(cardImgeUrl)){
+                    goodFirstMeumDo.setCardImgeUrl(filePathOnlineConfig.getBaseUrl()+cardImgeUrl);
+                }
                 List<GoodFirstMeumEquirementsDo> listequirements = goodFirstMeumEquirementsServiceImpl.list(wq_equirements);
                 if(listequirements!=null&&listequirements.size()>0){
                     goodFirstMeumDo.setListEquirements(listequirements);

@@ -21,5 +21,9 @@ public interface OfflineConstants {
         public static final Integer error=-1;
         public static final Integer finish=1;
     }
+    public interface checkStatus {
+        public static final Integer check=9;
+        public static final Integer check_no=-1;
+    }
 
 }

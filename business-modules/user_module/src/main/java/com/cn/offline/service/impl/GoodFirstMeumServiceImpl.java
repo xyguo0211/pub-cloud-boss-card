@@ -1,11 +1,13 @@
 package com.cn.offline.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.offline.config.OfflineFilePathOnlineConfig;
 import com.cn.offline.entity.*;
 import com.cn.offline.mapper.GoodFirstMeumMapper;
 import com.cn.offline.service.IGoodFirstMeumService;
+import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -119,5 +121,66 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
             multipartFile.getInputStream().close();
         }
         return localFile;
+    }
+
+    public void addFirstCard(GoodFirstMeumDo req) {
+        Date createTime = new Date();
+        req.setCreateTime(createTime);
+        req.setUpdateTime(createTime);
+        save(req);
+        List<GoodFirstMeumEquirementsDo> listEquirements = req.getListEquirements();
+        if(listEquirements!=null&&listEquirements.size()>0){
+            for (GoodFirstMeumEquirementsDo listEquirement : listEquirements) {
+                listEquirement.setFirstId(req.getId());
+                listEquirement.setCreateTime(createTime);
+                listEquirement.setUpdateTime(createTime);
+            }
+            goodFirstMeumEquirementsServiceImpl.saveBatch(listEquirements);
+        }
+
+    }
+
+    public void updateFirstCard(GoodFirstMeumDo req) {
+        Date createTime = new Date();
+        req.setUpdateTime(createTime);
+        updateById(req);
+        QueryWrapper<GoodFirstMeumEquirementsDo> rm=new QueryWrapper<>();
+        rm.eq("first_id",req.getId());
+        goodFirstMeumEquirementsServiceImpl.remove(rm);
+        List<GoodFirstMeumEquirementsDo> listEquirements = req.getListEquirements();
+        if(listEquirements!=null&&listEquirements.size()>0){
+            for (GoodFirstMeumEquirementsDo listEquirement : listEquirements) {
+                listEquirement.setFirstId(req.getId());
+                listEquirement.setCreateTime(createTime);
+                listEquirement.setUpdateTime(createTime);
+            }
+            goodFirstMeumEquirementsServiceImpl.saveBatch(listEquirements);
+        }
+    }
+
+    public GoodFirstMeumDo getByIdEntity(Integer id) {
+        GoodFirstMeumDo byId = getById(id);
+        String cardImgeUrl = byId.getCardImgeUrl();
+        if(StringUtils.isNotBlank(cardImgeUrl)){
+            byId.setCardImgeUrl(filePathOnlineConfig.getBaseUrl()+cardImgeUrl);
+        }
+        QueryWrapper<GoodFirstMeumEquirementsDo> wq=new QueryWrapper<>();
+        wq.eq("first_id",id);
+        List<GoodFirstMeumEquirementsDo> list = goodFirstMeumEquirementsServiceImpl.list(wq);
+        byId.setListEquirements(list);
+        return byId;
+    }
+
+    public void deleteById(Integer id) {
+        removeById(id);
+        QueryWrapper<GoodFirstMeumEquirementsDo> first_rm=new QueryWrapper<>();
+        first_rm.eq("first_id",id);
+        goodFirstMeumEquirementsServiceImpl.remove(first_rm);
+        QueryWrapper<GoodSecondCountryDo> sencond_rm=new QueryWrapper<>();
+        sencond_rm.eq("first_id",id);
+        goodSecondCountryServiceImpl.remove(sencond_rm);
+        QueryWrapper<GoodThirdRateDo> third_rm=new QueryWrapper<>();
+        third_rm.eq("first_id",id);
+        goodThirdRateServiceImpl.remove(third_rm);
     }
 }

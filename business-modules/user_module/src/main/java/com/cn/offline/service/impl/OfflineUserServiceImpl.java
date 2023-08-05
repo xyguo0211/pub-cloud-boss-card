@@ -295,7 +295,7 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
         QueryWrapper<OfflineUserDo> wq=new QueryWrapper<>();
         String name = req.getName();
         if(StringUtils.isNotBlank(name)){
-            wq.eq("name", name);
+            wq.like("name", name);
         }
 
         String nikeName = req.getNikeName();

@@ -1,5 +1,6 @@
 package com.cn.offline.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -28,7 +29,7 @@ public class OfflineMenuDo extends Model<OfflineMenuDo> {
      * 主键
      */
     @TableId(value = "id", type = IdType.AUTO)
-    private Long id;
+    private Integer id;
 
     /**
      * 菜单名称
@@ -46,5 +47,11 @@ public class OfflineMenuDo extends Model<OfflineMenuDo> {
      * 排序
      */
     private Integer sort;
+
+    /**
+     * 是否被选中
+     */
+    @TableField(exist = false)
+    private Integer isCheck;
 
 }

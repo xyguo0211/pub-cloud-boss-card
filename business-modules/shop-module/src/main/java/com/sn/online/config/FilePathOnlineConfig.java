@@ -14,7 +14,7 @@ public class FilePathOnlineConfig {
 
     private    String root ;
 
-    private  String  image;
+    private  String  baseUrl;
 
 
 
