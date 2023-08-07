@@ -7,6 +7,8 @@ import com.baomidou.mybatisplus.core.toolkit.AES;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
+import com.pub.core.exception.BusinessException;
+import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.utils.StringUtils;
 import com.pub.core.util.controller.BaseController;
 import com.sn.online.config.FilePathOnlineConfig;
@@ -54,10 +56,15 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
     @Autowired
     private FilePathOnlineConfig filePathOnlineConfig;
 
-    public List<OnlineOrderInfoDo> getPageList(JSONObject req) {
+    public List<OnlineOrderInfoDo> getPageList(JSONObject req) throws Exception{
+        User currentUser = UserContext.getCurrentUser();
+        if(currentUser==null){
+            throw  new BusinessException("Please log in !");
+        }
         QueryWrapper<OnlineOrderInfoDo> wq=new QueryWrapper<>();
         String startTime = req.getString("startTime");
         String endTime = req.getString("endTime");
+        wq.eq("user_id",currentUser.getId());
         if(StringUtils.isNotBlank(startTime)){
             wq.ge("create_time",startTime);
         }

@@ -25,7 +25,7 @@ import java.util.Map;
  * @since 2023-08-01
  */
 @Controller
-@RequestMapping("/sysDataDictionaryDo")
+@RequestMapping("/online/sysDataDictionaryDo")
 public class SysDataDictionaryController {
     @Autowired
     private SysDataDictionaryServiceImpl sysDataDictionaryServiceImpl;
@@ -36,6 +36,21 @@ public class SysDataDictionaryController {
         try{
             sysDataDictionaryServiceImpl.refreshCache();
             return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error();
+        }
+    }
+    @RequestMapping(value = "/getBankMsg", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getBankMsg() {
+        try{
+            List<String> listRtn=new ArrayList<>();
+            Map<String, String> bankMsg = sysDataDictionaryServiceImpl.getSysBaseParam("BankMsg");
+            for (String s : bankMsg.keySet()) {
+                listRtn.add(bankMsg.get(s));
+            }
+            return AjaxResult.success(listRtn);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error();

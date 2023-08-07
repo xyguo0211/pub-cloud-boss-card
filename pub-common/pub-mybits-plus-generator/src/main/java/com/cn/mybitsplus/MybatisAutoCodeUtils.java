@@ -19,7 +19,7 @@ public class MybatisAutoCodeUtils {
 
         //需要生成的表
         String[] tables = new String[]{
-                "offline_menu","offline_role","offline_role_menu","offline_user"
+                "online_withdraw","online_user_bank_account"
         };
         //数据库连接url
         String url = "jdbc:mysql://10.1.1.120:3306/sass_tracking_history?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai";
@@ -28,7 +28,7 @@ public class MybatisAutoCodeUtils {
         //数据库密码
         String password = "2wsx#EDC";
         //生成class 的 父包名
-        String parentPackage = "com.cn.offline";
+        String parentPackage = "com.sn.online";
 
         String controllerPackage = "controller";
 

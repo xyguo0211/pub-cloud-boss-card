@@ -20,4 +20,14 @@ public interface OnlineConstants {
         public static final Integer finish=1;
     }
 
+    /**
+     * 状态  9成功  -1失败  0 取消  1 初始化
+     */
+    public interface DrawStats {
+        public static final Integer initial =1;
+        public static final Integer cancel =0;
+        public static final Integer error=-1;
+        public static final Integer finish=9;
+    }
+
 }
