@@ -56,7 +56,6 @@ public class OnlineWithdrawDo extends Model<OnlineWithdrawDo> {
      */
     private Integer status;
 
-    @ApiModelProperty("跟踪状态文本")
     public String getDrawalFeeStatusStr() {
         if (Objects.isNull(status)) {
             return "";

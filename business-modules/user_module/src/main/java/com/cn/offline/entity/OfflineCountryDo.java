@@ -1,6 +1,5 @@
-package com.sn.online.entity;
+package com.cn.offline.entity;
 
-import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -10,45 +9,37 @@ import lombok.Data;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import java.util.Date;
-import java.util.List;
 
 /**
  * <p>
- * 
+ * 菜单表 (EIP)
  * </p>
  *
  * @author ganyongheng
- * @since 2023-08-02
+ * @since 2023-08-11
  */
 @Data
-@TableName("good_second_country")
-public class GoodSecondCountryDo extends Model<GoodSecondCountryDo> {
+@TableName("offline_country")
+public class OfflineCountryDo extends Model<OfflineCountryDo> {
 
     private static final long serialVersionUID = 1L;
 
+    /**
+     * 主键
+     */
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
     /**
-     * 文案类容
+     * 菜单名称
      */
     private String countryName;
 
-    private Date createTime;
-
-    private Date updateTime;
-
-    private String countryImage;
-
-    private Integer firstId;
-
-    @TableField(exist = false)
-    private List<GoodThirdRateDo> listThird;
-
-
     /**
-     * 关联的国家id
+     * 菜单路径
      */
-    private Integer countryId;
+    private String imageUrl;
+
+    private Date createTime;
 
 }

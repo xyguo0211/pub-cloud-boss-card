@@ -105,12 +105,13 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
     public String uploadImage(MultipartFile file) throws Exception {
         //存储文件路径
         String root = filePathOnlineConfig.getRoot();
+        String baseUrl = filePathOnlineConfig.getBaseUrl();
         String shipDfsPath = getDfsPath(root);
         File extracted = extracted(file, shipDfsPath);
         String absolutePath = extracted.getAbsolutePath();
         String[] split = absolutePath.split(root);
         if(split.length>1){
-            return split[1];
+            return baseUrl+split[1];
         }
        return null;
     }

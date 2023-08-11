@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.offline.entity.GoodFirstMeumEquirementsDo;
 import com.cn.offline.entity.GoodSecondCountryDo;
 import com.cn.offline.entity.GoodThirdRateDo;
+import com.cn.offline.entity.OfflineCountryDo;
 import com.cn.offline.mapper.GoodSecondCountryMapper;
 import com.cn.offline.service.IGoodSecondCountryService;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,8 +26,14 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
 
     @Autowired
     private GoodThirdRateServiceImpl goodThirdRateServiceImpl;
+    @Autowired
+    private OfflineCountryServiceImpl offlineCountryServiceImpl;
 
     public void addSecondCountry(GoodSecondCountryDo req) {
+        Integer countryId = req.getCountryId();
+        OfflineCountryDo offlineCountryDo = offlineCountryServiceImpl.getById(countryId);
+        req.setCountryName(offlineCountryDo.getCountryName());
+        req.setCountryImage(offlineCountryDo.getImageUrl());
         Date createTime = new Date();
         req.setCreateTime(createTime);
         req.setUpdateTime(createTime);

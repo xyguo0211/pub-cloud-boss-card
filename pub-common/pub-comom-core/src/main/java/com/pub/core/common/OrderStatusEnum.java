@@ -8,7 +8,6 @@ import java.util.Objects;
 /**
  * SaaS业务单状态枚举
  */
-@Slf4j
 public enum OrderStatusEnum {
     TRACKING_STATUS_WAITING(0, "初始化", "tracking_status"),
     TRACKING_STATUS_TRACKED(-1, "异常", "tracking_status"),

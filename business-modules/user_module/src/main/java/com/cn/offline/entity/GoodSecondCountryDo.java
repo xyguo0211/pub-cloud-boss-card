@@ -32,6 +32,11 @@ public class GoodSecondCountryDo extends Model<GoodSecondCountryDo> {
      */
     private String countryName;
 
+    /**
+     * 关联的国家id
+     */
+    private Integer countryId;
+
     private Date createTime;
 
     private Date updateTime;
