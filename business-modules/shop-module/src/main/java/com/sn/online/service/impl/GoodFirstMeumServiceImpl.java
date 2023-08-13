@@ -63,7 +63,7 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
                 wq_equirements.eq("first_id",goodFirstMeumDo.getId());
                 String cardImgeUrl = goodFirstMeumDo.getCardImgeUrl();
                 if(StringUtils.isNotBlank(cardImgeUrl)){
-                    goodFirstMeumDo.setCardImgeUrl(filePathOnlineConfig.getBaseUrl()+cardImgeUrl);
+                    goodFirstMeumDo.setCardImgeUrl(filePathOnlineConfig.getBaseUrl()+"/"+cardImgeUrl);
                 }
                 List<GoodFirstMeumEquirementsDo> listequirements = goodFirstMeumEquirementsServiceImpl.list(wq_equirements);
                 if(listequirements!=null&&listequirements.size()>0){
@@ -73,8 +73,9 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
                 wq_goodsecond.eq("first_id",goodFirstMeumDo.getId());
                 List<GoodSecondCountryDo> list_goodsecond = goodSecondCountryServiceImpl.list(wq_goodsecond);
                 if(list_goodsecond!=null&&list_goodsecond.size()>0){
-                    goodFirstMeumDo.setListSencond(list_goodsecond);
+
                     for (GoodSecondCountryDo goodSecondCountryDo : list_goodsecond) {
+                        goodSecondCountryDo.setCountryImage(filePathOnlineConfig.getBaseUrl()+"/"+goodSecondCountryDo.getCountryImage());
                         QueryWrapper<GoodThirdRateDo> wq_third=new QueryWrapper<>();
                         wq_third.eq("second_id",goodSecondCountryDo.getId());
                         wq_third.eq("first_id",goodSecondCountryDo.getFirstId());
@@ -91,6 +92,7 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
                             }
                         }
                     }
+                    goodFirstMeumDo.setListSencond(list_goodsecond);
                 }
 
             }

@@ -35,8 +35,19 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
     private String userRemarks;
 
     private Date createTime;
+    /**
+     * 完成时间
+     */
+    private Date completeTime;
 
+    /**
+     * 下单人的id
+     */
     private Integer userId;
+    /**
+     * 下单人的姓名
+     */
+    private String userName;
 
     private Integer thirdId;
 
@@ -49,6 +60,14 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
     private String rate;
 
     private Integer orderStatus;
+
+    private Integer offlineUserId;
+
+    private String offlineUserName;
+
+    private Integer completeUserId;
+
+    private String completeUserName;
 
     @ApiModelProperty("跟踪状态文本")
     public String getOrderStatusStr() {
@@ -64,5 +83,5 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
     @TableField(exist = false)
     private OnlineOrderInfoReplyDo onlineOrderInfoReplyDo;
 
-
+    private String cashBackFee;
 }

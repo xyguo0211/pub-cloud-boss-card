@@ -6,6 +6,8 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import lombok.Data;
 
+import java.util.Date;
+
 /**
  * <p>
  * 订单图片回复表
@@ -23,7 +25,7 @@ public class OnlineOrderInfoReplyImageDo extends Model<OnlineOrderInfoReplyImage
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    private Data createTime;
+    private Date createTime;
 
     private Integer reply_id;
 

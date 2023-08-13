@@ -3,10 +3,13 @@ package com.cn.offline.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cn.offline.entity.GoodSecondCountryDo;
 import com.cn.offline.entity.GoodThirdCardTypeDo;
 import com.cn.offline.entity.GoodThirdRateDo;
 import com.cn.offline.mapper.GoodThirdRateMapper;
 import com.cn.offline.service.IGoodThirdRateService;
+import com.pub.core.util.controller.BaseController;
+import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -72,5 +75,12 @@ public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, G
 
     public void deleteById(Integer id) {
         removeById(id);
+    }
+
+    public List<GoodThirdRateDo> getPageList() {
+        QueryWrapper<GoodThirdRateDo> wq=new QueryWrapper<>();
+        BaseController.startPage();
+        List<GoodThirdRateDo> list = list(wq);
+        return list;
     }
 }

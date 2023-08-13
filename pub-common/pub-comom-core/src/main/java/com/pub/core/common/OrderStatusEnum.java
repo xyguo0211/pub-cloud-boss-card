@@ -12,6 +12,11 @@ public enum OrderStatusEnum {
     TRACKING_STATUS_WAITING(0, "初始化", "tracking_status"),
     TRACKING_STATUS_TRACKED(-1, "异常", "tracking_status"),
     TRACKING_STATUS_EXCEPTION(1, "已完成", "tracking_status"),
+
+    TR_TYPE_ORDER(1, "订单交易", "TR_status"),
+    TR_TYPE_PERSON(2, "邀请人返现", "TR_status"),
+    TR_TYPE_RECOD(3, "提现", "TR_status"),
+
     /**
      * 状态  9成功  -1失败  0 取消  1 初始化
      */
@@ -29,6 +34,11 @@ public enum OrderStatusEnum {
         this.code = code;
         this.name = name;
         this.columnName = columnName;
+    }
+
+    public static String getTransactionTypeStr(Integer type) {
+        String targetColumnName = "TR_status";
+        return getStr(targetColumnName, type);
     }
 
     public Integer getCode() {

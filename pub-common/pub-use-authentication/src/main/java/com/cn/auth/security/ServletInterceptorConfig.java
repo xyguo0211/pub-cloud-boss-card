@@ -60,7 +60,7 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
          */
         registry.addInterceptor(new AuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_offline)
-                .addPathPatterns("/offline/ganyongheng/**");
+                .addPathPatterns("/offline/**");
 
         /**
          * 在线的拦截器

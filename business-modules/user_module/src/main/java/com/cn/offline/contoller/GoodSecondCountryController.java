@@ -1,6 +1,7 @@
 package com.cn.offline.contoller;
 
 
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.config.Authentication;
 import com.cn.auth.config.TimingLog;
 import com.cn.offline.config.OfflineAuthMenuKeyConstant;
@@ -9,9 +10,13 @@ import com.cn.offline.entity.GoodSecondCountryDo;
 import com.cn.offline.service.impl.GoodSecondCountryServiceImpl;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.util.page.TableDataInfo;
+import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
 
 /**
  * <p>
@@ -95,6 +100,27 @@ public class GoodSecondCountryController extends BaseController {
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());
         }
+    }
+
+    /**
+     * 分页数据
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
+    @ResponseBody
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_CARD)
+    public AjaxResult getPageList(@RequestBody GoodSecondCountryDo req){
+        try{
+            List<GoodSecondCountryDo> pageList = goodSecondCountryServiceImpl.getPageList(req);
+            TableDataInfo dataTable = getDataTable(pageList);
+            return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
     }
 
 }

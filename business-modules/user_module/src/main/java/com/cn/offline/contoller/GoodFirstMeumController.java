@@ -9,10 +9,13 @@ import com.cn.offline.entity.OfflineRoleDo;
 import com.cn.offline.service.impl.GoodFirstMeumServiceImpl;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.util.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+
+import java.util.List;
 
 /**
  * <p>
@@ -112,6 +115,27 @@ public class GoodFirstMeumController extends BaseController {
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());
         }
+    }
+
+    /**
+     * 分页数据
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
+    @ResponseBody
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_CARD)
+    public AjaxResult getPageList(@RequestBody GoodFirstMeumDo req){
+        try{
+            List<GoodFirstMeumDo> pageList = goodFirstMeumServiceImpl.getPageList(req);
+            TableDataInfo dataTable = getDataTable(pageList);
+            return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
     }
 
 }

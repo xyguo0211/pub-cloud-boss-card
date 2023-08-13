@@ -9,6 +9,7 @@ import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.utils.CalculateUtil;
 import com.pub.core.utils.StringUtils;
 import com.pub.core.util.controller.BaseController;
 import com.sn.online.config.FilePathOnlineConfig;
@@ -19,8 +20,10 @@ import com.sn.online.service.IOnlineOrderInfoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -52,9 +55,15 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
     private OnlineOrderInfoReplyServiceImpl  onlineOrderInfoReplyServiceImpl;
     @Autowired
     private OnlineOrderInfoReplyImageServiceImpl  onlineOrderInfoReplyImageServiceImpl;
+    @Autowired
+    private OfflineUserServiceImpl  offlineUserServiceImpl;
 
     @Autowired
     private FilePathOnlineConfig filePathOnlineConfig;
+
+
+    @Value("${shop.fee.rata}")
+    private String shopFeeRata;
 
     public List<OnlineOrderInfoDo> getPageList(JSONObject req) throws Exception{
         User currentUser = UserContext.getCurrentUser();
@@ -113,9 +122,11 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         GoodThirdRateDo goodThirdRateDo = goodThirdRateServiceImpl.getById(third_id);
         Integer secondId = goodThirdRateDo.getSecondId();
         GoodSecondCountryDo goodSecondCountryDo = goodSecondCountryServiceImpl.getById(secondId);
+        goodSecondCountryDo.setCountryImage(filePathOnlineConfig.getBaseUrl()+"/"+goodSecondCountryDo.getCountryImage());
         goodThirdRateDo.setGoodSecondCountryDo(goodSecondCountryDo);
         Integer firstId = goodThirdRateDo.getFirstId();
         GoodFirstMeumDo goodFirstMeumDo = goodFirstMeumServiceImpl.getById(firstId);
+        goodFirstMeumDo.setCardImgeUrl(filePathOnlineConfig.getBaseUrl()+"/"+goodFirstMeumDo.getCardImgeUrl());
         QueryWrapper<GoodFirstMeumEquirementsDo> wq_equirements=new QueryWrapper<>();
         wq_equirements.eq("first_id",goodFirstMeumDo.getId());
         List<GoodFirstMeumEquirementsDo> listequirements = goodFirstMeumEquirementsServiceImpl.list(wq_equirements);
@@ -140,6 +151,13 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         onlineOrderInfoDo.setCreateTime(createTime);
         onlineOrderInfoDo.setUserId(currentUser.getId());
         onlineOrderInfoDo.setOrderStatus(OnlineConstants.orderStats.initial);
+        String totalAmonuntFee = onlineOrderInfoDo.getTotalAmonuntFee();
+        BigDecimal cal = CalculateUtil.cal(new StringBuilder(totalAmonuntFee).append("*").append(shopFeeRata).toString());
+        onlineOrderInfoDo.setCashBackFee(cal.toString());
+        /**
+         * 分配客服的逻辑
+         */
+        offlineUserServiceImpl.divideOrder(onlineOrderInfoDo);
         save(onlineOrderInfoDo);
         List<String> images = onlineOrderSubmitDto.getImages();
         List<OnlineOrderInfoImageDo> list_OnlineOrderInfoImageDo=new ArrayList<>();
@@ -148,7 +166,12 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
                 OnlineOrderInfoImageDo onlineOrderInfoImageDo=new OnlineOrderInfoImageDo();
                 onlineOrderInfoImageDo.setOrderId(onlineOrderInfoDo.getId());
                 onlineOrderInfoImageDo.setCreateTime(createTime);
-                onlineOrderInfoImageDo.setImageUrl(image);
+                String[] split = image.split(filePathOnlineConfig.getBaseUrl());
+                if(split.length>1){
+                    onlineOrderInfoImageDo.setImageUrl(split[1]);
+                }else{
+                    onlineOrderInfoImageDo.setImageUrl(split[0]);
+                }
                 list_OnlineOrderInfoImageDo.add(onlineOrderInfoImageDo);
             }
             onlineOrderInfoImageServiceImpl.saveBatch(list_OnlineOrderInfoImageDo);

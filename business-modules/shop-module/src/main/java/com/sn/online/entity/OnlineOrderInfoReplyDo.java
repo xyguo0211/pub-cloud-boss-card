@@ -48,4 +48,6 @@ public class OnlineOrderInfoReplyDo extends Model<OnlineOrderInfoReplyDo> {
     @TableField(exist = false)
     List<OnlineOrderInfoReplyImageDo> listOnlineOrderInfoReplyImageDo;
 
+    private Integer status;
+
 }

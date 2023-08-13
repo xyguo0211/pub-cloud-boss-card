@@ -29,7 +29,7 @@ import java.util.List;
  * @since 2023-08-11
  */
 @Controller
-@RequestMapping("/offlineCountryDo")
+@RequestMapping("/offline/offlineCountryDo")
 public class OfflineCountryController extends BaseController {
 
     @Autowired

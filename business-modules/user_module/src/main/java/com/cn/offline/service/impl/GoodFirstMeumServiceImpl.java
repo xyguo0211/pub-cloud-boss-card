@@ -7,6 +7,7 @@ import com.cn.offline.config.OfflineFilePathOnlineConfig;
 import com.cn.offline.entity.*;
 import com.cn.offline.mapper.GoodFirstMeumMapper;
 import com.cn.offline.service.IGoodFirstMeumService;
+import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -93,15 +94,17 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
     public String uploadImage(MultipartFile file) throws Exception {
         //存储文件路径
         String root = filePathOnlineConfig.getRoot();
+        String baseUrl = filePathOnlineConfig.getBaseUrl();
         String shipDfsPath = getDfsPath(root);
         File extracted = extracted(file, shipDfsPath);
         String absolutePath = extracted.getAbsolutePath();
         String[] split = absolutePath.split(root);
         if(split.length>1){
-            return split[1];
+            return baseUrl+split[1];
         }
         return null;
     }
+
 
     public static String getDfsPath(String root) {
 
@@ -127,6 +130,13 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
         Date createTime = new Date();
         req.setCreateTime(createTime);
         req.setUpdateTime(createTime);
+        String image = req.getCardImgeUrl();
+        String[] split = image.split(filePathOnlineConfig.getBaseUrl());
+        if(split.length>1){
+            req.setCardImgeUrl(split[1]);
+        }else{
+            req.setCardImgeUrl(split[0]);
+        }
         save(req);
         List<GoodFirstMeumEquirementsDo> listEquirements = req.getListEquirements();
         if(listEquirements!=null&&listEquirements.size()>0){
@@ -143,6 +153,16 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
     public void updateFirstCard(GoodFirstMeumDo req) {
         Date createTime = new Date();
         req.setUpdateTime(createTime);
+        String image = req.getCardImgeUrl();
+        if(StringUtils.isNotBlank(image)&&image.contains(":")){
+            String[] split = image.split(filePathOnlineConfig.getBaseUrl());
+            if(split.length>1){
+                req.setCardImgeUrl(split[1]);
+            }else{
+                req.setCardImgeUrl(split[0]);
+            }
+        }
+
         updateById(req);
         QueryWrapper<GoodFirstMeumEquirementsDo> rm=new QueryWrapper<>();
         rm.eq("first_id",req.getId());
@@ -182,5 +202,16 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
         QueryWrapper<GoodThirdRateDo> third_rm=new QueryWrapper<>();
         third_rm.eq("first_id",id);
         goodThirdRateServiceImpl.remove(third_rm);
+    }
+
+    public List<GoodFirstMeumDo> getPageList(GoodFirstMeumDo req) {
+        QueryWrapper<GoodFirstMeumDo> wq=new QueryWrapper<>();
+        String name = req.getCardName();
+        if(StringUtils.isNotBlank(name)){
+            wq.like("card_name", name);
+        }
+        BaseController.startPage();
+        List<GoodFirstMeumDo> list = list(wq);
+        return list;
     }
 }

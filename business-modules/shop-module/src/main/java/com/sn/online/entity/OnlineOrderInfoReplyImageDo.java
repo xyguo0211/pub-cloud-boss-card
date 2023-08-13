@@ -8,6 +8,7 @@ import lombok.Data;
 
 import java.time.LocalDateTime;
 import java.io.Serializable;
+import java.util.Date;
 
 /**
  * <p>
@@ -26,7 +27,7 @@ public class OnlineOrderInfoReplyImageDo extends Model<OnlineOrderInfoReplyImage
     @TableId(value = "id", type = IdType.AUTO)
     private Integer id;
 
-    private Data createTime;
+    private Date createTime;
 
     private Integer reply_id;
 
