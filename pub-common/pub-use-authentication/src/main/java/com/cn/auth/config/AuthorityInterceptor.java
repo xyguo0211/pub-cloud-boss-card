@@ -119,7 +119,9 @@ public class AuthorityInterceptor extends HandlerInterceptorAdapter {
                     return true;
                 }
             } else {
-                return true;
+                logger.info("认证未通过,未登陆异常!");
+                responseMessage(response, AjaxResult.error(ResultMessageConstants.B00003.message()));
+                return false;
             }
         } else {
             logger.info("认证未通过,未知的接口!");
