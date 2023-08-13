@@ -150,6 +150,7 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         Date createTime = new Date();
         onlineOrderInfoDo.setCreateTime(createTime);
         onlineOrderInfoDo.setUserId(currentUser.getId());
+        onlineOrderInfoDo.setUserName(currentUser.getLoginName());
         onlineOrderInfoDo.setOrderStatus(OnlineConstants.orderStats.initial);
         String totalAmonuntFee = onlineOrderInfoDo.getTotalAmonuntFee();
         BigDecimal cal = CalculateUtil.cal(new StringBuilder(totalAmonuntFee).append("*").append(shopFeeRata).toString());

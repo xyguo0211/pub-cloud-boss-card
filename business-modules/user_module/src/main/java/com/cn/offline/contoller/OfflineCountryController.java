@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.config.Authentication;
 import com.cn.auth.config.TimingLog;
 import com.cn.offline.config.OfflineAuthMenuKeyConstant;
+import com.cn.offline.config.OfflineFilePathOnlineConfig;
 import com.cn.offline.entity.OfflineCountryDo;
 import com.cn.offline.entity.OfflineRoleDo;
 import com.cn.offline.service.impl.OfflineCountryServiceImpl;
@@ -35,6 +36,8 @@ public class OfflineCountryController extends BaseController {
     @Autowired
     private OfflineCountryServiceImpl offlineCountryServiceImpl;
 
+    @Autowired
+    private OfflineFilePathOnlineConfig filePathOnlineConfig;
     /**
      * 新增角色
      * @return
@@ -52,6 +55,13 @@ public class OfflineCountryController extends BaseController {
                 return AjaxResult.error("重复国家名称！");
             }
             req.setCreateTime(new Date());
+            String imageUrl = req.getImageUrl();
+            String[] split = imageUrl.split(filePathOnlineConfig.getBaseUrl());
+            if(split.length>1){
+                req.setImageUrl(split[1]);
+            }else{
+                req.setImageUrl(split[0]);
+            }
             offlineCountryServiceImpl.save(req);
             return AjaxResult.success();
         }catch (Exception e){

@@ -212,6 +212,9 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
         }
         BaseController.startPage();
         List<GoodFirstMeumDo> list = list(wq);
+        for (GoodFirstMeumDo goodFirstMeumDo : list) {
+            goodFirstMeumDo.setCardImgeUrl(filePathOnlineConfig.getBaseUrl()+goodFirstMeumDo.getCardImgeUrl());
+        }
         return list;
     }
 }

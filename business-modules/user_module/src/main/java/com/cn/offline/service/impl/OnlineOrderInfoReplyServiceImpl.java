@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.cn.offline.config.OfflineFilePathOnlineConfig;
 import com.cn.offline.entity.*;
 import com.cn.offline.mapper.OnlineOrderInfoReplyMapper;
 import com.cn.offline.service.IOnlineOrderInfoReplyService;
@@ -32,6 +33,9 @@ import java.util.List;
 @Service
 public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfoReplyMapper, OnlineOrderInfoReplyDo> implements IOnlineOrderInfoReplyService {
 
+
+    @Autowired
+    private OfflineFilePathOnlineConfig filePathOnlineConfig;
     @Autowired
     private OnlineOrderInfoServiceImpl onlineOrderInfoService;
     @Autowired
@@ -64,6 +68,13 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
             for (OnlineOrderInfoReplyImageDo onlineOrderInfoReplyImageDo : listOnlineOrderInfoReplyImageDo) {
                 onlineOrderInfoReplyImageDo.setCreateTime(createTime);
                 onlineOrderInfoReplyImageDo.setReply_id(req.getId());
+                String imageUrl = onlineOrderInfoReplyImageDo.getImageUrl();
+                String[] split = imageUrl.split(filePathOnlineConfig.getBaseUrl());
+                if(split.length>1){
+                    onlineOrderInfoReplyImageDo.setImageUrl(split[1]);
+                }else{
+                    onlineOrderInfoReplyImageDo.setImageUrl(split[0]);
+                }
             }
             onlineOrderInfoReplyImageServiceImpl.saveBatch(listOnlineOrderInfoReplyImageDo);
         }
@@ -72,7 +83,7 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
          * 生成一笔交易记录
          */
         if(req.getStatus()==OrderStatusEnum.TRACKING_STATUS_EXCEPTION.getCode()){
-            OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(currentUser.getId());
+            OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(onlineOrderInfoDo.getUserId());
             String randomCode = onlineUserDo.getRandomCode();
             QueryWrapper<OnlineUserDo> wq_randomCode=new QueryWrapper<>();
             wq_randomCode.eq("random_code",randomCode);
