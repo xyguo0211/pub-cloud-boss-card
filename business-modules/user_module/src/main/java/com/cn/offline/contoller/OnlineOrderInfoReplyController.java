@@ -37,7 +37,7 @@ public class OnlineOrderInfoReplyController {
     @TimingLog
     @RequestMapping(value = "/addOrderInfoReply", method = RequestMethod.POST)
     @ResponseBody
-    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_CARD)
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_ORDER)
     public AjaxResult addOrderInfoReply(@RequestBody OnlineOrderInfoReplyDo req){
         try{
             onlineOrderInfoReplyServiceImpl.addOrderInfoReply(req);

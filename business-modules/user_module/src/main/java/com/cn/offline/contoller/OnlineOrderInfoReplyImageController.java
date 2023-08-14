@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @since 2023-08-03
  */
 @Controller
-@RequestMapping("/onlineOrderInfoReplyImageDo")
+@RequestMapping("/offline/onlineOrderInfoReplyImageDo")
 public class OnlineOrderInfoReplyImageController {
 
 }

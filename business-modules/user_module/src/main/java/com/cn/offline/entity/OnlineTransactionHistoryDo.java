@@ -58,6 +58,9 @@ public class OnlineTransactionHistoryDo extends Model<OnlineTransactionHistoryDo
 
     private String thirdUserName;
 
+    /**
+     * 邀请码返现额度
+     */
     private String cashBackFee;
 
 }

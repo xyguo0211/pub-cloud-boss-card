@@ -22,8 +22,7 @@ public enum OrderStatusEnum {
      */
     DrawalFee_STATUS_INIT(1, "审核中", "DrawalFee_status"),
     DrawalFee_STATUS_FAIL(-1, "异常", "DrawalFee_status"),
-    DrawalFee_STATUS_SUCESS(9, "已完成", "DrawalFee_status"),
-    DrawalFee_STATUS_CANCEL(0, "已取消", "DrawalFee_status");
+    DrawalFee_STATUS_SUCESS(9, "已完成", "DrawalFee_status");
 
 
     private final Integer code;

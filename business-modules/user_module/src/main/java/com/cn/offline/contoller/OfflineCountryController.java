@@ -39,13 +39,12 @@ public class OfflineCountryController extends BaseController {
     @Autowired
     private OfflineFilePathOnlineConfig filePathOnlineConfig;
     /**
-     * 新增角色
      * @return
      */
     @TimingLog
     @RequestMapping(value = "/addCountryDo", method = RequestMethod.POST)
     @ResponseBody
-    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_CARD)
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_COUNTRY)
     public AjaxResult addCountryDo(@RequestBody OfflineCountryDo req){
         try{
             QueryWrapper<OfflineCountryDo> wq=new QueryWrapper<>();
@@ -71,14 +70,14 @@ public class OfflineCountryController extends BaseController {
     }
 
     /**
-     * 角色分页数据
+     * 分页数据
      * @param req
      * @return
      */
     @TimingLog
     @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
     @ResponseBody
-    @Authentication(menu = OfflineAuthMenuKeyConstant.BASE_USER_CENTER)
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_COUNTRY)
     public AjaxResult getPageList(@RequestBody OfflineCountryDo req){
         try{
             List<OfflineCountryDo> pageList = offlineCountryServiceImpl.getPageList(req);
@@ -97,7 +96,7 @@ public class OfflineCountryController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/delete", method = RequestMethod.GET)
     @ResponseBody
-    @Authentication(menu = OfflineAuthMenuKeyConstant.BASE_USER_CENTER)
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_COUNTRY)
     public AjaxResult delete(@RequestParam Integer id){
         try{
             offlineCountryServiceImpl.removeById(id);

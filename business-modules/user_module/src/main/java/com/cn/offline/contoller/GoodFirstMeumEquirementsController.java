@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
  * @since 2023-08-02
  */
 @Controller
-@RequestMapping("/goodFirstMeumEquirementsDo")
+@RequestMapping("/offline/goodFirstMeumEquirementsDo")
 public class GoodFirstMeumEquirementsController {
 
 }

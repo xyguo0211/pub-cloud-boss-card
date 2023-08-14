@@ -1,21 +1,22 @@
 package com.cn.offline.contoller;
 
 
+import com.pub.core.util.controller.BaseController;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.stereotype.Controller;
 
 /**
  * <p>
- * 交易记录 前端控制器
+ * 提现管理 前端控制器
  * </p>
  *
  * @author ganyongheng
- * @since 2023-08-12
+ * @since 2023-08-14
  */
 @Controller
-@RequestMapping("/offline/onlineTransactionHistoryDo")
-public class OnlineTransactionHistoryController {
+@RequestMapping("/onlineWithdrawImageDo")
+public class OnlineWithdrawImageController extends BaseController {
 
 }
 

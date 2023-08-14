@@ -101,6 +101,7 @@ public class OfflineUserController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/changePassword", method = RequestMethod.POST)
     @ResponseBody
+    @Authentication(menu = OfflineAuthMenuKeyConstant.BASE_USER_CENTER)
     public AjaxResult changePassword(@RequestBody JSONObject req){
         try{
             offlineUserServiceImpl.changePassword(req);

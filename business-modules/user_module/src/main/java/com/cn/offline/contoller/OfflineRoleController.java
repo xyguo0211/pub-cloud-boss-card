@@ -61,7 +61,7 @@ public class OfflineRoleController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
     @ResponseBody
-    @Authentication(menu = OfflineAuthMenuKeyConstant.BASE_USER_CENTER)
+    @Authentication(menu = OfflineAuthMenuKeyConstant.BASE_ROLE_CENTER)
     public AjaxResult getPageList(@RequestBody OfflineRoleDo req){
         try{
             List<OfflineRoleDo> pageList = offlineRoleServiceImpl.getPageList(req);

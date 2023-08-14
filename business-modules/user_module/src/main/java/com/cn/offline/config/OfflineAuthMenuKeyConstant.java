@@ -8,7 +8,9 @@ public final class OfflineAuthMenuKeyConstant {
     public final static String BASE_USER_CENTER="/main/user";
     public final static String BASE_ROLE_CENTER="/main/role";
     public final static String SELL_GIFT_CARD="/main/card";
+    public final static String SELL_GIFT_COUNTRY="/main/country";
     public final static String SELL_ORDER="/main/order";
+    public final static String SELL_DRAW="/main/draw";
 
 
 

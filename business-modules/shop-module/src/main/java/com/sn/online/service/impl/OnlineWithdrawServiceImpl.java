@@ -55,7 +55,6 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
             throw new BusinessException("   Withdrawal amount, please do not exceed the balance   ！");
         }
         req.setCreateTime(new Date());
-        req.setBeforeDrawalFee(balance);
         req.setStatus(OnlineConstants.DrawStats.initial);
         req.setUserId(userId);
         save(req);
