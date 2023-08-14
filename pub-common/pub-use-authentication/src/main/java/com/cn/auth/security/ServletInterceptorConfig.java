@@ -2,6 +2,7 @@ package com.cn.auth.security;
 
 import com.cn.auth.config.AuthorityInterceptor;
 import com.cn.auth.config.OnlineAuthorityInterceptor;
+import com.cn.auth.config.SchoolAuthorityInterceptor;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.pub.redis.service.RedisService;
 import com.pub.redis.util.RedisCache;
@@ -20,6 +21,9 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.util.StopWatch;
 import org.springframework.web.client.RestTemplate;
+import org.springframework.web.cors.CorsConfiguration;
+import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
+import org.springframework.web.filter.CorsFilter;
 import org.springframework.web.servlet.config.annotation.EnableWebMvc;
 import org.springframework.web.servlet.config.annotation.InterceptorRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurationSupport;
@@ -28,6 +32,7 @@ import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
 import java.nio.charset.Charset;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 
@@ -52,6 +57,7 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
     /** 不需要拦截地址 */
     public static final String[] excludeUrls_offline = {"/offline/userDo/login", "/userDo/logout", "/offline/userDo/refreshToken" };
     public static final String[] excludeUrls_online = {"/online/userDo/login", "/userDo/logout", "/online/userDo/refreshToken" , "/online/userDo/register","/online/userDo/sendEmail","/online/sysDataDictionaryDo/refreshCache"};
+    public static final String[] excludeUrls_school = {"/online/userDo/login", "/userDo/logout", "/online/userDo/refreshToken" , "/online/userDo/register","/online/userDo/sendEmail","/online/sysDataDictionaryDo/refreshCache"};
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {
@@ -68,12 +74,28 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
         registry.addInterceptor(new OnlineAuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_online)
                 .addPathPatterns("/online/**");
+        /**
+         * 在线的拦截器
+         */
+        registry.addInterceptor(new SchoolAuthorityInterceptor(tokenProvider,redisCache))
+                .excludePathPatterns(excludeUrls_school)
+                .addPathPatterns("/school/**");
 
 
 
     }
 
 
+    @Bean
+    public CorsFilter corsFilter() {
+        UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
+        CorsConfiguration config = new CorsConfiguration();
+        config.setAllowedOrigins(Arrays.asList("*"));
+        config.setAllowedMethods(Arrays.asList("*"));
+        config.setAllowedHeaders(Arrays.asList("*"));
+        source.registerCorsConfiguration("/**", config);
+        return new CorsFilter(source);
+    }
 
 
     @Bean

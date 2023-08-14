@@ -14,6 +14,7 @@
     <modules>
         <module>shop-module</module>
         <module>user_module</module>
+        <module>school</module>
     </modules>
 <dependencies>
     <!-- springboot web -->
