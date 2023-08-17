@@ -1,5 +1,6 @@
 package com.cn.offline.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -66,6 +67,14 @@ public class OfflineUserDo extends Model<OfflineUserDo> {
      * 1 系统人员   2 非系统人员
      */
     private Integer roleId;
+    /**
+     * 1 系统人员   2 非系统人员
+     */
+    @TableField(exist = false)
+    private String roleName;
+
+    @TableField(exist = false)
+    private String isOrder;
 
     /**
      * 客服开始工作时间

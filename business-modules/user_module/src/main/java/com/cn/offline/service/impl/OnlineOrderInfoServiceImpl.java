@@ -4,12 +4,14 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.cn.offline.config.OfflineFilePathOnlineConfig;
 import com.cn.offline.entity.*;
 import com.cn.offline.mapper.OnlineOrderInfoMapper;
 import com.cn.offline.service.IOnlineOrderInfoService;
 
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -25,7 +27,14 @@ import java.util.List;
 @Service
 public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMapper, OnlineOrderInfoDo> implements IOnlineOrderInfoService {
 
+    @Autowired
     private OfflineUserServiceImpl offlineUserService;
+    @Autowired
+    private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
+    @Autowired
+    private GoodSecondCountryServiceImpl goodSecondCountryServiceImpl;
+    @Autowired
+    private OfflineFilePathOnlineConfig offlineFilePathOnlineConfig;
 
     public List<OnlineOrderInfoDo> getPageList(OnlineOrderInfoDo req) {
         User currentUser = UserContext.getCurrentUser();
@@ -48,6 +57,16 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         }
         BaseController.startPage();
         List<OnlineOrderInfoDo> list = list(wq);
+        for (OnlineOrderInfoDo onlineOrderInfoDo : list) {
+            Integer firstId = onlineOrderInfoDo.getFirstId();
+            GoodFirstMeumDo goodFirstMeumDo = goodFirstMeumServiceImpl.getById(firstId);
+            onlineOrderInfoDo.setCardName(goodFirstMeumDo.getCardName());
+            onlineOrderInfoDo.setCardImage(offlineFilePathOnlineConfig.getBaseUrl()+"/"+goodFirstMeumDo.getCardImgeUrl());
+            Integer secondId = onlineOrderInfoDo.getSecondId();
+            GoodSecondCountryDo goodSecondCountryDo = goodSecondCountryServiceImpl.getById(secondId);
+            onlineOrderInfoDo.setCountryName(goodSecondCountryDo.getCountryName());
+            onlineOrderInfoDo.setCountryImage(offlineFilePathOnlineConfig.getBaseUrl()+"/"+ goodSecondCountryDo.getCountryImage());
+        }
         return list;
     }
 }

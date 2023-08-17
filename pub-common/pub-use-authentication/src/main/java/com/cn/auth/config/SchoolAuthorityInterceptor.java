@@ -56,10 +56,7 @@ public class SchoolAuthorityInterceptor extends HandlerInterceptorAdapter {
             //判断handler是不是指定类HandlerMethod
             return true;
         }
-       /* String Inner_token = request.getHeader(Constant.Online.fegin_key);
-        if(StringUtils.hasText(Inner_token)&&Constant.Online.fegin_token.equals(Inner_token)){
-            return true;
-        }*/
+
         String jwt = request.getHeader(TokenProvider.AUTHORIZATION_HEADER_ONLINE);
         if(!StringUtils.hasText(jwt)){
             //未携带token
@@ -67,12 +64,12 @@ public class SchoolAuthorityInterceptor extends HandlerInterceptorAdapter {
             return false;
         }
         //校验jwt是否合法
-        if (!jwt.startsWith("Bearer ")) {
+        if (!jwt.startsWith("BearerSchool")) {
             //格式不对
             responseMessage(response, AjaxResult.error(ResultMessageConstants.B00011.message()));
             return false;
         }
-         String  jwt_check= jwt.substring(7, jwt.length());
+         String  jwt_check= jwt.substring(12, jwt.length());
         JSONObject jsonObject = this.tokenProvider.validateTokenNew(jwt_check);
         String code = jsonObject.getString("code");
         if(!Constant.Online.Jwt.sucess_code.equals(code)){

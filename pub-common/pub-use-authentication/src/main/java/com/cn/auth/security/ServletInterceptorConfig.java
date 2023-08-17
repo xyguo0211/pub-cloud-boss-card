@@ -77,7 +77,7 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
          */
         registry.addInterceptor(new SchoolAuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_school)
-                .addPathPatterns("/school/**");
+                .addPathPatterns("/school/test/**");
 
 
 

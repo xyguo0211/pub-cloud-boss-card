@@ -7,6 +7,7 @@ import com.cn.auth.config.Constant;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.cn.offline.entity.OfflineRoleDo;
 import com.cn.offline.entity.OfflineRoleMenuDo;
 import com.cn.offline.entity.OfflineUserDo;
 import com.cn.offline.entity.OnlineUserDo;
@@ -45,6 +46,8 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
     private RedisCache redisCache;
     @Autowired
     private OfflineRoleMenuServiceImpl offlineRoleMenuServiceImpl;
+    @Autowired
+    private OfflineRoleServiceImpl offlineRoleServiceImpl;
     @Autowired
     private OfflineMenuServiceImpl offlineMenuServiceImpl;
 
@@ -315,6 +318,20 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
         }
         BaseController.startPage();
         List<OfflineUserDo> list = list(wq);
+        for (OfflineUserDo offlineUserDo : list) {
+            Integer roleId1 = offlineUserDo.getRoleId();
+            if(roleId1!=null){
+                OfflineRoleDo byId = offlineRoleServiceImpl.getById(roleId1);
+                offlineUserDo.setRoleName(byId.getName());
+                //0 不可以接单   1可以接单
+                if(byId.getIsOrder()!=null&&byId.getIsOrder()==1){
+                    offlineUserDo.setIsOrder("是");
+                }else{
+                    offlineUserDo.setIsOrder("否");
+                }
+
+            }
+        }
         return list;
     }
 

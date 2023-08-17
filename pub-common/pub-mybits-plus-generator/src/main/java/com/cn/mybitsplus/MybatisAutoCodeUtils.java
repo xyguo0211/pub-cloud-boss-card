@@ -19,7 +19,7 @@ public class MybatisAutoCodeUtils {
 
         //需要生成的表
         String[] tables = new String[]{
-                "user"
+                "trip_product_car_relation"
         };
         //数据库连接url
         //String url = "jdbc:mysql://10.1.1.120:3306/sass_tracking_history?useUnicode=true&characterEncoding=utf8&zeroDateTimeBehavior=convertToNull&serverTimezone=Asia/Shanghai";

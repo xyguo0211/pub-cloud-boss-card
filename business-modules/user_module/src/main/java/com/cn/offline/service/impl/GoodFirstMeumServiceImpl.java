@@ -7,6 +7,7 @@ import com.cn.offline.config.OfflineFilePathOnlineConfig;
 import com.cn.offline.entity.*;
 import com.cn.offline.mapper.GoodFirstMeumMapper;
 import com.cn.offline.service.IGoodFirstMeumService;
+import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -126,7 +127,13 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
         return localFile;
     }
 
-    public void addFirstCard(GoodFirstMeumDo req) {
+    public void addFirstCard(GoodFirstMeumDo req) throws  Exception {
+        QueryWrapper<GoodFirstMeumDo> wq_un=new QueryWrapper<>();
+        wq_un.eq("card_name",req.getCardName());
+        GoodFirstMeumDo one = getOne(wq_un);
+        if(one!=null){
+            throw new BusinessException("卡片名称已配置，请勿重复添加！");
+        }
         Date createTime = new Date();
         req.setCreateTime(createTime);
         req.setUpdateTime(createTime);

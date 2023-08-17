@@ -4,6 +4,7 @@ import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
+import com.cn.school.config.WxPayConfig;
 import com.cn.school.entity.UserDo;
 import com.cn.school.service.impl.UserServiceImpl;
 import com.pub.core.util.controller.BaseController;
@@ -35,16 +36,7 @@ public class WxController extends BaseController {
     @Autowired
     private RedisCache redisCache;
 
-    //回调方法路径
-    @Value("${wx.calbakurl}")
-    private String wxCallback;
 
-
-    @Value("${wx.wxAppId}")
-    private String wxAppId;
-
-    @Value("${wx.wxAppSecret}")
-    private String wxAppSecret;
 
     //微信Scope，固定snsapi_login
     private String wxScope = "snsapi_login";
@@ -54,6 +46,9 @@ public class WxController extends BaseController {
 
     @Autowired
     private UserServiceImpl userServiceImpl;
+
+    @Autowired
+    private com.cn.school.config.WxPayConfig wxPayConfig;
 
     @Resource
     private TokenProvider tokenProvider;
@@ -72,7 +67,7 @@ public class WxController extends BaseController {
 
         //1.通过code获取access_token
         String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code";
-        url = url.replace("APPID", wxAppId).replace("SECRET", wxAppSecret).replace("CODE", code);
+        url = url.replace("APPID", wxPayConfig.getAppid()).replace("SECRET", wxPayConfig.getWxAppSecret()).replace("CODE", code);
         ResponseEntity<String> tokenData = restTemplate.getForEntity(url, String.class);
         String tokenInfoStr = tokenData.getBody();
 

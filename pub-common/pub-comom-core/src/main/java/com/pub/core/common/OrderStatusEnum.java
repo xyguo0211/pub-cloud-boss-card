@@ -10,8 +10,8 @@ import java.util.Objects;
  */
 public enum OrderStatusEnum {
     TRACKING_STATUS_WAITING(0, "初始化", "tracking_status"),
-    TRACKING_STATUS_TRACKED(-1, "异常", "tracking_status"),
-    TRACKING_STATUS_EXCEPTION(1, "已完成", "tracking_status"),
+    TRACKING_STATUS_TRACKED(1, "失败", "tracking_status"),
+    TRACKING_STATUS_EXCEPTION(2, "成功", "tracking_status"),
 
     TR_TYPE_ORDER(1, "订单交易", "TR_status"),
     TR_TYPE_PERSON(2, "邀请人返现", "TR_status"),
@@ -53,7 +53,6 @@ public enum OrderStatusEnum {
     }
 
 
-    /** 获取展示文案 - 跟踪状态 */
     public static String getOrderStatusStr(Integer trackingStatus) {
         String targetColumnName = "tracking_status";
         return getStr(targetColumnName, trackingStatus);

@@ -84,4 +84,17 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
     private OnlineOrderInfoReplyDo onlineOrderInfoReplyDo;
 
     private String cashBackFee;
+
+
+    @TableField(exist = false)
+    private String  cardName;
+
+    @TableField(exist = false)
+    private String  cardImage;
+
+    @TableField(exist = false)
+    private String  countryName;
+
+    @TableField(exist = false)
+    private String  countryImage;
 }

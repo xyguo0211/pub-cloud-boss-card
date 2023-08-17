@@ -77,8 +77,10 @@ public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, G
         removeById(id);
     }
 
-    public List<GoodThirdRateDo> getPageList() {
+    public List<GoodThirdRateDo> getPageList(GoodThirdRateDo goodThirdRateDo) {
         QueryWrapper<GoodThirdRateDo> wq=new QueryWrapper<>();
+        Integer secondId = goodThirdRateDo.getSecondId();
+        wq.eq("second_id",secondId);
         BaseController.startPage();
         List<GoodThirdRateDo> list = list(wq);
         return list;

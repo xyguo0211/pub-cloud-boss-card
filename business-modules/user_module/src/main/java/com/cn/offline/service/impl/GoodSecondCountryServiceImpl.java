@@ -1,5 +1,6 @@
 package com.cn.offline.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.offline.config.OfflineFilePathOnlineConfig;
@@ -9,6 +10,7 @@ import com.cn.offline.entity.GoodThirdRateDo;
 import com.cn.offline.entity.OfflineCountryDo;
 import com.cn.offline.mapper.GoodSecondCountryMapper;
 import com.cn.offline.service.IGoodSecondCountryService;
+import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -36,7 +38,15 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
     @Autowired
     private OfflineFilePathOnlineConfig filePathOnlineConfig;;
 
-    public void addSecondCountry(GoodSecondCountryDo req) {
+    public void addSecondCountry(GoodSecondCountryDo req)throws  Exception {
+
+        QueryWrapper<GoodSecondCountryDo> wq_un=new QueryWrapper<>();
+        wq_un.eq("first_id",req.getFirstId());
+        wq_un.eq("country_id",req.getCountryId());
+        GoodSecondCountryDo one = getOne(wq_un);
+        if(one!=null){
+            throw new BusinessException("已存在国家配置");
+        }
         Integer countryId = req.getCountryId();
         OfflineCountryDo offlineCountryDo = offlineCountryServiceImpl.getById(countryId);
         req.setCountryName(offlineCountryDo.getCountryName());
@@ -62,6 +72,10 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
 
     public List<GoodSecondCountryDo> getPageList(GoodSecondCountryDo req) {
         QueryWrapper<GoodSecondCountryDo> wq=new QueryWrapper<>();
+        Integer firstId = req.getFirstId();
+        if(firstId!=null){
+            wq.eq("first_id", firstId);
+        }
         String name = req.getCountryName();
         if(StringUtils.isNotBlank(name)){
             wq.like("country_name", name);

@@ -108,9 +108,9 @@ public class GoodThirdRateController extends BaseController {
     @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
     @ResponseBody
     @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_GIFT_CARD)
-    public AjaxResult getPageList(){
+    public AjaxResult getPageList(@RequestBody GoodThirdRateDo goodThirdRateDo){
         try{
-            List<GoodThirdRateDo> pageList = goodThirdRateServiceImpl.getPageList();
+            List<GoodThirdRateDo> pageList = goodThirdRateServiceImpl.getPageList(goodThirdRateDo);
             TableDataInfo dataTable = getDataTable(pageList);
             return AjaxResult.success(dataTable);
         }catch (Exception e){

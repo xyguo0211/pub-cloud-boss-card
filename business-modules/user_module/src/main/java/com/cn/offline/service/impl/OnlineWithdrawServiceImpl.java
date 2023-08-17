@@ -59,6 +59,10 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
         if(StringUtils.isNotBlank(endTime)){
             wq.lt("create_time",endTime);
         }
+        Integer status = req.getInteger("status");
+        if(status!=null){
+            wq.eq("status",status);
+        }
         wq.orderByDesc("id");
         BaseController.startPage();
         List<OnlineWithdrawDo> list = list(wq);
