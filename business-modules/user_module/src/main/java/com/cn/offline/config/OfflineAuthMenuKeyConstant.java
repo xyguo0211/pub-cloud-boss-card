@@ -11,6 +11,7 @@ public final class OfflineAuthMenuKeyConstant {
     public final static String SELL_GIFT_COUNTRY="/main/country";
     public final static String SELL_ORDER="/main/order";
     public final static String SELL_DRAW="/main/draw";
+    public final static String BASE_CUSTOM="/main/custom";
 
 
 

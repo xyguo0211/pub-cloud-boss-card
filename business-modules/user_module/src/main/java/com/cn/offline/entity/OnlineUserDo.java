@@ -4,9 +4,12 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.pub.core.common.OfflineStatusEnum;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * <p>
@@ -44,6 +47,19 @@ public class OnlineUserDo extends Model<OnlineUserDo> {
      */
     private Integer isBlack;
 
+    @ApiModelProperty("黑名单")
+    public String isBlackStr() {
+        if (Objects.isNull(isBlack)) {
+            return "";
+        }
+        if(9==isBlack){
+            return "正常";
+        }else{
+            return "黑名单";
+        }
+
+    }
+
     /**
      * 邀请码
      */
@@ -60,6 +76,20 @@ public class OnlineUserDo extends Model<OnlineUserDo> {
      * 1 系统人员   2 非系统人员
      */
     private Integer role;
+
+    @ApiModelProperty("角色文案")
+    public String isRoleStr() {
+        if (Objects.isNull(role)) {
+            return "";
+        }
+        if(1==role){
+            return "系统人员";
+        }else{
+            return "客户";
+        }
+
+    }
+
 
     private String nikeName;
 
