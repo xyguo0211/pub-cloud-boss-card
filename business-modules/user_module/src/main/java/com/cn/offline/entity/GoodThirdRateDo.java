@@ -36,6 +36,18 @@ public class GoodThirdRateDo extends Model<GoodThirdRateDo> {
 
     private Date updateTime;
 
+    /**
+     * 卡片名称
+     */
+    @TableField(exist = false)
+    private String cardName;
+
+    /**
+     * 文案类容
+     */
+    @TableField(exist = false)
+    private String countryName;
+
     private Integer firstId;
 
     private Integer secondId;

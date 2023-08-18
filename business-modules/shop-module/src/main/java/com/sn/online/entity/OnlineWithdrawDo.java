@@ -36,6 +36,8 @@ public class OnlineWithdrawDo extends Model<OnlineWithdrawDo> {
 
     private Integer bankId;
 
+    private String bankName;
+
     /**
      * 提现金额
      */

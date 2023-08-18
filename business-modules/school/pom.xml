@@ -27,6 +27,10 @@
             <artifactId>mybatis-plus-boot-starter</artifactId>
         </dependency>
         <dependency>
+            <groupId>org.example</groupId>
+            <artifactId>pub-common-cloud-redis</artifactId>
+        </dependency>
+        <dependency>
             <groupId>com.baomidou</groupId>
             <artifactId>mybatis-plus-core</artifactId>
             <scope>compile</scope>
@@ -61,6 +65,11 @@
             <artifactId>okhttp</artifactId>
             <version>4.9.2</version>
         </dependency>
+        <dependency>
+            <groupId>com.github.wechatpay-apiv3</groupId>
+            <artifactId>wechatpay-apache-httpclient</artifactId>
+            <version>0.4.9</version>
+        </dependency>
 
     </dependencies>
 
@@ -73,7 +82,7 @@
                 <artifactId>spring-boot-maven-plugin</artifactId>
                 <version>2.3.7.RELEASE</version>
                 <configuration>
-                    <mainClass>com.sn.online.SchoolApplication</mainClass>
+                    <mainClass>com.cn.school.SchoolApplication</mainClass>
                 </configuration>
                 <executions>
                     <execution>

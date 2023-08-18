@@ -4,10 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.offline.config.OfflineFilePathOnlineConfig;
-import com.cn.offline.entity.GoodFirstMeumEquirementsDo;
-import com.cn.offline.entity.GoodSecondCountryDo;
-import com.cn.offline.entity.GoodThirdRateDo;
-import com.cn.offline.entity.OfflineCountryDo;
+import com.cn.offline.entity.*;
 import com.cn.offline.mapper.GoodSecondCountryMapper;
 import com.cn.offline.service.IGoodSecondCountryService;
 import com.pub.core.exception.BusinessException;
@@ -32,6 +29,8 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
 
     @Autowired
     private GoodThirdRateServiceImpl goodThirdRateServiceImpl;
+    @Autowired
+    private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
     @Autowired
     private OfflineCountryServiceImpl offlineCountryServiceImpl;
 
@@ -83,7 +82,12 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
         BaseController.startPage();
         List<GoodSecondCountryDo> list = list(wq);
         for (GoodSecondCountryDo goodSecondCountryDo : list) {
+            GoodFirstMeumDo goodFirstMeumDo = goodFirstMeumServiceImpl.getById(goodSecondCountryDo.getFirstId());
             goodSecondCountryDo.setCountryImage(filePathOnlineConfig.getBaseUrl()+"/"+goodSecondCountryDo.getCountryImage());
+            if(goodFirstMeumDo!=null){
+                goodSecondCountryDo.setCardName(goodFirstMeumDo.getCardName());
+            }
+
         }
         return list;
     }

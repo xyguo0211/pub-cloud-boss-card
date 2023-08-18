@@ -76,7 +76,7 @@ public class TripOrderController extends BaseController {
     public AjaxResult testVx(@RequestParam Integer id){
         try{
             TripOrderDo tripOrderDo = tripOrderService.getById(id);
-            tripOrderService.submitTripOrder(tripOrderDo);
+            tripOrderService.tets();
             return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();

@@ -31,6 +31,11 @@ public class GoodSecondCountryDo extends Model<GoodSecondCountryDo> {
      * 文案类容
      */
     private String countryName;
+    /**
+     * 卡片名称
+     */
+    @TableField(exist = false)
+    private String cardName;
 
     /**
      * 关联的国家id

@@ -3,6 +3,7 @@ package com.cn.offline.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cn.offline.entity.GoodFirstMeumDo;
 import com.cn.offline.entity.GoodSecondCountryDo;
 import com.cn.offline.entity.GoodThirdCardTypeDo;
 import com.cn.offline.entity.GoodThirdRateDo;
@@ -29,6 +30,12 @@ public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, G
 
     @Autowired
     private GoodThirdCardTypeServiceImpl goodThirdCardTypeServiceImpl;
+
+    @Autowired
+    private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
+
+    @Autowired
+    private GoodSecondCountryServiceImpl goodSecondCountryServiceImpl;
 
     public void addThirdRate(GoodThirdRateDo req) {
         Date createTime = new Date();
@@ -83,6 +90,17 @@ public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, G
         wq.eq("second_id",secondId);
         BaseController.startPage();
         List<GoodThirdRateDo> list = list(wq);
+        for (GoodThirdRateDo thirdRateDo : list) {
+            GoodSecondCountryDo goodSecondCountryDo = goodSecondCountryServiceImpl.getById(thirdRateDo.getSecondId());
+            GoodFirstMeumDo goodFirstMeumDo = goodFirstMeumServiceImpl.getById(thirdRateDo.getFirstId());
+            if(goodFirstMeumDo!=null){
+                thirdRateDo.setCardName(goodFirstMeumDo.getCardName());
+            }
+            if(goodSecondCountryDo!=null){
+                thirdRateDo.setCountryName(goodSecondCountryDo.getCountryName());
+            }
+
+        }
         return list;
     }
 }

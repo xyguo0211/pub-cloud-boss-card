@@ -9,6 +9,7 @@ import com.pub.core.common.OnlineConstants;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
+import com.sn.online.entity.OnlineUserBankAccountDo;
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.entity.OnlineWithdrawDo;
 import com.sn.online.mapper.OnlineWithdrawMapper;
@@ -33,6 +34,8 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
 
     @Autowired
     private OnlineUserServiceImpl onlineUserService;
+    @Autowired
+    private OnlineUserBankAccountServiceImpl onlineUserBankAccountServiceImpl;
 
     public void addOnlineWithdraw(OnlineWithdrawDo req) throws Exception{
         /**
@@ -53,6 +56,11 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
         String drawalFee = req.getDrawalFee();
         if(Double.valueOf(balance)<Double.valueOf(drawalFee)){
             throw new BusinessException("   Withdrawal amount, please do not exceed the balance   ！");
+        }
+        Integer bankId = req.getBankId();
+        OnlineUserBankAccountDo onlineUserBankAccountDo = onlineUserBankAccountServiceImpl.getById(bankId);
+        if(onlineUserBankAccountDo!=null){
+            req.setBankName(onlineUserBankAccountDo.getBankName());
         }
         req.setCreateTime(new Date());
         req.setStatus(OnlineConstants.DrawStats.initial);
