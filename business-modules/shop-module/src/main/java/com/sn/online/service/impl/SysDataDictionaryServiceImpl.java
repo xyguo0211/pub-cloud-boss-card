@@ -41,7 +41,7 @@ public class SysDataDictionaryServiceImpl extends ServiceImpl<SysDataDictionaryM
             throw new BusinessException("paramName名称不能为空");
         }
         if(StringUtils.isBlank(key)){
-            return null;
+            throw new BusinessException("key名称不能为空");
         }
 
         Map<String, String> map = this.getSysBaseParam(paramName);

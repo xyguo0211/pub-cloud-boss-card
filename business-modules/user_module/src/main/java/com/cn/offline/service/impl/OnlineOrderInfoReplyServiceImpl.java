@@ -92,19 +92,26 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
             /**
              * 生成两笔交易记录,一笔是返现，一笔是卖卡
              */
+            /**
+             * 卖卡
+             */
             List<OnlineTransactionHistoryDo> list=new ArrayList<>();
             OnlineTransactionHistoryDo entity=new OnlineTransactionHistoryDo();
             entity.setCreateTime(createTime);
             entity.setOrderId(onlineOrderInfoDo.getId());
             entity.setThirdId(onlineOrderInfoDo.getThirdId());
             entity.setTotalAmonunt(onlineOrderInfoDo.getTotalAmonuntFee());
-            entity.setUserId(currentUser.getId());
+            entity.setUserId(onlineUserDo.getId());
             entity.setCashBackFee(onlineOrderInfoDo.getCashBackFee());
             entity.setType(OrderStatusEnum.TR_TYPE_ORDER.getCode());
             entity.setThirdUserId(onlineUserDo_other.getId());
             entity.setThirdUserName(onlineUserDo_other.getName());
             list.add(entity);
 
+
+            /**
+             * 返现
+             */
             OnlineTransactionHistoryDo entity2=new OnlineTransactionHistoryDo();
             entity2.setCreateTime(createTime);
             entity2.setOrderId(onlineOrderInfoDo.getId());

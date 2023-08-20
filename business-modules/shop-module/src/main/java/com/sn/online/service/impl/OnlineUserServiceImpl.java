@@ -170,6 +170,16 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
          */
         redisCache.putCacheWithExpireTime(emailAddress,"1111",1000*60*10);
     }
+    public void sendEmailBank(String emailAddress) {
+        Random random = new Random();
+        int randomNumber = random.nextInt(900000) + 100000;
+      /*  SendGmailUtil.gmailSender(emailAddress);*/
+       /* sendGmail.sendEmai(randomNumber,emailAddress);*/
+        /**
+         * 10分钟过期
+         */
+        redisCache.putCacheWithExpireTime(emailAddress+"_bank","1111",1000*60*10);
+    }
 
     public void changePassword(JSONObject req) throws Exception{
         User currentUser = UserContext.getCurrentUser();

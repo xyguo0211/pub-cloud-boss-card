@@ -32,6 +32,10 @@ public class User extends Model<User> {
      * 登录名
      */
     private String loginName;
+    /**
+     * 昵称
+     */
+    private String nikeName;
 
     /**
      * 手机号

@@ -6,10 +6,14 @@ import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
 import com.pub.core.exception.BusinessException;
+import com.pub.core.util.domain.AjaxResult;
+import com.pub.redis.util.RedisCache;
 import com.sn.online.entity.OnlineUserBankAccountDo;
+import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.mapper.OnlineUserBankAccountMapper;
 import com.sn.online.service.IOnlineUserBankAccountService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.Date;
@@ -25,8 +29,26 @@ import java.util.Date;
 @Service
 public class OnlineUserBankAccountServiceImpl extends ServiceImpl<OnlineUserBankAccountMapper, OnlineUserBankAccountDo> implements IOnlineUserBankAccountService {
 
+    @Autowired
+    private RedisCache redisCache;
+
+    @Autowired
+    private OnlineUserServiceImpl onlineUserServiceImpl;
+
+
     public void addBankAccount(OnlineUserBankAccountDo req) throws Exception{
+        /**
+         * 校验验证码
+         */
+        String emailCode = req.getEmailCode();
         User currentUser = UserContext.getCurrentUser();
+        Integer id = currentUser.getId();
+        OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(id);
+        String emailAddress = onlineUserDo.getName();
+        String stringCache = redisCache.getStringCache(emailAddress + "_bank");
+        if(stringCache==null||!stringCache.equals(emailCode)){
+            throw new BusinessException("Email verification code error !");
+        }
         String bankName = req.getBankName();
         String bankAccountNumber = req.getBankAccountNumber();
         QueryWrapper<OnlineUserBankAccountDo> wq=new QueryWrapper<>();

@@ -66,31 +66,20 @@ public class WxController extends BaseController {
         }
 
         //1.通过code获取access_token
-        String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code";
+        //String url = "https://api.weixin.qq.com/sns/oauth2/access_token?appid=APPID&secret=SECRET&code=CODE&grant_type=authorization_code";
+        String url = "https://api.weixin.qq.com/sns/jscode2session?appid=APPID&secret=SECRET&js_code=CODE&grant_type=authorization_code";
         url = url.replace("APPID", wxPayConfig.getAppid()).replace("SECRET", wxPayConfig.getWxAppSecret()).replace("CODE", code);
         ResponseEntity<String> tokenData = restTemplate.getForEntity(url, String.class);
         String tokenInfoStr = tokenData.getBody();
 
         JSONObject tokenInfoObject = JSONObject.parseObject(tokenInfoStr);
         log.info("tokenInfoObject:{}", tokenInfoObject);
-        if (tokenInfoObject.getString("access_token") == null || "".equals(tokenInfoObject.getString("access_token"))) {
-            log.info("用code获取access_token失败");
-            return  error("用code获取access_token失败！");
+        String openid = tokenInfoObject.getString("openid");
+        if (openid == null || "".equals(tokenInfoObject.getString("openid"))) {
+            log.error("用code获取openid失败");
+            return  error("用code获取openid失败！");
         }
-
-        //2.通过access_token和openid获取用户信息
-        String userInfoUrl = "https://api.weixin.qq.com/sns/userinfo?access_token=ACCESS_TOKEN&openid=OPENID";
-        userInfoUrl = userInfoUrl.replace("ACCESS_TOKEN", tokenInfoObject.getString("access_token")).replace("OPENID", tokenInfoObject.getString("openid"));
-        ResponseEntity<String> userData = restTemplate.getForEntity(userInfoUrl, String.class);
-        String userInfoStr = userData.getBody();
-        JSONObject userInfoObject = JSONObject.parseObject(userInfoStr);
-        log.info("userInfoObject:{}", userInfoStr);
-        String wx_openid = userInfoObject.getString("openid");
-        if (StringUtils.isBlank(wx_openid)) {
-            log.info("获取用户信息失败");
-            return  error("获取微信用户信息失败！");
-        }
-
+        String sesssoin_key = tokenInfoObject.getString("sesssoin_key");
         /**
          * {
          * 	"openid": "oVLC_6lTZxSWkoZA9L1povjQiplA",
@@ -106,8 +95,6 @@ public class WxController extends BaseController {
          * }
          */
 
-        String wx_unionid = userInfoObject.getString("unionid");
-        String wx_nickname = userInfoObject.getString("nickname");
 
         /**
          * 根据openid查询平台用户：
@@ -116,15 +103,14 @@ public class WxController extends BaseController {
          */
         Date date=new Date();
         QueryWrapper<UserDo> wq_user=new QueryWrapper<>();
-        wq_user.eq("open_id",wx_openid);
+        wq_user.eq("openid",openid);
         UserDo userDo = userServiceImpl.getOne(wq_user);
         String token=null;
         if(userDo==null){
            //说明是新用户，需要榜单手机
             userDo=new UserDo();
-            userDo.setOpenid(wx_openid);
-            userDo.setNickName(wx_nickname);
-            userDo.setWxunionid(wx_unionid);
+            userDo.setOpenid(openid);
+            userDo.setWxunionid(sesssoin_key);
             userDo.setIsDelete(1);
             userServiceImpl.save(userDo);
             token = createToken(userDo);
@@ -137,12 +123,9 @@ public class WxController extends BaseController {
                 return success(jsonObject);
             }
             //说明是老用户
-            if(StringUtils.isNotBlank(wx_unionid)){
-                userDo.setWxunionid(wx_unionid);
+            if(StringUtils.isNotBlank(sesssoin_key)){
+                userDo.setWxunionid(sesssoin_key);
             }
-           if(StringUtils.isNotBlank(wx_nickname)){
-               userDo.setNickName(wx_nickname);
-           }
            token = createToken(userDo);
         }
         jsonObject.put("token",token);
@@ -152,7 +135,7 @@ public class WxController extends BaseController {
 
     public String createToken(UserDo userDo){
         User mUser=new User();
-        mUser.setLoginName(userDo.getNickName());
+        /*mUser.setLoginName(userDo.getNickName());*/
         mUser.setId(userDo.getId());
         mUser.setPassword(userDo.getOpenid());
         String jwt ="BearerSchool" +  tokenProvider.createToken(mUser);

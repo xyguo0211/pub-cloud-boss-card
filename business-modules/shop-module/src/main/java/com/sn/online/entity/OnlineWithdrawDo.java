@@ -5,7 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.baomidou.mybatisplus.annotation.TableId;
-import com.pub.core.common.OrderStatusEnum;
+import com.sn.online.config.OnlineOrderStatusEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -64,7 +64,7 @@ public class OnlineWithdrawDo extends Model<OnlineWithdrawDo> {
         if (Objects.isNull(status)) {
             return "";
         }
-        return OrderStatusEnum.getDrawalFeeStatusStr(status);
+        return OnlineOrderStatusEnum.getDrawalFeeStatusStr(status);
     }
 
     /**

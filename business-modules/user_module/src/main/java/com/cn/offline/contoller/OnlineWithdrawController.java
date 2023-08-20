@@ -7,6 +7,7 @@ import com.cn.auth.config.TimingLog;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.cn.offline.config.OfflineAuthMenuKeyConstant;
+import com.cn.offline.entity.OnlineOrderInfoDo;
 import com.cn.offline.entity.OnlineWithdrawDo;
 import com.cn.offline.service.impl.OnlineWithdrawServiceImpl;
 import com.pub.core.util.controller.BaseController;
@@ -14,10 +15,7 @@ import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -70,6 +68,25 @@ public class OnlineWithdrawController extends BaseController {
         try{
             onlineWithdrawServiceImpl.submitDraw(req);
             return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
+    /**
+     * 打开详情页
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getDetail", method = RequestMethod.GET)
+    @ResponseBody
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_DRAW)
+    public AjaxResult getDetail(@RequestParam Integer id){
+        try{
+            OnlineWithdrawDo onlineWithdrawDo = onlineWithdrawServiceImpl.getDetail(id);
+            return AjaxResult.success(onlineWithdrawDo);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

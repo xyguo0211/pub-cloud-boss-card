@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.pub.core.common.OrderStatusEnum;
+import com.sn.online.config.OnlineOrderStatusEnum;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 
@@ -60,7 +61,7 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
         if (Objects.isNull(orderStatus)) {
             return "";
         }
-        return OrderStatusEnum.getOrderStatusStr(orderStatus);
+        return OnlineOrderStatusEnum.getOrderStatusStr(orderStatus);
     }
 
     @TableField(exist = false)

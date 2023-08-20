@@ -11,7 +11,10 @@ import com.pub.core.common.OnlineConstants;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.sn.online.entity.OnlineUserBankAccountDo;
+import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.service.impl.OnlineUserBankAccountServiceImpl;
+import com.sn.online.service.impl.OnlineUserServiceImpl;
+import com.sn.online.service.impl.SysDataDictionaryServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -21,6 +24,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
+import java.util.Map;
 
 /**
  * <p>
@@ -36,6 +40,9 @@ public class OnlineUserBankAccountController extends BaseController {
 
     @Autowired
     private OnlineUserBankAccountServiceImpl onlineUserBankAccountService;
+    @Autowired
+    private OnlineUserServiceImpl onlineUserServiceImpl;
+
     /**
      * 添加银行卡
      * @return
@@ -50,6 +57,29 @@ public class OnlineUserBankAccountController extends BaseController {
                 return AjaxResult.error("Please log in !");
             }
             onlineUserBankAccountService.addBankAccount(req);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+    /**
+     * 添加银行卡
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/sendBankEmail", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult sendBankEmail(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            if(currentUser==null){
+                return AjaxResult.error("Please log in !");
+            }
+            Integer id = currentUser.getId();
+            OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(id);
+            String emailAddress = onlineUserDo.getName();
+            onlineUserServiceImpl.sendEmailBank(emailAddress);
             return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();
@@ -79,6 +109,7 @@ public class OnlineUserBankAccountController extends BaseController {
             return AjaxResult.error(e.getMessage());
         }
     }
+
 
 }
 

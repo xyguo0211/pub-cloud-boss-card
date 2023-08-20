@@ -3,9 +3,7 @@ package com.cn.offline.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cn.offline.entity.OnlineOrderInfoDo;
-import com.cn.offline.entity.OnlineUserDo;
-import com.cn.offline.entity.OnlineWithdrawDo;
+import com.cn.offline.entity.*;
 import com.cn.offline.mapper.OnlineUserMapper;
 import com.cn.offline.service.IOnlineUserService;
 
@@ -36,6 +34,11 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
     @Autowired
     private OnlineOrderInfoServiceImpl onlineOrderInfoServiceImpl;
 
+    @Autowired
+    private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
+    @Autowired
+    private GoodSecondCountryServiceImpl goodSecondCountryServiceImpl;
+
     public List<OnlineUserDo> getPageList(OnlineUserDo onlineUserDo) {
         BaseController.startPage();
         QueryWrapper<OnlineUserDo> wq=new QueryWrapper<>();
@@ -55,6 +58,16 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
             wq.eq("role",role);
         }
         List<OnlineUserDo> list = list(wq);
+        for (OnlineUserDo userDo : list) {
+            String randomCode = userDo.getRandomCode();
+            QueryWrapper<OnlineUserDo> wq_one=new QueryWrapper<>();
+            wq_one.eq("my_invitation_code",randomCode);
+            OnlineUserDo db = getOne(wq_one);
+            if(db!=null){
+                userDo.setRandomCodeUse(db.getNikeName());
+            }
+
+        }
         return list;
     }
 
@@ -67,6 +80,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         QueryWrapper<OnlineWithdrawDo> wq=new QueryWrapper<>();
         wq.eq("user_id",userId);
         wq.orderByDesc("create_time");
+        BaseController.startPage();
         List<OnlineWithdrawDo> list = onlineWithdrawServiceImpl.list(wq);
         return list;
     }
@@ -75,7 +89,14 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         QueryWrapper<OnlineOrderInfoDo> wq=new QueryWrapper<>();
         wq.eq("user_id",userId);
         wq.orderByDesc("create_time");
+        BaseController.startPage();
         List<OnlineOrderInfoDo> list = onlineOrderInfoServiceImpl.list(wq);
+        for (OnlineOrderInfoDo onlineOrderInfoDo : list) {
+            GoodFirstMeumDo goodFirstMeumDo = goodFirstMeumServiceImpl.getById(onlineOrderInfoDo.getFirstId());
+            onlineOrderInfoDo.setCardName(goodFirstMeumDo.getCardName());
+            GoodSecondCountryDo goodSecondCountryDo = goodSecondCountryServiceImpl.getById(onlineOrderInfoDo.getSecondId());
+            onlineOrderInfoDo.setCountryName(goodSecondCountryDo.getCountryName());
+        }
         return list;
     }
 }

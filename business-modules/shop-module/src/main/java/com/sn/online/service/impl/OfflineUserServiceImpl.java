@@ -61,8 +61,8 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
             QueryWrapper<OfflineUserDo> wq_user=new QueryWrapper<>();
             wq_user.eq("is_black",9);
             wq_user.in("role_id",listId);
-            wq_user.ge("start_time",new Date());
-            wq_user.lt("end_time",new Date());
+            wq_user.lt("start_time",new Date());
+            wq_user.ge("end_time",new Date());
             List<OfflineUserDo> listOfflineUserDo = list(wq_user);
             if(listOfflineUserDo!=null&&listOfflineUserDo.size()>0){
                 //说明此时有客服在线

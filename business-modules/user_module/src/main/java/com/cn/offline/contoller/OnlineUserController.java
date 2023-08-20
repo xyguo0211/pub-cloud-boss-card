@@ -36,7 +36,7 @@ import java.util.List;
  * @since 2023-07-31
  */
 @Controller
-@RequestMapping("/offline/userDo")
+@RequestMapping("/offline/onlineUserDo")
 public class OnlineUserController extends BaseController {
 
     @Autowired
@@ -87,10 +87,11 @@ public class OnlineUserController extends BaseController {
     @RequestMapping(value = "/getDraw", method = RequestMethod.POST)
     @ResponseBody
     @Authentication(menu = OfflineAuthMenuKeyConstant.BASE_CUSTOM)
-    public AjaxResult getDraw(@RequestBody Integer userId){
+    public AjaxResult getDraw(@RequestParam Integer userId){
         try{
-            List<OnlineWithdrawDo> draw = onlineUserServiceImpl.getDraw(userId);
-            return AjaxResult.success(draw);
+            List<OnlineWithdrawDo> pageList = onlineUserServiceImpl.getDraw(userId);
+            TableDataInfo dataTable = getDataTable(pageList);
+            return AjaxResult.success(dataTable);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());
@@ -105,10 +106,11 @@ public class OnlineUserController extends BaseController {
     @RequestMapping(value = "/getOrder", method = RequestMethod.POST)
     @ResponseBody
     @Authentication(menu = OfflineAuthMenuKeyConstant.BASE_CUSTOM)
-    public AjaxResult getOrder(@RequestBody Integer userId){
+    public AjaxResult getOrder(@RequestParam Integer userId){
         try{
             List<OnlineOrderInfoDo> order = onlineUserServiceImpl.getOrder(userId);
-            return AjaxResult.success(order);
+            TableDataInfo dataTable = getDataTable(order);
+            return AjaxResult.success(dataTable);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

@@ -276,7 +276,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         rootNode.putObject("amount")
                 .put("total", 1);
         rootNode.putObject("payer")
-                .put("openid", "wx81e195d01798b996");
+                .put("openid", "oH-Ut5XAibVwhZfLjMhpAcxpWJ0I");
 
         objectMapper.writeValue(bos, rootNode);
 

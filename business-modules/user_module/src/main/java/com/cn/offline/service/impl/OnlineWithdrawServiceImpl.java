@@ -1,6 +1,7 @@
 package com.cn.offline.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.auth.entity.User;
@@ -120,5 +121,19 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
             }
             onlineWithdrawImageServiceImpl.saveBatch(listOnlineWithdrawImageDo);
         }
+    }
+
+    public OnlineWithdrawDo getDetail(Integer id) {
+        OnlineWithdrawDo onlineWithdrawDo = getById(id);
+        QueryWrapper<OnlineWithdrawImageDo> wq=new QueryWrapper<>();
+        wq.eq("parent_id",id);
+        List<OnlineWithdrawImageDo> list = onlineWithdrawImageServiceImpl.list(wq);
+        if(list!=null){
+            for (OnlineWithdrawImageDo onlineWithdrawImageDo : list) {
+                onlineWithdrawImageDo.setImageUrl(filePathOnlineConfig.getBaseUrl()+"/"+onlineWithdrawImageDo.getImageUrl());
+            }
+        }
+        onlineWithdrawDo.setListOnlineWithdrawImageDo(list);
+        return onlineWithdrawDo;
     }
 }

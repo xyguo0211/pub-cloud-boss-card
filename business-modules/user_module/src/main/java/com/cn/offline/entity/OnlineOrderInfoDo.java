@@ -69,7 +69,6 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
 
     private String completeUserName;
 
-    @ApiModelProperty("跟踪状态文本")
     public String getOrderStatusStr() {
         if (Objects.isNull(orderStatus)) {
             return "";

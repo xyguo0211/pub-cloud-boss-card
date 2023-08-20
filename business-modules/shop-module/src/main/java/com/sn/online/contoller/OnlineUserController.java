@@ -14,6 +14,7 @@ import com.pub.redis.util.RedisCache;
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.entity.dto.OnlineUserRegisterDto;
 import com.sn.online.service.impl.OnlineUserServiceImpl;
+import com.sn.online.service.impl.SysDataDictionaryServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.validation.BindingResult;
@@ -41,6 +42,8 @@ public class OnlineUserController extends BaseController {
 
     @Autowired
     private RedisCache redisCache;
+    @Autowired
+    private SysDataDictionaryServiceImpl sysDataDictionaryServiceImpl;
 
     @TimingLog
     @RequestMapping(value = "/login", method = RequestMethod.POST)
@@ -162,6 +165,60 @@ public class OnlineUserController extends BaseController {
         try{
             String rtn_aes = AESUtil.encryptStandingBook(JSONObject.toJSONString(req));
             return AjaxResult.success(rtn_aes,"操作成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    @TimingLog
+    @RequestMapping(value = "/getCode", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getCode(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            if(currentUser==null){
+                return AjaxResult.error("Please log in !");
+            }
+            OnlineUserDo byId = onlineUserServiceImpl.getById(currentUser.getId());
+            return AjaxResult.success(byId.getMyInvitationCode(),"操作成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    @TimingLog
+    @RequestMapping(value = "/shareCode", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult shareCode(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            if(currentUser==null){
+                return AjaxResult.error("Please log in !");
+            }
+            OnlineUserDo byId = onlineUserServiceImpl.getById(currentUser.getId());
+            String sysBaseParam = sysDataDictionaryServiceImpl.getSysBaseParam("shareCode", "shareCode");
+            sysBaseParam=sysBaseParam.replace("##",byId.getMyInvitationCode());
+            return AjaxResult.success(sysBaseParam,"操作成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    @TimingLog
+    @RequestMapping(value = "/getBalance", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getBalance(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            if(currentUser==null){
+                return AjaxResult.error("Please log in !");
+            }
+            OnlineUserDo byId = onlineUserServiceImpl.getById(currentUser.getId());
+            String balance = byId.getBalance();
+            return AjaxResult.success(balance,"操作成功");
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

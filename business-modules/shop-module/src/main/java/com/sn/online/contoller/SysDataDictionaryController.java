@@ -2,8 +2,10 @@ package com.sn.online.contoller;
 
 
 import com.alibaba.fastjson.JSONObject;
+import com.cn.auth.config.TimingLog;
 import com.pub.core.util.domain.AjaxResult;
 import com.sn.online.service.impl.SysDataDictionaryServiceImpl;
+import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestMapping;
 
@@ -54,6 +56,30 @@ public class SysDataDictionaryController {
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error();
+        }
+    }
+    /**
+     * 添加银行卡
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/bankCheckBox", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult bankCheckBox(){
+        try{
+
+            Map<String, String> bankList = sysDataDictionaryServiceImpl.getSysBaseParam("bankList");
+            List< Map<String, String>> listRtn=new ArrayList<>();
+            for (String s : bankList.keySet()) {
+                Map<String, String> mp_one=new HashedMap();
+                mp_one.put("lable",s);
+                mp_one.put("value",s);
+                listRtn.add(mp_one);
+            }
+            return AjaxResult.success(listRtn);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
         }
     }
 }

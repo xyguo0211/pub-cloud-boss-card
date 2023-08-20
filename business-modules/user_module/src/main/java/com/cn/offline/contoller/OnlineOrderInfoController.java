@@ -33,7 +33,7 @@ public class OnlineOrderInfoController extends BaseController {
     private OnlineOrderInfoServiceImpl onlineOrderInfoService;
 
     /**
-     * 客服获取订单分页数据
+     * 获取订单分页数据
      * @param req
      * @return
      */
@@ -46,6 +46,24 @@ public class OnlineOrderInfoController extends BaseController {
             List<OnlineOrderInfoDo> pageList = onlineOrderInfoService.getPageList(req);
             TableDataInfo dataTable = getDataTable(pageList);
             return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 打开详情页
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getDetail", method = RequestMethod.GET)
+    @ResponseBody
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_ORDER)
+    public AjaxResult getDetail(@RequestParam Integer id){
+        try{
+            OnlineOrderInfoDo onlineOrderInfoDo = onlineOrderInfoService.getDetail(id);
+            return AjaxResult.success(onlineOrderInfoDo);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

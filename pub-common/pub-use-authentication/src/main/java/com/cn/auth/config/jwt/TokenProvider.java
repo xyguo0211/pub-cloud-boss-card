@@ -3,6 +3,7 @@ package com.cn.auth.config.jwt;
 import com.alibaba.fastjson.JSONObject;
 import com.cn.auth.config.Constant;
 import com.cn.auth.entity.User;
+import com.pub.core.utils.DateUtils;
 import io.jsonwebtoken.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -47,12 +48,13 @@ public class TokenProvider {
                 .compact();
     }
 
+
     public String createTokenNewONline(User user) {
         long now = (new Date()).getTime();
         /**
-         * 五分钟
+         * 1分钟
          */
-        Date validity = new Date(now + 1000 * 200 *60);
+        Date validity = new Date(now + 1000  *60);
 
 
         return Jwts.builder()

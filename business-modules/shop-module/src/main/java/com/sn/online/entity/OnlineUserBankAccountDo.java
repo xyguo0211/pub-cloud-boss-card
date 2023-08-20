@@ -1,5 +1,6 @@
 package com.sn.online.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -59,5 +60,9 @@ public class OnlineUserBankAccountDo extends Model<OnlineUserBankAccountDo> {
      */
     private Integer deleteStatus;
 
-
+    /**
+     * 邮箱验证码
+     */
+    @TableField(exist = false)
+    private String emailCode;
 }

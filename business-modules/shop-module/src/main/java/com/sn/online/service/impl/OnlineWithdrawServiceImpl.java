@@ -65,6 +65,7 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
         req.setCreateTime(new Date());
         req.setStatus(OnlineConstants.DrawStats.initial);
         req.setUserId(userId);
+        req.setUserName(byId.getNikeName());
         save(req);
     }
 

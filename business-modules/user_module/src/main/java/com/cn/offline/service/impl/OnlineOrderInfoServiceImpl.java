@@ -1,5 +1,6 @@
 package com.cn.offline.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.auth.entity.User;
@@ -35,6 +36,12 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
     private GoodSecondCountryServiceImpl goodSecondCountryServiceImpl;
     @Autowired
     private OfflineFilePathOnlineConfig offlineFilePathOnlineConfig;
+    @Autowired
+    private OnlineOrderInfoImageServiceImpl onlineOrderInfoImageServiceImpl;
+    @Autowired
+    private OnlineOrderInfoReplyServiceImpl onlineOrderInfoReplyServiceImpl;
+    @Autowired
+    private OnlineOrderInfoReplyImageServiceImpl onlineOrderInfoReplyImageServiceImpl;
 
     public List<OnlineOrderInfoDo> getPageList(OnlineOrderInfoDo req) {
         User currentUser = UserContext.getCurrentUser();
@@ -55,6 +62,7 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         if(StringUtils.isNotBlank(userName)){
             wq.eq("user_name", userName);
         }
+        wq.orderByDesc("id");
         BaseController.startPage();
         List<OnlineOrderInfoDo> list = list(wq);
         for (OnlineOrderInfoDo onlineOrderInfoDo : list) {
@@ -68,5 +76,31 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
             onlineOrderInfoDo.setCountryImage(offlineFilePathOnlineConfig.getBaseUrl()+"/"+ goodSecondCountryDo.getCountryImage());
         }
         return list;
+    }
+
+    public OnlineOrderInfoDo getDetail(Integer id) {
+        OnlineOrderInfoDo onlineOrderInfoDo = getById(id);
+        QueryWrapper<OnlineOrderInfoImageDo> wq=new QueryWrapper<>();
+        wq.eq("order_id",onlineOrderInfoDo.getId());
+        List<OnlineOrderInfoImageDo> listOnlineOrderInfoImageDo = onlineOrderInfoImageServiceImpl.list(wq);
+        for (OnlineOrderInfoImageDo onlineOrderInfoImageDo : listOnlineOrderInfoImageDo) {
+            onlineOrderInfoImageDo.setImageUrl(offlineFilePathOnlineConfig.getBaseUrl()+"/"+onlineOrderInfoImageDo.getImageUrl());
+        }
+        onlineOrderInfoDo.setListOrderInfoImage(listOnlineOrderInfoImageDo);
+        QueryWrapper<OnlineOrderInfoReplyDo> wq_reply=new QueryWrapper<>();
+        wq_reply.eq("order_id",onlineOrderInfoDo.getId());
+        OnlineOrderInfoReplyDo onlineOrderInfoReplyDo = onlineOrderInfoReplyServiceImpl.getOne(wq_reply);
+        if(onlineOrderInfoReplyDo!=null){
+            Integer id_reply = onlineOrderInfoReplyDo.getId();
+            QueryWrapper<OnlineOrderInfoReplyImageDo> wq_image=new QueryWrapper<>();
+            wq_image.eq("reply_id",id_reply);
+            List<OnlineOrderInfoReplyImageDo> listOnlineOrderInfoReplyImageDo = onlineOrderInfoReplyImageServiceImpl.list(wq_image);
+            for (OnlineOrderInfoReplyImageDo onlineOrderInfoReplyImageDo : listOnlineOrderInfoReplyImageDo) {
+                onlineOrderInfoReplyImageDo.setImageUrl(offlineFilePathOnlineConfig.getBaseUrl()+"/"+onlineOrderInfoReplyImageDo.getImageUrl());
+            }
+            onlineOrderInfoReplyDo.setListOnlineOrderInfoReplyImageDo(listOnlineOrderInfoReplyImageDo);
+        }
+        onlineOrderInfoDo.setOnlineOrderInfoReplyDo(onlineOrderInfoReplyDo);
+        return onlineOrderInfoDo;
     }
 }

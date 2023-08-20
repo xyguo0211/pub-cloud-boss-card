@@ -122,6 +122,7 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
         mUser.setId(id);
         mUser.setLoginName(one_db_name.getName());
         mUser.setUserType(one_db_name.getRoleId());
+        mUser.setNikeName(one_db_name.getNikeName());
         Date startTime = one_db_name.getStartTime();
         if(startTime!=null){
             mUser.setStartDate(startTime);
@@ -197,6 +198,7 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
         mUserNew.setId(id);
         mUserNew.setLoginName(offlineUserDo.getName());
         mUserNew.setUserType(offlineUserDo.getRoleId());
+        mUserNew.setNikeName(offlineUserDo.getNikeName());
         Date startTime = offlineUserDo.getStartTime();
         if(startTime!=null){
             mUserNew.setStartDate(startTime);
