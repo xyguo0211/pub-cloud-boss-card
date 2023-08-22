@@ -9,10 +9,13 @@ import com.cn.auth.util.UserContext;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
+import com.sn.online.config.Decrypt;
+import com.sn.online.config.Encrypt;
 import com.sn.online.entity.OnlineOrderInfoDo;
 import com.sn.online.entity.OnlineUserBankAccountDo;
 import com.sn.online.entity.OnlineWithdrawDo;
 import com.sn.online.service.impl.OnlineWithdrawServiceImpl;
+import com.sn.online.utils.AESUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -60,6 +63,16 @@ public class OnlineWithdrawController extends BaseController {
      * @param req
      * @return
      */
+    /**
+     * 请求参数加密
+     * @param req
+     * @return
+     */
+    @Decrypt
+    /**
+     * 请求参数解密
+     */
+    @Encrypt
     @TimingLog
     @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
     @ResponseBody
@@ -95,5 +108,23 @@ public class OnlineWithdrawController extends BaseController {
         }
 
     }
+    /**
+     * 打开详情页
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/testAES", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult testAES(@RequestBody JSONObject body){
+        try{
+            String encrypt = AESUtils.encrypt(JSONObject.toJSONString(body));
+            return AjaxResult.success(encrypt,"成功");
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
 }
 
