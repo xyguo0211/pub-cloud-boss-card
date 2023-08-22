@@ -52,9 +52,9 @@ public class TokenProvider {
     public String createTokenNewONline(User user) {
         long now = (new Date()).getTime();
         /**
-         * 1分钟
+         * 10分钟
          */
-        Date validity = new Date(now + 1000  *60);
+        Date validity = new Date(now + 1000  *10*60);
 
 
         return Jwts.builder()

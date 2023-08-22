@@ -12,7 +12,7 @@ public enum OnlineOrderStatusEnum {
     TRACKING_STATUS_EXCEPTION(2, "success", "tracking_status"),
 
     TR_TYPE_ORDER(1, "Order transaction", "TR_status"),
-    TR_TYPE_PERSON(2, "Inviter cash back", "TR_status"),
+    TR_TYPE_PERSON(2, "Invitation code cashback", "TR_status"),
     TR_TYPE_RECOD(3, "Withdrawal", "TR_status"),
 
     /**

@@ -2,6 +2,7 @@ package com.sn.online.contoller;
 
 
 import com.alibaba.fastjson.JSONObject;
+import com.cn.auth.config.Authentication;
 import com.cn.auth.config.TimingLog;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
@@ -13,12 +14,9 @@ import com.sn.online.entity.OnlineUserBankAccountDo;
 import com.sn.online.entity.OnlineWithdrawDo;
 import com.sn.online.service.impl.OnlineWithdrawServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
@@ -74,6 +72,23 @@ public class OnlineWithdrawController extends BaseController {
             List<OnlineWithdrawDo> pageList = onlineWithdrawServiceImpl.getPageList(req);
             TableDataInfo dataTable = getDataTable(pageList);
             return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 打开详情页
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getDetail", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getDetail(@RequestParam Integer id){
+        try{
+            OnlineWithdrawDo onlineWithdrawDo = onlineWithdrawServiceImpl.getDetail(id);
+            return AjaxResult.success(onlineWithdrawDo);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.pub.core.common.OrderStatusEnum;
+import com.sn.online.config.OnlineOrderStatusEnum;
 import lombok.Data;
 
 import java.time.LocalDateTime;
@@ -38,7 +39,7 @@ public class OnlineTransactionHistoryDo extends Model<OnlineTransactionHistoryDo
         if (Objects.isNull(type)) {
             return "";
         }
-        return OrderStatusEnum.getTransactionTypeStr(type);
+        return OnlineOrderStatusEnum.getTransactionTypeStr(type);
     }
 
     private String totalAmonunt;
@@ -67,4 +68,6 @@ public class OnlineTransactionHistoryDo extends Model<OnlineTransactionHistoryDo
     private String thirdUserName;
 
     private String cashBackFee;
+
+    private Integer withdrawId;
 }

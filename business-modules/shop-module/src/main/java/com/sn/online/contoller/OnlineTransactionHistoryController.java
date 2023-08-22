@@ -10,6 +10,7 @@ import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import com.sn.online.entity.OnlineOrderInfoDo;
 import com.sn.online.entity.OnlineTransactionHistoryDo;
+import com.sn.online.entity.dto.OnlineTransactionHistoryDto;
 import com.sn.online.service.impl.OnlineTransactionHistoryServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -45,7 +46,7 @@ public class OnlineTransactionHistoryController extends BaseController {
     @ResponseBody
     public AjaxResult getPageList(@RequestBody JSONObject req){
         try{
-            List<OnlineTransactionHistoryDo> pageList = onlineTransactionHistoryServiceImpl.getPageList(req);
+            List<OnlineTransactionHistoryDto> pageList = onlineTransactionHistoryServiceImpl.getPageList(req);
             TableDataInfo dataTable = getDataTable(pageList);
             return AjaxResult.success(dataTable);
         }catch (Exception e){

@@ -9,9 +9,11 @@ import com.pub.core.common.OnlineConstants;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
+import com.sn.online.config.FilePathOnlineConfig;
 import com.sn.online.entity.OnlineUserBankAccountDo;
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.entity.OnlineWithdrawDo;
+import com.sn.online.entity.OnlineWithdrawImageDo;
 import com.sn.online.mapper.OnlineWithdrawMapper;
 import com.sn.online.service.IOnlineWithdrawService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -37,6 +39,13 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
     @Autowired
     private OnlineUserBankAccountServiceImpl onlineUserBankAccountServiceImpl;
 
+
+    @Autowired
+    private OnlineWithdrawImageServiceImpl onlineWithdrawImageServiceImpl;
+
+    @Autowired
+    private FilePathOnlineConfig filePathOnlineConfig;
+
     public void addOnlineWithdraw(OnlineWithdrawDo req) throws Exception{
         /**
          * 只允许有一次正在提交的记录
@@ -61,6 +70,8 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
         OnlineUserBankAccountDo onlineUserBankAccountDo = onlineUserBankAccountServiceImpl.getById(bankId);
         if(onlineUserBankAccountDo!=null){
             req.setBankName(onlineUserBankAccountDo.getBankName());
+            req.setBankAccountName(onlineUserBankAccountDo.getBankAccountName());
+            req.setBankAccountNumber(onlineUserBankAccountDo.getBankAccountNumber());
         }
         req.setCreateTime(new Date());
         req.setStatus(OnlineConstants.DrawStats.initial);
@@ -85,5 +96,19 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
         BaseController.startPage();
         List<OnlineWithdrawDo> list = list(wq);
         return list;
+    }
+
+    public OnlineWithdrawDo getDetail(Integer id) {
+        OnlineWithdrawDo onlineWithdrawDo = getById(id);
+        QueryWrapper<OnlineWithdrawImageDo> wq=new QueryWrapper<>();
+        wq.eq("parent_id",id);
+        List<OnlineWithdrawImageDo> list = onlineWithdrawImageServiceImpl.list(wq);
+        if(list!=null){
+            for (OnlineWithdrawImageDo onlineWithdrawImageDo : list) {
+                onlineWithdrawImageDo.setImageUrl(filePathOnlineConfig.getBaseUrl()+"/"+onlineWithdrawImageDo.getImageUrl());
+            }
+        }
+        onlineWithdrawDo.setListOnlineWithdrawImageDo(list);
+        return onlineWithdrawDo;
     }
 }

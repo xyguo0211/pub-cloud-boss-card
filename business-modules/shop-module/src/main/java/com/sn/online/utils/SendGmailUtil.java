@@ -7,6 +7,8 @@ import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
 import java.util.Date;
 import java.util.Properties;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 
 public class SendGmailUtil {
     /*
@@ -32,18 +34,23 @@ public class SendGmailUtil {
         props.put("mail.smtp.port", "587");
     }
 
-    /*
-     * 通过gmail邮箱发送邮件
+    /**
+     *
+     * @param username  发送者账号
+     * @param password  发送者密码，不是邮箱密码
+     * @param email   接受者邮箱
+     * @param subject  主题
+     * @param text  正文
      */
-    public static void gmailSender(String email) {
+    public static void gmailSender(String username,String password, String email, String subject, String text) {
 
         // Get a Properties object
         Properties props = new Properties();
         //选择ssl方式
         gmailssl(props);
 
-        final String username = "smtp.gmail.com";//gmail邮箱
-        final String password = "8vTmzh96nE";//密码
+       /* final String username = "GloriazMcCaben24@gmail.com";//gmail邮箱
+        final String password = "hunnntygbcshynvr";//密码*/
         Session session = Session.getDefaultInstance(props,
                 new Authenticator() {
                     protected javax.mail.PasswordAuthentication getPasswordAuthentication() {
@@ -52,15 +59,13 @@ public class SendGmailUtil {
                 });
         // -- Create a new message --
         Message msg = new MimeMessage(session);
-
-
         // -- Set the FROM and TO fields --
         try {
             msg.setFrom(new InternetAddress(username));
             msg.setRecipients(Message.RecipientType.TO,
                     InternetAddress.parse(email));
-            msg.setSubject("");
-            msg.setText("");
+            msg.setSubject(subject);
+            msg.setText(text);
             msg.setSentDate(new Date());
             Transport.send(msg);
         } catch (AddressException e) {
@@ -68,9 +73,8 @@ public class SendGmailUtil {
         } catch (Exception e) {
             e.printStackTrace();
         }
-
-
-        System.out.println("Message sent.");
     }
+
+
 
 }

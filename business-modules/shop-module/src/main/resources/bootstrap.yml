@@ -8,16 +8,6 @@
 #      druid-dev
 
 spring:
-  mail:
-    host: smtp.gmail.com
-    password: 8vTmzh96nE
-    port: 465
-    properties:
-        smtp:
-          socketFactory:
-            class: javax.net.ssl.SSLSocketFactory
-            port: 465
-    username: GloriazMcCaben24@gmail.com
   application:
     name: online-card-service
   cloud:

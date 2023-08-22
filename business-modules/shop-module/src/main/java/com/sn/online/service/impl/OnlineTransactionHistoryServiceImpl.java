@@ -6,13 +6,19 @@ import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
+import com.sn.online.config.OnlineOrderStatusEnum;
 import com.sn.online.entity.GoodFirstMeumDo;
+import com.sn.online.entity.OnlineOrderInfoDo;
 import com.sn.online.entity.OnlineTransactionHistoryDo;
+import com.sn.online.entity.OnlineWithdrawDo;
+import com.sn.online.entity.dto.OnlineTransactionHistoryDto;
 import com.sn.online.mapper.OnlineTransactionHistoryMapper;
 import com.sn.online.service.IOnlineTransactionHistoryService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -26,7 +32,14 @@ import java.util.List;
 @Service
 public class OnlineTransactionHistoryServiceImpl extends ServiceImpl<OnlineTransactionHistoryMapper, OnlineTransactionHistoryDo> implements IOnlineTransactionHistoryService {
 
-    public List<OnlineTransactionHistoryDo> getPageList(JSONObject req) {
+    @Autowired
+    private OnlineOrderInfoServiceImpl onlineOrderInfoServiceImpl;
+    @Autowired
+    private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
+    @Autowired
+    private OnlineWithdrawServiceImpl onlineWithdrawServiceImpl;
+
+    public List<OnlineTransactionHistoryDto> getPageList(JSONObject req) {
         User currentUser = UserContext.getCurrentUser();
         QueryWrapper<OnlineTransactionHistoryDo> wq=new QueryWrapper<>();
         String startTime = req.getString("startTime");
@@ -38,8 +51,42 @@ public class OnlineTransactionHistoryServiceImpl extends ServiceImpl<OnlineTrans
         if(StringUtils.isNotBlank(endTime)){
             wq.lt("create_time",endTime);
         }
+        wq.orderByDesc("id");
         BaseController.startPage();
         List<OnlineTransactionHistoryDo> list = list(wq);
-        return list;
+        List<OnlineTransactionHistoryDto> rtn=new ArrayList<>();
+        for (OnlineTransactionHistoryDo onlineTransactionHistoryDo : list) {
+            OnlineTransactionHistoryDto onlineTransactionHistoryDto=new OnlineTransactionHistoryDto();
+            onlineTransactionHistoryDto.setId(onlineTransactionHistoryDo.getId());
+            Integer orderId = onlineTransactionHistoryDo.getOrderId();
+            if(orderId!=null){
+                OnlineOrderInfoDo onlineOrderInfoDo = onlineOrderInfoServiceImpl.getById(orderId);
+                if(onlineOrderInfoDo!=null){
+                    Integer firstId = onlineOrderInfoDo.getFirstId();
+                    GoodFirstMeumDo goodFirstMeumDo = goodFirstMeumServiceImpl.getById(firstId);
+                    onlineTransactionHistoryDto.setCardName(goodFirstMeumDo.getCardName());
+                }
+
+            }
+
+            onlineTransactionHistoryDto.setThirdUserName(onlineTransactionHistoryDo.getThirdUserName());
+            Integer type = onlineTransactionHistoryDo.getType();
+            if(OnlineOrderStatusEnum.TR_TYPE_ORDER.getCode()==type){
+                onlineTransactionHistoryDto.setTotalAmonunt(onlineTransactionHistoryDo.getTotalAmonunt());
+            } else if(OnlineOrderStatusEnum.TR_TYPE_PERSON.getCode()==type){
+                //只有返现的是金额(不是提现)
+                onlineTransactionHistoryDto.setTotalAmonunt(onlineTransactionHistoryDo.getCashBackFee());
+            }else{
+                //提现
+                 onlineTransactionHistoryDto.setTotalAmonunt(onlineTransactionHistoryDo.getTotalAmonunt());
+                Integer withdrawId = onlineTransactionHistoryDo.getWithdrawId();
+                OnlineWithdrawDo onlineWithdrawDo = onlineWithdrawServiceImpl.getById(withdrawId);
+                onlineTransactionHistoryDto.setBankName(onlineWithdrawDo.getBankName());
+            }
+            onlineTransactionHistoryDto.setType(onlineTransactionHistoryDo.getType());
+            onlineTransactionHistoryDto.setCreateTime(onlineTransactionHistoryDo.getCreateTime());
+            rtn.add(onlineTransactionHistoryDto);
+        }
+        return rtn;
     }
 }

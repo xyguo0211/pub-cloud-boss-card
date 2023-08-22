@@ -6,6 +6,7 @@ import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.utils.AESUtil;
@@ -91,16 +92,10 @@ public class OnlineUserController extends BaseController {
         }
 
     }
-    @TimingLog
-    @RequestMapping(value = "/loginOut", method = RequestMethod.POST)
-    @ResponseBody
-    public AjaxResult loginOut(@RequestBody JSONObject req){
-        onlineUserServiceImpl.loginOut();
-        return AjaxResult.success();
-    }
+
 
     /**
-     * 发送谷歌邮件
+     * 发送谷歌邮件 ，第一次注册的时候
      * @return
      */
     @TimingLog
@@ -108,7 +103,52 @@ public class OnlineUserController extends BaseController {
     @ResponseBody
     public AjaxResult sendEmail(@RequestParam String emailAddress){
         try{
+            if(!emailAddress.endsWith("@gmail.com")){
+                return AjaxResult.error("Google email format error ！");
+            }
             onlineUserServiceImpl.sendEmail(emailAddress);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+    /**
+     * 发送谷歌邮件 ，忘记密码时候，邮箱验证
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/sendEmailForgetPwd", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult sendEmailForgetPwd(@RequestParam String emailAddress){
+        try{
+            if(!emailAddress.endsWith("@gmail.com")){
+                return AjaxResult.error("Google email format error ！");
+            }
+            onlineUserServiceImpl.sendEmailForgetPwd(emailAddress);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+    /**
+     * 发送谷歌邮件  ，添加银行卡的时候
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/sendEmailBank", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult sendEmailBank(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            if(currentUser==null){
+                return AjaxResult.error("Please log in !");
+            }
+            Integer id = currentUser.getId();
+            OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(id);
+            String emailAddress = onlineUserDo.getName();
+            onlineUserServiceImpl.sendEmailBank(emailAddress);
             return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();
@@ -224,6 +264,19 @@ public class OnlineUserController extends BaseController {
             return AjaxResult.error(e.getMessage());
         }
 
+    }
+
+    @TimingLog
+    @RequestMapping(value = "/forgetPwd", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult forgetPwd(@RequestBody JSONObject req){
+        try {
+            onlineUserServiceImpl.forgetPwd(req);
+                return AjaxResult.success();
+            }catch (Exception e){
+                e.printStackTrace();
+                return AjaxResult.error(e.getMessage());
+        }
     }
 
 }

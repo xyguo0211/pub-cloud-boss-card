@@ -3,35 +3,34 @@ package com.sn.online.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.cn.auth.config.Constant;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
 import com.pub.core.exception.BusinessException;
+import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.utils.StringUtils;
 import com.pub.redis.util.RedisCache;
 
+import com.sn.online.config.FilePathOnlineConfig;
+import com.sn.online.config.GmailConfig;
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.entity.dto.OnlineUserRegisterDto;
 import com.sn.online.mapper.OnlineUserMapper;
 import com.sn.online.service.IOnlineUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sn.online.utils.SendGmail;
 import com.sn.online.utils.SendGmailUtil;
 import lombok.extern.slf4j.Slf4j;
-import org.hibernate.validator.constraints.Length;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import javax.validation.constraints.NotBlank;
 import java.util.Date;
+import java.util.Map;
 import java.util.Random;
 import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 
 /**
@@ -52,15 +51,25 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
     @Autowired
     private RedisCache redisCache;
 
-    @Autowired
-    private SendGmail sendGmail;
-
     @Value("${short_token_redis_cache_time}")
     private  Long short_token_redis_cache_time ;
+    /**
+     * 0是测试  1是正式
+     */
+    @Value("${isTest}")
+    private  Integer isTest ;
+
+    @Autowired
+    private GmailConfig gmailConfig ;
+    @Autowired
+    private SysDataDictionaryServiceImpl sysDataDictionaryServiceImpl ;
 
 
     public void register(OnlineUserRegisterDto req) throws  Exception{
         String name = req.getName();
+        if(!name.endsWith("@gmail.com")){
+            throw new BusinessException("Google email format error ！");
+        }
         /**
          * 校验用户是否存在
          */
@@ -99,6 +108,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         onlineUserDo_save.setMyInvitationCode(UUID.randomUUID().toString().replaceAll("-",""));
         onlineUserDo_save.setRole(OnlineConstants.onlineRole.system_no);
         save(onlineUserDo_save);
+        redisCache.deleteCache(name);
     }
 
     public JSONObject login(OnlineUserDo req) throws  Exception {
@@ -149,6 +159,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         Integer id = one_db_name.getId();
         mUser.setId(id);
         mUser.setLoginName(one_db_name.getName());
+        mUser.setNikeName(one_db_name.getNikeName());
         String jwt ="Bearer " +  tokenProvider.createTokenNewONline(mUser);
         redisCache.putCacheWithExpireTime(jwt,mUser,short_token_redis_cache_time);
         one_db_name.setPwd(null);
@@ -157,28 +168,81 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         return js;
     }
 
-    public void loginOut() {
+    /**
+     * 注册时候邮箱验证码
+     * @param emailAddress
+     * @throws Exception
+     */
+    public void sendEmail(String emailAddress) throws Exception {
+        Random random = new Random();
+        String randomNumber = random.nextInt(900000) + 100000+"";
+        if(isTest==1){
+            String subject = sysDataDictionaryServiceImpl.getSysBaseParam("gmailRegister", "subject");
+            String text = sysDataDictionaryServiceImpl.getSysBaseParam("gmailRegister", "text");
+            text = text.replace("##", randomNumber);
+            SendGmailUtil.gmailSender(gmailConfig.getUsername(),gmailConfig.getPassword(),emailAddress,subject,text);
+            /**
+             * 30分钟过期
+             */
+            redisCache.putCacheWithExpireTime(emailAddress,randomNumber,1000*60*30);
+        }else{
+            /**
+             * 30分钟过期
+             */
+            redisCache.putCacheWithExpireTime(emailAddress,"1111",1000*60*30);
+        }
+
+
     }
 
-    public void sendEmail(String emailAddress) {
+    /**
+     * 提交银行卡验证
+     * @param emailAddress
+     * @throws Exception
+     */
+    public void sendEmailBank(String emailAddress) throws Exception{
         Random random = new Random();
-        int randomNumber = random.nextInt(900000) + 100000;
-      /*  SendGmailUtil.gmailSender(emailAddress);*/
-       /* sendGmail.sendEmai(randomNumber,emailAddress);*/
-        /**
-         * 10分钟过期
-         */
-        redisCache.putCacheWithExpireTime(emailAddress,"1111",1000*60*10);
+        String randomNumber = random.nextInt(900000) + 100000+"";
+        if(isTest==1){
+            String subject = sysDataDictionaryServiceImpl.getSysBaseParam("gmailBank", "subject");
+            String text = sysDataDictionaryServiceImpl.getSysBaseParam("gmailBank", "text");
+            text = text.replace("##", randomNumber);
+            SendGmailUtil.gmailSender(gmailConfig.getUsername(),gmailConfig.getPassword(),emailAddress,subject,text);
+            /**
+             * 30分钟过期
+             */
+            redisCache.putCacheWithExpireTime(emailAddress+"_bank",randomNumber,1000*60*30);
+        }else{
+            /**
+             * 30分钟过期
+             */
+            redisCache.putCacheWithExpireTime(emailAddress+"_bank","1111",1000*60*30);
+        }
     }
-    public void sendEmailBank(String emailAddress) {
+
+    /**
+     * 忘记密码
+     * @param emailAddress
+     * @throws Exception
+     */
+    public void sendEmailForgetPwd(String emailAddress) throws Exception{
         Random random = new Random();
-        int randomNumber = random.nextInt(900000) + 100000;
-      /*  SendGmailUtil.gmailSender(emailAddress);*/
-       /* sendGmail.sendEmai(randomNumber,emailAddress);*/
-        /**
-         * 10分钟过期
-         */
-        redisCache.putCacheWithExpireTime(emailAddress+"_bank","1111",1000*60*10);
+        String randomNumber = random.nextInt(900000) + 100000+"";
+        if(isTest==1){
+            String subject = sysDataDictionaryServiceImpl.getSysBaseParam("gmailPwd", "subject");
+            String text = sysDataDictionaryServiceImpl.getSysBaseParam("gmailPwd", "text");
+            text = text.replace("##", randomNumber);
+            SendGmailUtil.gmailSender(gmailConfig.getUsername(),gmailConfig.getPassword(),emailAddress,subject,text);
+            /**
+             * 30分钟过期
+             */
+            redisCache.putCacheWithExpireTime(emailAddress+"_forgetpwd",randomNumber,1000*60*30);
+        }else{
+            /**
+             * 30分钟过期
+             */
+            redisCache.putCacheWithExpireTime(emailAddress+"_forgetpwd","1111",1000*60*30);
+        }
     }
 
     public void changePassword(JSONObject req) throws Exception{
@@ -230,5 +294,30 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         String online_cache_jwt="online_Cache_" + jwt;
         redisCache.putCacheWithExpireTime(online_cache_jwt,jsonObject.toJSONString(),30);
         return jsonObject;
+    }
+
+    public void forgetPwd(JSONObject req) throws Exception{
+        String name = req.getString("name");
+        if(!name.endsWith("@gmail.com")){
+            throw new BusinessException("Google email format error ！");
+        }
+        QueryWrapper<OnlineUserDo> wq=new QueryWrapper<>();
+        wq.eq("name",name);
+        OnlineUserDo one = getOne(wq);
+        if(one==null){
+            throw new BusinessException("  The user does not exists！");
+        }
+        String pwd = req.getString("pwd");
+        String code = req.getString("code").trim();
+        String cache_code = redisCache.getStringCache(name + "_forgetpwd");
+        if(cache_code!=null&&cache_code.equals(code)){
+            //修改密码
+            one.setPwd(pwd);
+            one.setUpdateTime(new Date());
+            updateById(one);
+            redisCache.deleteCache(name + "_forgetpwd");
+        }else{
+            throw new BusinessException(" Verification code error！");
+        }
     }
 }

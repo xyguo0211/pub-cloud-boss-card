@@ -63,4 +63,8 @@ public class OnlineTransactionHistoryDo extends Model<OnlineTransactionHistoryDo
      */
     private String cashBackFee;
 
+    /**
+     * 提现的id
+     */
+    private Integer withdrawId;
 }

@@ -86,7 +86,7 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
             OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(onlineOrderInfoDo.getUserId());
             String randomCode = onlineUserDo.getRandomCode();
             QueryWrapper<OnlineUserDo> wq_randomCode=new QueryWrapper<>();
-            wq_randomCode.eq("random_code",randomCode);
+            wq_randomCode.eq("my_invitation_code",randomCode);
             OnlineUserDo onlineUserDo_other = onlineUserServiceImpl.getOne(wq_randomCode);
 
             /**

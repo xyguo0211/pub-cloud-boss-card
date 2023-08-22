@@ -97,9 +97,15 @@ public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper,
             onlineTransactionHistoryDo.setUserId(onlineWithdrawDo_db.getUserId());
             onlineTransactionHistoryDo.setTotalAmonunt(onlineWithdrawDo_db.getDrawalFee());
             onlineTransactionHistoryDo.setCreateTime(createTime);
+            onlineTransactionHistoryDo.setWithdrawId(onlineWithdrawDo_db.getId());
             onlineTransactionHistoryServiceImpl.save(onlineTransactionHistoryDo);
 
 
+        }else{
+            OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(onlineWithdrawDo_db.getUserId());
+            String balance = onlineUserDo.getBalance();
+            onlineWithdrawDo_db.setBeforeDrawalFee(balance);
+            onlineWithdrawDo_db.setAftherDrawalFee(balance);
         }
         onlineWithdrawDo_db.setStatus(req.getStatus());
         onlineWithdrawDo_db.setOfflineUserId(currentUser.getId());
