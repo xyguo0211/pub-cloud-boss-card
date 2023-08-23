@@ -271,7 +271,7 @@ public class OnlineUserController extends BaseController {
     @ResponseBody
     public AjaxResult forgetPwd(@RequestBody JSONObject req){
         try {
-            onlineUserServiceImpl.forgetPwd(req);
+               onlineUserServiceImpl.forgetPwd(req);
                 return AjaxResult.success();
             }catch (Exception e){
                 e.printStackTrace();

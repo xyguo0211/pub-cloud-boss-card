@@ -297,7 +297,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
     }
 
     public void forgetPwd(JSONObject req) throws Exception{
-        String name = req.getString("name");
+        String name = req.getString("emailAddress");
         if(!name.endsWith("@gmail.com")){
             throw new BusinessException("Google email format error ！");
         }
@@ -308,6 +308,10 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
             throw new BusinessException("  The user does not exists！");
         }
         String pwd = req.getString("pwd");
+        String rePwd = req.getString("rePwd");
+        if(!pwd.equals(rePwd)){
+            throw new BusinessException("  The two passwords entered do not match ！");
+        }
         String code = req.getString("code").trim();
         String cache_code = redisCache.getStringCache(name + "_forgetpwd");
         if(cache_code!=null&&cache_code.equals(code)){

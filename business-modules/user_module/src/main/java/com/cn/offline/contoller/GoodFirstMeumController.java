@@ -11,6 +11,7 @@ import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
@@ -32,7 +33,8 @@ public class GoodFirstMeumController extends BaseController {
     @Autowired
     private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
 
-
+    @Value("${imageName}")
+    private String imageName;
 
     /**
      * 上传文件
@@ -43,6 +45,21 @@ public class GoodFirstMeumController extends BaseController {
     @ResponseBody
     public AjaxResult uploadImage(MultipartFile file){
         try{
+            String fileName = file.getOriginalFilename();
+            /**
+             *
+             */
+            String[] split = imageName.split("#");
+            boolean isImage=false;
+            for (String s : split) {
+                if(fileName.endsWith(s)){
+                    isImage=true;
+                    break;
+                }
+            }
+            if(!isImage){
+                return AjaxResult.error("上传文件非图片格式 !");
+            }
             String url= goodFirstMeumServiceImpl.uploadImage(file);
             return AjaxResult.success(url);
         }catch (Exception e){

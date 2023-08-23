@@ -10,6 +10,7 @@ import com.sn.online.entity.GoodThirdRateDo;
 import com.sn.online.entity.dto.OnlineOrderSubmitDto;
 import com.sn.online.service.impl.GoodFirstMeumServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
@@ -31,6 +32,8 @@ public class GoodFirstMeumController {
 
     @Autowired
     private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
+    @Value("${imageName}")
+    private String imageName;
 
     @TimingLog
     @RequestMapping(value = "/getFirstPage", method = RequestMethod.POST)
@@ -56,6 +59,21 @@ public class GoodFirstMeumController {
     @ResponseBody
     public AjaxResult uploadImage(MultipartFile file){
         try{
+            String fileName = file.getOriginalFilename();
+            /**
+             *
+             */
+            String[] split = imageName.split("#");
+            boolean isImage=false;
+            for (String s : split) {
+                if(fileName.endsWith(s)){
+                    isImage=true;
+                    break;
+                }
+            }
+            if(!isImage){
+                return AjaxResult.error("Upload file format is not an image !");
+            }
             String url= goodFirstMeumServiceImpl.uploadImage(file);
             return AjaxResult.success(url);
         }catch (Exception e){
