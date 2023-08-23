@@ -12,6 +12,8 @@ import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.utils.AESUtil;
 
 import com.pub.redis.util.RedisCache;
+import com.sn.online.config.Decrypt;
+import com.sn.online.config.Encrypt;
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.entity.dto.OnlineUserRegisterDto;
 import com.sn.online.service.impl.OnlineUserServiceImpl;
@@ -46,6 +48,8 @@ public class OnlineUserController extends BaseController {
     @Autowired
     private SysDataDictionaryServiceImpl sysDataDictionaryServiceImpl;
 
+    @Encrypt
+    @Decrypt
     @TimingLog
     @RequestMapping(value = "/login", method = RequestMethod.POST)
     @ResponseBody
@@ -76,6 +80,7 @@ public class OnlineUserController extends BaseController {
         }
 
     }*/
+    @Decrypt
     @TimingLog
     @RequestMapping(value = "/register", method = RequestMethod.POST)
     @ResponseBody
@@ -159,6 +164,7 @@ public class OnlineUserController extends BaseController {
      * 修改密码
      * @return
      */
+    @Decrypt
     @TimingLog
     @RequestMapping(value = "/changePassword", method = RequestMethod.POST)
     @ResponseBody
@@ -176,6 +182,8 @@ public class OnlineUserController extends BaseController {
      * 刷新token
      * @return
      */
+    @Encrypt
+    @Decrypt
     @RequestMapping(value = "/refreshToken", method = RequestMethod.GET)
     @ResponseBody
     public AjaxResult refreshToken(){
@@ -266,6 +274,7 @@ public class OnlineUserController extends BaseController {
 
     }
 
+    @Decrypt
     @TimingLog
     @RequestMapping(value = "/forgetPwd", method = RequestMethod.POST)
     @ResponseBody

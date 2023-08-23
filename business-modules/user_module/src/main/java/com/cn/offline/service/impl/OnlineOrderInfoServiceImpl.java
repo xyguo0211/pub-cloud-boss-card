@@ -60,7 +60,7 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         }
         String userName = req.getUserName();
         if(StringUtils.isNotBlank(userName)){
-            wq.eq("user_name", userName);
+            wq.like("user_name", userName);
         }
         wq.orderByDesc("id");
         BaseController.startPage();

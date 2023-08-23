@@ -306,7 +306,7 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
         String nikeName = req.getNikeName();
 
         if(StringUtils.isNotBlank(nikeName)){
-            wq.eq("nike_name", nikeName);
+            wq.like("nike_name", nikeName);
         }
         Integer isBlack = req.getIsBlack();
 

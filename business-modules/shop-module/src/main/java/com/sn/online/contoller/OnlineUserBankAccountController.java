@@ -10,6 +10,8 @@ import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
+import com.sn.online.config.Decrypt;
+import com.sn.online.config.Encrypt;
 import com.sn.online.entity.OnlineUserBankAccountDo;
 import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.service.impl.OnlineUserBankAccountServiceImpl;
@@ -47,6 +49,7 @@ public class OnlineUserBankAccountController extends BaseController {
      * 添加银行卡
      * @return
      */
+    @Decrypt
     @TimingLog
     @RequestMapping(value = "/addBankAccount", method = RequestMethod.POST)
     @ResponseBody
@@ -64,7 +67,6 @@ public class OnlineUserBankAccountController extends BaseController {
         }
     }
     /**
-     * 添加银行卡
      * @return
      */
     @TimingLog
@@ -87,9 +89,10 @@ public class OnlineUserBankAccountController extends BaseController {
         }
     }
     /**
-     * 添加银行卡
+     * 获取银行卡列表
      * @return
      */
+    @Encrypt
     @TimingLog
     @RequestMapping(value = "/getBanklist", method = RequestMethod.GET)
     @ResponseBody

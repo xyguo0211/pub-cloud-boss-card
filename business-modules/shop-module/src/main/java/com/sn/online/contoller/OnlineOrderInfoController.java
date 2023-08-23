@@ -8,6 +8,8 @@ import com.cn.auth.config.TimingLog;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
+import com.sn.online.config.Decrypt;
+import com.sn.online.config.Encrypt;
 import com.sn.online.entity.GoodThirdRateDo;
 import com.sn.online.entity.OnlineOrderInfoDo;
 import com.sn.online.entity.dto.OnlineOrderSubmitDto;
@@ -39,6 +41,7 @@ public class OnlineOrderInfoController extends BaseController {
      * @param req
      * @return
      */
+    @Encrypt
     @TimingLog
     @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
     @ResponseBody
@@ -57,6 +60,7 @@ public class OnlineOrderInfoController extends BaseController {
      * 查看详情页面
      */
 
+    @Encrypt
     @TimingLog
     @RequestMapping(value = "/getDetailInfo", method = RequestMethod.GET)
     @ResponseBody
@@ -95,6 +99,7 @@ public class OnlineOrderInfoController extends BaseController {
      * @param onlineOrderSubmitDto
      * @return
      */
+    @Decrypt
     @TimingLog
     @RequestMapping(value = "/submitOrder", method = RequestMethod.POST)
     @ResponseBody

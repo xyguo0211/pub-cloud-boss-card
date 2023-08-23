@@ -42,6 +42,7 @@ public class OnlineWithdrawController extends BaseController {
      * 添加提现记录
      * @return
      */
+    @Decrypt
     @TimingLog
     @RequestMapping(value = "/addOnlineWithdraw", method = RequestMethod.POST)
     @ResponseBody
@@ -64,13 +65,13 @@ public class OnlineWithdrawController extends BaseController {
      * @return
      */
     /**
-     * 请求参数加密
+     *  请求参数解密
      * @param req
      * @return
      */
     @Decrypt
     /**
-     * 请求参数解密
+     *返回参数加密
      */
     @Encrypt
     @TimingLog
@@ -95,6 +96,7 @@ public class OnlineWithdrawController extends BaseController {
      * 打开详情页
      * @return
      */
+    @Encrypt
     @TimingLog
     @RequestMapping(value = "/getDetail", method = RequestMethod.GET)
     @ResponseBody
@@ -108,10 +110,7 @@ public class OnlineWithdrawController extends BaseController {
         }
 
     }
-    /**
-     * 打开详情页
-     * @return
-     */
+
     @TimingLog
     @RequestMapping(value = "/testAES", method = RequestMethod.GET)
     @ResponseBody
