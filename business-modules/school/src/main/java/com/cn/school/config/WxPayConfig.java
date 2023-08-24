@@ -17,6 +17,8 @@ public class WxPayConfig {
 
 	private String url;
 
+	private String payUrl;
+
 	private String appid;
 
 	private String mchid;
@@ -26,5 +28,8 @@ public class WxPayConfig {
 
 
 	private String wxAppSecret;
+
+	//商户证书序列号有误
+	private String businessPayId;
 
 }

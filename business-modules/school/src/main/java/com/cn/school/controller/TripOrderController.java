@@ -1,6 +1,7 @@
 package com.cn.school.controller;
 
 
+import com.alibaba.fastjson.JSONObject;
 import com.cn.auth.config.TimingLog;
 import com.cn.school.entity.TripAreaDo;
 import com.cn.school.entity.TripOrderDo;
@@ -8,6 +9,7 @@ import com.cn.school.service.impl.TripOrderServiceImpl;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
+import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
@@ -76,8 +78,8 @@ public class TripOrderController extends BaseController {
     public AjaxResult testVx(@RequestParam Integer id){
         try{
             TripOrderDo tripOrderDo = tripOrderService.getById(id);
-            tripOrderService.tets();
-            return AjaxResult.success();
+            PrepayWithRequestPaymentResponse prepayWithRequestPaymentResponse = tripOrderService.WeChartPay(tripOrderDo, "oH-Ut5XAibVwhZfLjMhpAcxpWJ0I");
+            return AjaxResult.success(prepayWithRequestPaymentResponse);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

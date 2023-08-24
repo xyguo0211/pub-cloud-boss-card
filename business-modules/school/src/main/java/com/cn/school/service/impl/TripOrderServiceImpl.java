@@ -27,10 +27,17 @@ import com.wechat.pay.contrib.apache.httpclient.auth.WechatPay2Validator;
 import com.wechat.pay.contrib.apache.httpclient.cert.CertificatesManager;
 import com.wechat.pay.contrib.apache.httpclient.exception.HttpCodeException;
 import com.wechat.pay.contrib.apache.httpclient.util.PemUtil;
+import com.wechat.pay.java.core.RSAAutoCertificateConfig;
+import com.wechat.pay.java.service.payments.jsapi.model.Amount;
+import com.wechat.pay.java.service.payments.jsapi.model.Payer;
+import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
+import com.wechat.pay.java.service.payments.jsapi.JsapiServiceExtension;
+import com.wechat.pay.java.service.payments.jsapi.model.PrepayRequest;
 import lombok.extern.log4j.Log4j2;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
 import okhttp3.Response;
+import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
@@ -52,6 +59,7 @@ import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
 import java.security.cert.X509Certificate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
 import java.util.*;
 import java.util.concurrent.TimeUnit;
 
@@ -259,7 +267,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
             "ER3loKnO3uOc2tMq9cjYVihX26EjxLkqMRByE/X0j5hVfR8uafBMuw==\n" +
             "-----END CERTIFICATE-----";
 
-    public void tets() throws Exception {
+    public JSONObject tets(TripOrderDo tripOrderDo,String openid) throws Exception {
         HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi");
         httpPost.addHeader("Accept", "application/json");
         httpPost.addHeader("Content-type","application/json; charset=utf-8");
@@ -268,18 +276,17 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         ObjectMapper objectMapper = new ObjectMapper();
 
         ObjectNode rootNode = objectMapper.createObjectNode();
-        rootNode.put("mchid","1650712342")
-                .put("appid", "wx81e195d01798b996")
-                .put("description", "Image形象店-深圳腾大-QQ公仔")
-                .put("notify_url", "http://xhx.ygb56.com:60235/online_use/online/wx/wxCallback")
-                .put("out_trade_no", "1217752501201407033233368018");
+        rootNode.put("mchid",wxPayConfig.getMchid())
+                .put("appid", wxPayConfig.getAppid())
+                .put("description", "校园车租车小程序预支付申请")
+                .put("notify_url", wxPayConfig.getNotifyUrl())
+                .put("out_trade_no", tripOrderDo.getOrderId());
         rootNode.putObject("amount")
-                .put("total", 1);
+                .put("total",Integer.valueOf(tripOrderDo.getTotalFee()));
         rootNode.putObject("payer")
-                .put("openid", "oH-Ut5XAibVwhZfLjMhpAcxpWJ0I");
+                .put("openid", openid);
 
         objectMapper.writeValue(bos, rootNode);
-
         httpPost.setEntity(new StringEntity(bos.toString("UTF-8"), "UTF-8"));
         /**
          *
@@ -297,71 +304,79 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         listCertificates.add(wechatPayCertificate);
 
         WechatPayHttpClientBuilder builder = WechatPayHttpClientBuilder.create()
-                .withMerchant("1650712342", "755C5E96EAA985960035B577C12AFBFD1669C48E", merchantPrivateKey)
+                .withMerchant(wxPayConfig.getMchid(), wxPayConfig.getBusinessPayId(), merchantPrivateKey)
                 .withWechatPay(listCertificates);
 
         CloseableHttpClient httpClient = builder.build();
         CloseableHttpResponse response = httpClient.execute(httpPost);
 
-        String bodyAsString = EntityUtils.toString(response.getEntity());
-        System.out.println(bodyAsString);
+        String prepay_id = EntityUtils.toString(response.getEntity());
+        JSONObject jsonPay=new JSONObject();
+        // 获取当前时间
+        LocalTime currentTime = LocalTime.now();
+
+        // 获取当前时间的秒数
+        String seconds = currentTime.getSecond()+"";
+        jsonPay.put("timeStamp",seconds);
+        jsonPay.put("appId",wxPayConfig.getAppid());
+        String nonceStr1 = WXPayUtil.generateNonceStr();
+        jsonPay.put("nonceStr", nonceStr1);
+        jsonPay.put("package",prepay_id);
+        String mapStr1 = "appId="+wxPayConfig.getAppid()+"&nonceStr=" + nonceStr1 + "&package=prepay_id=" + prepay_id + "&signType=MD5&timeStamp=" + seconds;
+        String paySign = WXPayUtil.generateSignature(null, privateKey, SignType.HMACSHA256);
+        return jsonPay;
     }
-    // 你的商户私钥
-    private static final String merchantId = "1650712342"; // 商户号（服务商）
-    private static final String merchantSerialNumber = "755C5E96EAA985960035B577C12AFBFD1669C48E"; // 商户证书序列号
-    private static final String apiV3Key = "llikjdkYY2546525llYkjdk2546525ll"; // API V3密钥
-    private CloseableHttpClient httpClient;
-    CertificatesManager certificatesManager;
-    Verifier verifier;
 
-    private static final HttpHost proxy = null;
+    public static RSAAutoCertificateConfig config = null ;
 
-    public void test02() throws Exception {
-       /* PrivateKey merchantPrivateKey = PemUtil.loadPrivateKey(privateKey);*/
-        PrivateKey merchantPrivateKey = PemUtil.loadPrivateKey(
-                new FileInputStream("C:\\Users\\Administrator\\Desktop\\card\\cert\\apiclient_key.pem"));
-        // 获取证书管理器实例
-        certificatesManager = CertificatesManager.getInstance();
-        // 添加代理服务器
-        certificatesManager.setProxy(proxy);
-        // 向证书管理器增加需要自动更新平台证书的商户信息
-        certificatesManager.putMerchant(merchantId, new WechatPay2Credentials(merchantId,
-                        new PrivateKeySigner(merchantSerialNumber, merchantPrivateKey)),
-                apiV3Key.getBytes(StandardCharsets.UTF_8));
-        // 从证书管理器中获取verifier
-        verifier = certificatesManager.getVerifier(merchantId);
-        // 构造httpclient
-        httpClient = WechatPayHttpClientBuilder.create()
-                .withMerchant(merchantId, merchantSerialNumber, merchantPrivateKey)
-                .withValidator(new WechatPay2Validator(verifier))
-                .build();
+    public static JsapiServiceExtension service = null ;
+    public PrepayWithRequestPaymentResponse WeChartPay(TripOrderDo tripOrderDo,String openid) {
+        //元转换为分
+        Integer amountInteger = Integer.valueOf(tripOrderDo.getTotalFee());
 
+        // 一个商户号只能初始化一个配置，否则会因为重复的下载任务报错
+        if (config == null) {
+            config = new RSAAutoCertificateConfig.Builder()
+                    .merchantId(wxPayConfig.getMchid())
+                    .privateKey(privateKey)
+                    .merchantSerialNumber(wxPayConfig.getBusinessPayId())
+                    .apiV3Key("llikjdkYY2546525llYkjdk2546525ll")
+                    .build();
+        }
+        // 构建service
+        if (service == null) {
+            service = new JsapiServiceExtension.Builder().config(config).build();
+        }
 
-        HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi");
-        httpPost.addHeader("Accept", "application/json");
-        httpPost.addHeader("Content-type","application/json; charset=utf-8");
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        ObjectNode rootNode = objectMapper.createObjectNode();
-        rootNode.put("mchid","1650712342")
-                .put("appid", "wx81e195d01798b996")
-                .put("description", "Image形象店-深圳腾大-QQ公仔")
-                .put("notify_url", "http://xhx.ygb56.com:60235/online_use/online/wx/wxCallback")
-                .put("out_trade_no", "1217752501201407033233368018");
-        rootNode.putObject("amount")
-                .put("total", 1);
-        rootNode.putObject("payer")
-                .put("openid", "wx81e195d01798b996");
-
-        objectMapper.writeValue(bos, rootNode);
-
-        httpPost.setEntity(new StringEntity(bos.toString("UTF-8"), "UTF-8"));
-        CloseableHttpResponse response = httpClient.execute(httpPost);
-
-        String bodyAsString = EntityUtils.toString(response.getEntity());
-        System.out.println(bodyAsString);
+        //组装预约支付的实体
+        // request.setXxx(val)设置所需参数，具体参数可见Request定义
+        PrepayRequest request = new PrepayRequest();
+        //计算金额
+        Amount amount = new Amount();
+        amount.setTotal(amountInteger);
+        amount.setCurrency("CNY");
+        request.setAmount(amount);
+        //公众号appId
+        request.setAppid(wxPayConfig.getAppid());
+        //商户号
+        request.setMchid(wxPayConfig.getMchid());
+        //支付者信息
+        Payer payer = new Payer();
+        payer.setOpenid(openid);
+        request.setPayer(payer);
+        //描述
+        request.setDescription("支付测试");
+        //微信回调地址，需要是https://开头的，必须外网可以正常访问
+        //本地测试可以使用内网穿透工具，网上很多的
+        request.setNotifyUrl(wxPayConfig.getNotifyUrl());
+        //订单号
+        request.setOutTradeNo(tripOrderDo.getOrderId());
+        // 加密
+        PrepayWithRequestPaymentResponse payment = service.prepayWithRequestPayment(request);
+        //默认加密类型为RSA
+        payment.setSignType("MD5");
+        //返回数据，前端调起支付
+        return payment;
     }
 
 }

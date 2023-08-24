@@ -183,7 +183,6 @@ public class OnlineUserController extends BaseController {
      * @return
      */
     @Encrypt
-    @Decrypt
     @RequestMapping(value = "/refreshToken", method = RequestMethod.GET)
     @ResponseBody
     public AjaxResult refreshToken(){
