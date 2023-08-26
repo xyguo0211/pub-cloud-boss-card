@@ -5,16 +5,19 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.cn.school.config.Constant;
 import com.cn.school.config.WxPayConfig;
 import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.TripOrderDo;
 import com.cn.school.entity.TripProductDo;
 import com.cn.school.entity.UserDo;
+import com.cn.school.entity.dto.UnlimitedQRCodeParam;
 import com.cn.school.mapper.TripOrderMapper;
 import com.cn.school.service.ITripOrderService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.school.util.WXPayUtil;
 import com.cn.school.util.WeixinApiClient;
+import com.cn.school.util.WxPayRequstUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pub.core.exception.BusinessException;
@@ -39,6 +42,7 @@ import okhttp3.Request;
 import okhttp3.Response;
 import org.apache.commons.collections.map.HashedMap;
 import org.apache.commons.lang3.StringUtils;
+import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
@@ -47,6 +51,8 @@ import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.remoting.RemoteAccessException;
 import org.springframework.stereotype.Service;
 
@@ -64,6 +70,8 @@ import java.util.*;
 import java.util.concurrent.TimeUnit;
 
 import com.cn.school.util.WXPayConstants.SignType;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.client.RestTemplate;
 
 /**
  * <p>
@@ -90,7 +98,9 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     @Autowired
     private WxPayConfig wxPayConfig;
 
-    private int timeout = 30;
+    @Autowired
+    private RestTemplate restTemplate;
+
 
     public List<TripOrderDo> myTripOrderDo(Integer status) {
         User currentUser = UserContext.getCurrentUser();
@@ -113,28 +123,11 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
      * 这里一定要加上锁,此时一定要锁单
      * @param tripOrderDo
      */
-    public synchronized void addTripOrder(TripOrderDo tripOrderDo) throws Exception{
-        TripCarDo tripCarDo = tripCarServiceImpl.getById(tripOrderDo.getCarId());
-        Integer orderNum = tripCarDo.getOrderNum();
-        Integer sellNum = tripCarDo.getSellNum();
-        if( orderNum-sellNum-tripOrderDo.getNum()<0){
-            //说明没票了
-            throw  new BusinessException("余票不足！请刷新购买页面");
-        }
-        User currentUser = UserContext.getCurrentUser();
-        String taskNo = createTaskNo();
-        tripOrderDo.setStarTime(tripCarDo.getStartTime());
-        tripOrderDo.setEndTime(tripCarDo.getEndTime());
-        //tripOrderDo.setUserId(currentUser.getId());
-        tripOrderDo.setUserId(1);
-        tripOrderDo.setOrderId(taskNo);
-        tripOrderDo.setStatus(0);
-        tripOrderDo.setOnCarStatus(0);
-        tripOrderDo.setCreateTime(new Date());
+    @Transactional
+    public  void addTripOrder(TripOrderDo tripOrderDo) throws Exception{
         save(tripOrderDo);
         Integer num = tripOrderDo.getNum();
-        tripCarDo.setSellNum(sellNum+num);
-        tripCarServiceImpl.updateById(tripCarDo);
+        tripCarServiceImpl.addTicket(tripOrderDo.getCarId(),num,Constant.TicketAddStatus.DEL);
     }
 
     /**
@@ -214,60 +207,9 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
             return "JF"+yyyyMMddStr+rtn;
         }
     }
-    private static final String privateKey ="-----BEGIN PRIVATE KEY-----\n" +
-            "MIIEvwIBADANBgkqhkiG9w0BAQEFAASCBKkwggSlAgEAAoIBAQDTaSFJTqrbIEPE\n" +
-            "AynS5/I7+2ZTSoHkNX9IT6bBXMBrJuZATUHRNdgOw+KqffgHU3nuUBCU7kWQRIK6\n" +
-            "LAoy7AsDYgtqmaB0ZyhRua0PspADLyz57bVizLiNBBLeB7fENcksdcYeNiQg2C89\n" +
-            "AxWMSHy+UF+FNo2b3qU3ePurvybAinSaT1B+Bl9sVcq75EQJuCBBj3V/z70ZAv1j\n" +
-            "DQxDX/Xlnwlyrw1jkladLmzImWSv/sNkE+YLYf6VSpWfcPeNuqfm6wJ+V97f76mu\n" +
-            "L8mdSNo2v/57UgkUh/KaCvvwCQxbYrj3wjCMbJTZi+t8qGksdArU1MmoJX0WwKST\n" +
-            "XEuaWd/1AgMBAAECggEBAIlf9StHnSqKyr4iOBk+c1+auyFAdystwCni6D8Z4EdA\n" +
-            "nboG+c/SpzThAPc8p+FK0x6SlFPSiQ14F2KWn4H7dCScn0KD1YoORlrkxpo+s+n9\n" +
-            "y8IUPxuWYA3yKbhxV25+bN0hIr4a/FsDX57L1EK2D6kzXP6ZNmekw8NKMG+n5KyT\n" +
-            "nS//s4BcdKSb1sLNZx75lkhhE0gmbhjW9UtLJvLdK2jPEU68Vu97wn4kbES6yoTF\n" +
-            "mjidECulCsWUj8TfjDR6S9sG2Gj25tZjZcWwcxO4v1N6vELH+v9tAsFmCphu0Aul\n" +
-            "SsjNCeaynbSxGZgVBNiW+wOQbeXhc41iu1ALpFnvdXkCgYEA8MJsxVXDRXJKhkSh\n" +
-            "OcwAVe+bEWPplcg6fydfZUEEY3ERR4z6a91JHz+71V1fZu6zs1mjHdT0n0Cj/YOl\n" +
-            "tlx2wh9JNpGIjOW0CxAMPmd+h8LU7sGcPAnUz+NF7WDQDQDksPYw9kRGDiBZ8qJ4\n" +
-            "VutG+8DbX1sgT0rdgymQAvUHOfsCgYEA4MsZdFNjTeiViFq4C7GNfJ4P+SW8QLxq\n" +
-            "lS7Y7sjpkiekNxWClRHwF4eIoG3RK2hxyz7T8NtxpmSuWk2YoepHrsem36Gl2uJz\n" +
-            "VPvnHOmdh/bxCc0W37FPichINn8B7jTRKnZ0DmmYOQlk3NH4+kJzkxiqnxpTBHgi\n" +
-            "mzkQagkTms8CgYAdPvDpk75xvC1zW/jdxXsw9Tc4CJQCXt1EPusmqJw43C5GK8jr\n" +
-            "u2i7hAl0JLCHF2361mOrJwhEJB0HmatSmK7Qa+5/03Pr8adKRLvIBNho83DcQ+aP\n" +
-            "oH4adrgy2rTLL5WYLX/LGoYMB0AF6liF7nSj9kxvq+kj2KtJ2I2m3k7vawKBgQC/\n" +
-            "/fdhmQ8JrYp5iTIEGsODGeT+oLImgEZv4DE70LFdOSpSObbr5wQutH2GuASclHoM\n" +
-            "Yz7VSjfJK9iWHAwuzlAnATKPchqb1ik2/mcoFIeNZuX7vwS4TVJnlX3HvbZCYy36\n" +
-            "nG0HGjz/CfzxdQy3giYADmM7vFoHSSwVcymHxvTNlQKBgQDwJ+lbSlGc1H7X5PZS\n" +
-            "8mHxvo69vc+W0yLNN13Ln073Ly2TGtYrEQYEx6ZJhYxP1ZZuFgYefKdfSKCMRPXN\n" +
-            "87DTpwywHrJes7WuuQXkYgO4RShkrB4i+pTsD4Pue6fQXyMtugAMkk5c1Tlya8/V\n" +
-            "WIdne+MBmEReP18p43KXyX94xg==\n" +
-            "-----END PRIVATE KEY-----\n";
-    private static final String certificate  ="-----BEGIN CERTIFICATE-----\n" +
-            "MIIEFDCCAvygAwIBAgIUJsYsihcApwmmPEIZG4gcpS/of14wDQYJKoZIhvcNAQEL\n" +
-            "BQAwXjELMAkGA1UEBhMCQ04xEzARBgNVBAoTClRlbnBheS5jb20xHTAbBgNVBAsT\n" +
-            "FFRlbnBheS5jb20gQ0EgQ2VudGVyMRswGQYDVQQDExJUZW5wYXkuY29tIFJvb3Qg\n" +
-            "Q0EwHhcNMjMwODE3MDYzMDUzWhcNMjgwODE1MDYzMDUzWjBuMRgwFgYDVQQDDA9U\n" +
-            "ZW5wYXkuY29tIHNpZ24xEzARBgNVBAoMClRlbnBheS5jb20xHTAbBgNVBAsMFFRl\n" +
-            "bnBheS5jb20gQ0EgQ2VudGVyMQswCQYDVQQGDAJDTjERMA8GA1UEBwwIU2hlblpo\n" +
-            "ZW4wggEiMA0GCSqGSIb3DQEBAQUAA4IBDwAwggEKAoIBAQC7eO2e4e6Z2sKUJReu\n" +
-            "674uarydzbRgfRC6Wv/l1ImZldXvM0pVQcfaBaBthmfc22qNQAHtX+6J3Dwq2IiI\n" +
-            "9dYo267TGWJg9MAUeaBkZDy7dAnA8MTmZM168aGoLLTYQhT5FSbCpdmQvPAsM+Km\n" +
-            "If4rGA6hwSc6ImOI9oFZ1H65KCjBYIJFhRyZuQg01pRuDERLq3eJXBLg56JxWMf1\n" +
-            "NAA+6o5UQ+DqTk8Zg8c9p47JbPLp2XUxykXEgprlYfKmd5Ws/9ZlnkyubAZ0J/MN\n" +
-            "I+x2jNvwi5z1gxT/NM6Wws3HPbauecw01lAGw+tPFdr+1r8RyKOYYKQwNpmoI4z+\n" +
-            "bG7PAgMBAAGjgbkwgbYwCQYDVR0TBAIwADALBgNVHQ8EBAMCA/gwgZsGA1UdHwSB\n" +
-            "kzCBkDCBjaCBiqCBh4aBhGh0dHA6Ly9ldmNhLml0cnVzLmNvbS5jbi9wdWJsaWMv\n" +
-            "aXRydXNjcmw/Q0E9MUJENDIyMEU1MERCQzA0QjA2QUQzOTc1NDk4NDZDMDFDM0U4\n" +
-            "RUJEMiZzZz1IQUNDNDcxQjY1NDIyRTEyQjI3QTlEMzNBODdBRDFDREY1OTI2RTE0\n" +
-            "MDM3MTANBgkqhkiG9w0BAQsFAAOCAQEAL0YkFmjjr0Hwfut3kTqwywOxO+s778YA\n" +
-            "S/GY2fsD0kKo2NCUxQ2stUnt/EuIlMYJnksgOAl3REdLuHDuNtXQunbl9zb9HenA\n" +
-            "S1cmDXvdxPzoWZ3cWPMICDfYkeGUefaWY1gyIj85FWrZjrIxE6N9AQY8SjbZDWM5\n" +
-            "3uHGPHZ28B2/DeexoqYGMa9lt3167CbOBS7cmbSOKmyD99/o69BOjWAX1GVQmMY2\n" +
-            "ATMTsmtdYRpxRJ1uzZ/cqqnDeaduJ/1icc4OagD4WEhbrIJpx707wKJRG2VXkHXj\n" +
-            "ER3loKnO3uOc2tMq9cjYVihX26EjxLkqMRByE/X0j5hVfR8uafBMuw==\n" +
-            "-----END CERTIFICATE-----";
 
-    public JSONObject tets(TripOrderDo tripOrderDo,String openid) throws Exception {
+
+    public String tets(TripOrderDo tripOrderDo,String openid) throws Exception {
         HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi");
         httpPost.addHeader("Accept", "application/json");
         httpPost.addHeader("Content-type","application/json; charset=utf-8");
@@ -296,9 +238,9 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
          wechatPayCertificates微信支付平台证书列表。你也可以使用后面章节提到的“定时更新平台证书功能”，而不需要关心平台证书的来龙去脉。
 
          */
-        PrivateKey merchantPrivateKey = PemUtil.loadPrivateKey(privateKey);
+        PrivateKey merchantPrivateKey = PemUtil.loadPrivateKey(Constant.privateKey);
         X509Certificate wechatPayCertificate = PemUtil.loadCertificate(
-                new ByteArrayInputStream(certificate.getBytes(StandardCharsets.UTF_8)));
+                new ByteArrayInputStream(Constant.certificate.getBytes(StandardCharsets.UTF_8)));
 
         ArrayList<X509Certificate> listCertificates = new ArrayList<>();
         listCertificates.add(wechatPayCertificate);
@@ -311,36 +253,24 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         CloseableHttpResponse response = httpClient.execute(httpPost);
 
         String prepay_id = EntityUtils.toString(response.getEntity());
-        JSONObject jsonPay=new JSONObject();
-        // 获取当前时间
-        LocalTime currentTime = LocalTime.now();
 
-        // 获取当前时间的秒数
-        String seconds = currentTime.getSecond()+"";
-        jsonPay.put("timeStamp",seconds);
-        jsonPay.put("appId",wxPayConfig.getAppid());
-        String nonceStr1 = WXPayUtil.generateNonceStr();
-        jsonPay.put("nonceStr", nonceStr1);
-        jsonPay.put("package",prepay_id);
-        String mapStr1 = "appId="+wxPayConfig.getAppid()+"&nonceStr=" + nonceStr1 + "&package=prepay_id=" + prepay_id + "&signType=MD5&timeStamp=" + seconds;
-        String paySign = WXPayUtil.generateSignature(null, privateKey, SignType.HMACSHA256);
-        return jsonPay;
+        return prepay_id;
     }
 
     public static RSAAutoCertificateConfig config = null ;
-
+    String filePath ="C:/Users/Administrator/Desktop/card/cert/apiclient_key.pem";//测试环境可放到resource目录下
     public static JsapiServiceExtension service = null ;
     public PrepayWithRequestPaymentResponse WeChartPay(TripOrderDo tripOrderDo,String openid) {
         //元转换为分
-        Integer amountInteger = Integer.valueOf(tripOrderDo.getTotalFee());
-
+        Integer amountInteger = Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getTotalFee()));
         // 一个商户号只能初始化一个配置，否则会因为重复的下载任务报错
         if (config == null) {
             config = new RSAAutoCertificateConfig.Builder()
                     .merchantId(wxPayConfig.getMchid())
-                    .privateKey(privateKey)
+                    .privateKey(Constant.privateKey)
                     .merchantSerialNumber(wxPayConfig.getBusinessPayId())
-                    .apiV3Key("llikjdkYY2546525llYkjdk2546525ll")
+                    //.apiV3Key("llikjdkYY2546525llYkjdk2546525ll")
+                    .apiV3Key(wxPayConfig.getApiV3Key())
                     .build();
         }
         // 构建service
@@ -349,7 +279,6 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         }
 
         //组装预约支付的实体
-        // request.setXxx(val)设置所需参数，具体参数可见Request定义
         PrepayRequest request = new PrepayRequest();
         //计算金额
         Amount amount = new Amount();
@@ -365,7 +294,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         payer.setOpenid(openid);
         request.setPayer(payer);
         //描述
-        request.setDescription("支付测试");
+        request.setDescription(wxPayConfig.getDescription());
         //微信回调地址，需要是https://开头的，必须外网可以正常访问
         //本地测试可以使用内网穿透工具，网上很多的
         request.setNotifyUrl(wxPayConfig.getNotifyUrl());
@@ -379,4 +308,124 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         return payment;
     }
 
+    public void createTripOrder(TripOrderDo tripOrderDo) throws Exception{
+        TripCarDo tripCarDo = tripCarServiceImpl.getById(tripOrderDo.getCarId());
+        Integer orderNum = tripCarDo.getOrderNum();
+        Integer sellNum = tripCarDo.getSellNum();
+        if( orderNum-sellNum-tripOrderDo.getNum()<0){
+            //说明没票了
+            throw  new BusinessException("余票不足！请刷新购买页面");
+        }
+        User currentUser = UserContext.getCurrentUser();
+        Integer user_id = currentUser.getId();
+        UserDo userDo = userServiceImpl.getById(user_id);
+        String taskNo = createTaskNo();
+        tripOrderDo.setStarTime(tripCarDo.getStartTime());
+        tripOrderDo.setEndTime(tripCarDo.getEndTime());
+        tripOrderDo.setUserId(userDo.getId());
+        tripOrderDo.setPhone(tripOrderDo.getPhone());
+        tripOrderDo.setIdentityName(tripOrderDo.getIdentityName());
+        tripOrderDo.setOrderId(taskNo);
+        /**
+         * 初始化
+         */
+        tripOrderDo.setStatus(0);
+        /**
+         * 未上车
+         */
+        tripOrderDo.setOnCarStatus(0);
+        /**
+         * 未退票
+         */
+        tripOrderDo.setTicketStatus(-1);
+        tripOrderDo.setCreateTime(new Date());
+    }
+    @Transactional
+    public void wxPayNotify(TripOrderDo tripOrderDo) throws Exception{
+        // 订单状态   0 初始  1成功  -1 失败
+        tripOrderDo.setPayTime(new Date());
+        Integer status = tripOrderDo.getStatus();
+        if(1==status){
+            /**
+             * 生成二维码
+             */
+
+        }else{
+            /**
+             * 释放车票
+             */
+            Integer ticketStatus = tripOrderDo.getTicketStatus();
+            if(ticketStatus!=9){
+                tripOrderDo.setTicketStatus(9);
+                Integer num = tripOrderDo.getNum();
+                Integer carId = tripOrderDo.getCarId();
+                tripCarServiceImpl.addTicket(carId,num,Constant.TicketAddStatus.ADD);
+            }
+        }
+        updateById(tripOrderDo);
+    }
+
+
+    public String getAccessToken(){
+        String access_token_school = redisCache.getStringCache("access_token_school");
+        if(StringUtils.isNotBlank(access_token_school)){
+            return access_token_school;
+        }else{
+            //1.通过code获取access_token
+            String url = "https://api.weixin.qq.com/cgi-bin/token?appid=APPID&secret=SECRET&grant_type=client_credential";
+            url = url.replace("APPID", wxPayConfig.getAppid()).replace("SECRET", wxPayConfig.getWxAppSecret());
+            ResponseEntity<String> tokenData = restTemplate.getForEntity(url, String.class);
+            String tokenInfoStr = tokenData.getBody();
+            if(StringUtils.isNotBlank(tokenInfoStr)){
+                JSONObject tokenInfoObject = JSONObject.parseObject(tokenInfoStr);
+                log.info("getAccessToken:{}", tokenInfoObject);
+                String access_token = tokenInfoObject.getString("access_token");
+                Long expires_in = tokenInfoObject.getLong("expires_in");
+                if(StringUtils.isNotBlank(access_token)){
+                    //提前十分钟过期
+                    redisCache.putCacheWithExpireTime("access_token_school",access_token,expires_in-600);
+                    return access_token;
+                }
+            }
+            return null;
+
+        }
+
+
+
+    }
+    public byte[] getImageByte(UnlimitedQRCodeParam body) throws Exception{
+        String accessToken = getAccessToken();
+        if(StringUtils.isBlank(accessToken)){
+            throw new BusinessException("获取token异常！");
+        }
+        //1.通过code获取access_token
+        ResponseEntity<byte[]> responseEntity = restTemplate.postForEntity(wxPayConfig.getUrlToken() + "?access_token=" + accessToken, body, byte[].class);
+        byte[] urls = responseEntity.getBody();
+        return urls;
+    }
+
+    /**
+     * 单机部署，不存在分布式，加个锁就行了
+     * @param orderId
+     * @param carId
+     * @throws Exception
+     */
+    public synchronized void checkTripOrder(Integer orderId, Integer carId) throws Exception{
+        TripOrderDo tripOrderDo = getById(orderId);
+        Integer onCarStatus = tripOrderDo.getOnCarStatus();
+        /**
+         * 0 未上车  1 已上车  -1 已过期
+         */
+        if(onCarStatus!=0){
+            throw new BusinessException("该车票已被核销过！");
+        }
+        Integer carIdDb = tripOrderDo.getCarId();
+        if(carIdDb!=carId){
+            throw new BusinessException("车次不正确！");
+        }
+        tripOrderDo.setOnCarStatus(1);
+        tripOrderDo.setOncarTime(new Date());
+        updateById(tripOrderDo);
+    }
 }

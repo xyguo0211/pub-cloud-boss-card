@@ -1,5 +1,6 @@
 package com.cn.school.entity;
 
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -37,5 +38,17 @@ public class UserDo extends Model<UserDo> {
     private String nickName;
 
     private Date createTime;
+
+    private String school;
+
+    private String identityName;
+
+    private String phone;
+
+    /**
+     * 手机验证码
+     */
+    @TableField(exist = false)
+    private String phoneCode;
 
 }

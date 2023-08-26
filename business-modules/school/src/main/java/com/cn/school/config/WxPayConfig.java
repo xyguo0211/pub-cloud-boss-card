@@ -17,6 +17,8 @@ public class WxPayConfig {
 
 	private String url;
 
+	private String urlToken;
+
 	private String payUrl;
 
 	private String appid;
@@ -31,5 +33,14 @@ public class WxPayConfig {
 
 	//商户证书序列号有误
 	private String businessPayId;
+
+	/**
+	 * 支付描述
+	 */
+	private String description;
+	/**
+	 * 支付描述
+	 */
+	private String apiV3Key;
 
 }

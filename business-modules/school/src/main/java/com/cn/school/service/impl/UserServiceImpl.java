@@ -1,6 +1,7 @@
 package com.cn.school.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
@@ -72,5 +73,12 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
         String online_cache_jwt="school_cache_" + jwt;
         redisCache.putCacheWithExpireTime(online_cache_jwt,jsonObject.toJSONString(),30);
         return jsonObject;
+    }
+
+    public UserDo checkPhoneExit(String phone) {
+        QueryWrapper<UserDo> wq=new QueryWrapper<>();
+        wq.eq("phone",phone);
+        UserDo one = getOne(wq);
+       return one;
     }
 }

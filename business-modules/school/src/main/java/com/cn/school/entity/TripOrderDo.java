@@ -60,6 +60,10 @@ public class TripOrderDo extends Model<TripOrderDo> {
     private Integer productId;
 
     private Date createTime;
+    /**
+     * 支付时间
+     */
+    private Date payTime;
 
     /**
      * 0 未上车  1 已上车  -1 已过期 
@@ -86,5 +90,37 @@ public class TripOrderDo extends Model<TripOrderDo> {
     private String origin;
 
     private String destination;
+
+    /*
+    微信支付系统生成的订单号。
+     */
+    private String transactionId;
+
+    /**
+     * 是否已退票   9已退票  -1 未退票
+     */
+    private Integer ticketStatus;
+
+
+    /**
+     * 上车时间
+     */
+    private Date oncarTime;
+
+
+    /**
+     * 学校名称
+     */
+    private String school;
+
+    /**
+     * 身份名称
+     */
+    private String identityName;
+
+    /**
+     * 手机号
+     */
+    private String phone;
 
 }

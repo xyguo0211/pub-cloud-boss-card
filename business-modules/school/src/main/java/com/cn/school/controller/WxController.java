@@ -2,26 +2,44 @@ package com.cn.school.controller;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
+import com.cn.school.config.Constant;
 import com.cn.school.config.WxPayConfig;
+import com.cn.school.entity.TripOrderDo;
 import com.cn.school.entity.UserDo;
+import com.cn.school.entity.dto.UnlimitedQRCodeParam;
+import com.cn.school.service.impl.TripOrderServiceImpl;
 import com.cn.school.service.impl.UserServiceImpl;
+import com.cn.school.util.WXPayUtil;
+import com.cn.school.util.WxPayRequstUtil;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.redis.util.RedisCache;
+import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
+import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.cloud.context.config.annotation.RefreshScope;
+import org.springframework.http.HttpRequest;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.client.RestTemplate;
 
 import javax.annotation.Resource;
+import javax.imageio.stream.FileImageOutputStream;
+import javax.servlet.ServletOutputStream;
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import java.io.File;
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.Date;
+import java.util.Map;
 
 @RestController
 @RequestMapping("/school/wx")
@@ -48,10 +66,15 @@ public class WxController extends BaseController {
     private UserServiceImpl userServiceImpl;
 
     @Autowired
-    private com.cn.school.config.WxPayConfig wxPayConfig;
+    private WxPayConfig wxPayConfig;
 
     @Resource
     private TokenProvider tokenProvider;
+
+    @Autowired
+    private TripOrderServiceImpl tripOrderService;
+
+
 
     /**
      * 扫码成功回调
@@ -143,6 +166,67 @@ public class WxController extends BaseController {
         return jwt;
     }
 
+    @RequestMapping(value = "/wxPayNotify", method = RequestMethod.POST)
+    public String wxNotify(HttpServletRequest request){
+        //用于处理结束后返回的xml
+        String resXml = "";
+        String key = "&key="+ Constant.privateKey;
+        try {
+            InputStream in = request.getInputStream();
+            ByteArrayOutputStream out = new ByteArrayOutputStream();
+            int len = 0;
+            byte[] b = new byte[1024];
+            while((len = in.read(b)) != -1){
+                out.write(b, 0, len);
+            }
+            out.close();
+            in.close();
+            //将流 转为字符串
+            String result = new String(out.toByteArray(), "utf-8");
+            Map<String, String> map = WxPayRequstUtil.getNotifyUrl(result);
+            String return_code = map.get("return_code").toString().toUpperCase();
+            if(return_code.equals("SUCCESS")){
+                //进行签名验证，看是否是从微信发送过来的，防止资金被盗
+                if(WxPayRequstUtil.verifyWeixinNotify(map, key)){
+                    //签名验证成功后按照微信要求返回的xml
+                    resXml = "<xml>" + "<return_code><![CDATA[SUCCESS]]></return_code>"
+                            + "<return_msg><![CDATA[OK]]></return_msg>" + "</xml> ";
+                    return resXml;
+                }
+            }else{
+                resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"
+                        + "<return_msg><![CDATA[sign check error]]></return_msg>" + "</xml> ";
+                return resXml;
+            }
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"
+                + "<return_msg><![CDATA[xml error]]></return_msg>" + "</xml> ";
+        return resXml;
 
+    }
+
+
+    @TimingLog
+    @RequestMapping(value = "/getImageByte", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getImageByte(@RequestParam Integer orderId){
+        try{
+            UnlimitedQRCodeParam body=new UnlimitedQRCodeParam();
+            body.setPage("main/test");
+            body.setScene(orderId+"");
+            body.setCheckPath(false);
+            byte[] imageByte = tripOrderService.getImageByte(body);
+            HttpServletResponse response = getResponse();
+            ServletOutputStream outputStream = response.getOutputStream();
+            outputStream.write(imageByte);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
 
 }

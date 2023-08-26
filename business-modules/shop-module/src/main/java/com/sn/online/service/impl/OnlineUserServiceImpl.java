@@ -21,6 +21,7 @@ import com.sn.online.service.IOnlineUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sn.online.utils.SendGmailUtil;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.http.client.utils.DateUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -105,10 +106,38 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         onlineUserDo_save.setUpdateTime(createTime);
         onlineUserDo_save.setIsBlack(OnlineConstants.blockStatus.block_no);
         onlineUserDo_save.setBalance("0");
+        /**
+         * 生成邀请码
+         */
+        getMyInvitationCode();
         onlineUserDo_save.setMyInvitationCode(UUID.randomUUID().toString().replaceAll("-",""));
         onlineUserDo_save.setRole(OnlineConstants.onlineRole.system_no);
         save(onlineUserDo_save);
         redisCache.deleteCache(name);
+    }
+
+    private String getMyInvitationCode() {
+        String yyyyMMddStr = DateUtils.formatDate(new Date(), "yyyyMMdd");
+        //设置两天过期  1000*60*60*48
+        String hincr = redisCache.hincr(yyyyMMddStr, yyyyMMddStr, 1, 1000*60*60*48)+"";
+        if(hincr.contains(".")){
+            String[] split = hincr.split("\\.");
+            String rtn = String.format("%04d", Integer.valueOf(split[0]));
+            int i = (int)(Math.random()*90 + 10);
+            return "team"+yyyyMMddStr+rtn+i;
+        }else{
+            String rtn = String.format("%04d", Integer.valueOf(hincr));
+            int i = (int)(Math.random()*90 + 10);
+            return "team"+yyyyMMddStr+rtn+i;
+        }
+    }
+
+    public static void main(String[] args) {
+        String yyyyMMddStr = DateUtils.formatDate(new Date(), "yyyyMMdd");
+
+        int i = (int)(Math.random()*90 + 10);
+        String rtn = String.format("%04d", 523);
+        System.out.println( "team"+yyyyMMddStr+rtn+i);
     }
 
     public JSONObject login(OnlineUserDo req) throws  Exception {

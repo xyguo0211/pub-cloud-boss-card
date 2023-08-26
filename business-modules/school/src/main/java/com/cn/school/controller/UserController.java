@@ -1,14 +1,26 @@
 package com.cn.school.controller;
 
 
+import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.cn.auth.authority.AuthMenuKeyConstant;
+import com.cn.auth.config.Constant;
+import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
+import com.cn.auth.entity.User;
+import com.cn.auth.util.UserContext;
+import com.cn.school.entity.UserDo;
 import com.cn.school.service.impl.UserServiceImpl;
+import com.cn.school.util.RpcBaseResponseResult;
+import com.cn.school.util.SmsSendServiceUtil;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.utils.RandomUtil;
 import com.pub.redis.util.RedisCache;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 
 import org.springframework.stereotype.Controller;
@@ -16,6 +28,7 @@ import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -35,7 +48,14 @@ public class UserController extends BaseController {
 
     @Autowired
     private RedisCache redisCache;
+    @Autowired
+    private SmsSendServiceUtil smsSendServiceUtil;
 
+    /**
+     * 0是测试  1是正式
+     */
+    @Value("${isTest}")
+    private  Integer isTest ;
     /**
      * 刷新token
      * @return
@@ -61,6 +81,97 @@ public class UserController extends BaseController {
         }
         return AjaxResult.success(new_token);
     }
+
+    /**
+     * 第一次下单是否实名认证接口
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/checkIdentity", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult checkIdentity(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byIUserDod = userService.getById(id);
+            String phone = byIUserDod.getPhone();
+            if(com.pub.core.utils.StringUtils.isBlank(phone)){
+                return AjaxResult.error("请实名认证！");
+            }
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 第一次下单实名认证接口提交信息
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/addIdentity", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult addIdentity(UserDo userDo){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            String phoneCode = userDo.getPhoneCode();
+            String phone = userDo.getPhone();
+            String stringCache = redisCache.getStringCache(phone);
+            if(!phoneCode.equals(stringCache)){
+                return AjaxResult.error("手机验证码错误");
+            }
+            UserDo byIUserDod = userService.getById(id);
+
+            byIUserDod.setPhone(phone);
+            byIUserDod.setSchool(userDo.getSchool());
+            byIUserDod.setIdentityName(userDo.getIdentityName());
+            userService.updateById(byIUserDod);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
+    /**
+     * 获取验证码,校验用户是否已被拉黑
+     */
+    @TimingLog
+    @RequestMapping(value = "/getMsg/{phone}", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getMsg(@PathVariable String phone){
+        JSONObject rtn=new JSONObject();
+        try {
+            //第一步校验这个手机号是否被使用
+            UserDo userDo = userService.checkPhoneExit(phone);
+            if(userDo!=null){
+                return AjaxResult.error("手机号已被注册过！");
+            }
+
+            if(isTest==0){
+                //测试环境
+                redisCache.putCacheWithExpireTime(phone,"1111",5*60);
+                return AjaxResult.success();
+            }else{
+                int randomLenFours = RandomUtil.getRandomLenFours();
+                RpcBaseResponseResult rpcBaseResponseResult = smsSendServiceUtil.sendMassage("您好，您的验证码是:" + randomLenFours, phone);
+                int status = rpcBaseResponseResult.getStatus();
+                if(0==status){
+                    redisCache.putCacheWithExpireTime(phone,String.valueOf(randomLenFours),5*60);
+                    return AjaxResult.success();
+                }
+            }
+
+
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        return AjaxResult.error("失败，请联系管理员！");
+    }
+
 
 }
 
