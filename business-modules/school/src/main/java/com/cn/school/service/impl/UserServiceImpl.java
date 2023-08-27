@@ -63,7 +63,7 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
             return null;
         }
         //生成新的token,然后将旧的数据放回
-        String jwt = "BearerSchool" + tokenProvider.createTokenNewONline(muser);
+        String jwt = "BearerSchool" + tokenProvider.createTokenNewSchool(muser);
         redisCache.putCacheWithExpireTime(jwt,muser,short_token_redis_cache_time);
         //删掉过期token
         redisCache.deleteCache(bearerToken);

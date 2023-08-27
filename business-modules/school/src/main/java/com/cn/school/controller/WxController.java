@@ -161,7 +161,7 @@ public class WxController extends BaseController {
         /*mUser.setLoginName(userDo.getNickName());*/
         mUser.setId(userDo.getId());
         mUser.setPassword(userDo.getOpenid());
-        String jwt ="BearerSchool" +  tokenProvider.createToken(mUser);
+        String jwt ="BearerSchool" +  tokenProvider.createTokenNewSchool(mUser);
         redisCache.putCacheWithExpireTime(jwt,mUser,short_token_redis_cache_time);
         return jwt;
     }

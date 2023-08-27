@@ -20,12 +20,9 @@ import com.pub.redis.util.RedisCache;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.concurrent.TimeUnit;
@@ -48,6 +45,7 @@ public class UserController extends BaseController {
 
     @Autowired
     private RedisCache redisCache;
+
     @Autowired
     private SmsSendServiceUtil smsSendServiceUtil;
 
@@ -110,9 +108,9 @@ public class UserController extends BaseController {
      * @return
      */
     @TimingLog
-    @RequestMapping(value = "/addIdentity", method = RequestMethod.GET)
+    @RequestMapping(value = "/addIdentity", method = RequestMethod.POST)
     @ResponseBody
-    public AjaxResult addIdentity(UserDo userDo){
+    public AjaxResult addIdentity(@RequestBody UserDo userDo){
         try{
             User currentUser = UserContext.getCurrentUser();
             Integer id = currentUser.getId();

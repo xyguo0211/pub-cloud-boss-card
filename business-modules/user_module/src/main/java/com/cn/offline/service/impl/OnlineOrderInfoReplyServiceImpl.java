@@ -78,67 +78,89 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
             }
             onlineOrderInfoReplyImageServiceImpl.saveBatch(listOnlineOrderInfoReplyImageDo);
         }
-        onlineOrderInfoService.updateById(onlineOrderInfoDo);
         /**
          * 生成一笔交易记录
          */
         if(req.getStatus()==OrderStatusEnum.TRACKING_STATUS_EXCEPTION.getCode()){
-            OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(onlineOrderInfoDo.getUserId());
-            String randomCode = onlineUserDo.getRandomCode();
-            QueryWrapper<OnlineUserDo> wq_randomCode=new QueryWrapper<>();
-            wq_randomCode.eq("my_invitation_code",randomCode);
-            OnlineUserDo onlineUserDo_other = onlineUserServiceImpl.getOne(wq_randomCode);
+            /**
+             * 如果客户输入金额和客服输入金额不一致需要管理员审核
+             */
+            String totalAmonuntFee = onlineOrderInfoDo.getTotalAmonuntFee();
+            String replyFee = onlineOrderInfoDo.getReplyFee();
 
-            /**
-             * 生成两笔交易记录,一笔是返现，一笔是卖卡
-             */
-            /**
-             * 卖卡
-             */
-            List<OnlineTransactionHistoryDo> list=new ArrayList<>();
-            OnlineTransactionHistoryDo entity=new OnlineTransactionHistoryDo();
-            entity.setCreateTime(createTime);
-            entity.setOrderId(onlineOrderInfoDo.getId());
-            entity.setThirdId(onlineOrderInfoDo.getThirdId());
-            entity.setTotalAmonunt(onlineOrderInfoDo.getTotalAmonuntFee());
-            entity.setUserId(onlineUserDo.getId());
-            entity.setCashBackFee(onlineOrderInfoDo.getCashBackFee());
-            entity.setType(OrderStatusEnum.TR_TYPE_ORDER.getCode());
-            entity.setThirdUserId(onlineUserDo_other.getId());
-            entity.setThirdUserName(onlineUserDo_other.getName());
-            list.add(entity);
+            if(totalAmonuntFee.equals(replyFee)){
+                opertorSucess(onlineOrderInfoDo);
+            }else{
+                /**
+                 * 送管理员审核
+                 */
+            }
 
-
-            /**
-             * 返现
-             */
-            OnlineTransactionHistoryDo entity2=new OnlineTransactionHistoryDo();
-            entity2.setCreateTime(createTime);
-            entity2.setOrderId(onlineOrderInfoDo.getId());
-            entity2.setThirdId(onlineOrderInfoDo.getThirdId());
-            entity2.setTotalAmonunt(onlineOrderInfoDo.getTotalAmonuntFee());
-            entity2.setUserId(onlineUserDo_other.getId());
-            entity2.setType(OrderStatusEnum.TR_TYPE_PERSON.getCode());
-            entity2.setCashBackFee(onlineOrderInfoDo.getCashBackFee());
-            entity2.setThirdUserId(onlineUserDo.getId());
-            entity2.setThirdUserName(onlineUserDo.getName());
-            list.add(entity2);
-
-            onlineTransactionHistoryServiceImpl.saveBatch(list);
-            /**
-             * 更新个人用户账号
-             */
-            StringBuilder sb=new StringBuilder(onlineUserDo.getBalance()).append("+").append(onlineOrderInfoDo.getTotalAmonuntFee());
-            BigDecimal cal = CalculateUtil.cal(sb.toString());
-            onlineUserDo.setBalance(cal.toString());
-            onlineUserServiceImpl.updateById(onlineUserDo);
-            /**
-             * 返现用户用户账号余额
-             */
-            StringBuilder sb_other=new StringBuilder(onlineUserDo_other.getBalance()).append("+").append(onlineOrderInfoDo.getCashBackFee());
-            BigDecimal cal_other = CalculateUtil.cal(sb_other.toString());
-            onlineUserDo_other.setBalance(cal_other.toString());
-            onlineUserServiceImpl.updateById(onlineUserDo_other);
         }
+        onlineOrderInfoService.updateById(onlineOrderInfoDo);
     }
+
+    /**
+     * 订单审核通过以后操作
+     */
+    public void opertorSucess(OnlineOrderInfoDo onlineOrderInfoDo ){
+        Date createTime = new Date();
+        OnlineUserDo onlineUserDo = onlineUserServiceImpl.getById(onlineOrderInfoDo.getUserId());
+        String randomCode = onlineUserDo.getRandomCode();
+        QueryWrapper<OnlineUserDo> wq_randomCode=new QueryWrapper<>();
+        wq_randomCode.eq("my_invitation_code",randomCode);
+        OnlineUserDo onlineUserDo_other = onlineUserServiceImpl.getOne(wq_randomCode);
+
+        /**
+         * 生成两笔交易记录,一笔是返现，一笔是卖卡
+         */
+        /**
+         * 卖卡
+         */
+        List<OnlineTransactionHistoryDo> list=new ArrayList<>();
+        OnlineTransactionHistoryDo entity=new OnlineTransactionHistoryDo();
+        entity.setCreateTime(createTime);
+        entity.setOrderId(onlineOrderInfoDo.getId());
+        entity.setThirdId(onlineOrderInfoDo.getThirdId());
+        entity.setTotalAmonunt(onlineOrderInfoDo.getTotalAmonuntFee());
+        entity.setUserId(onlineUserDo.getId());
+        entity.setCashBackFee(onlineOrderInfoDo.getCashBackFee());
+        entity.setType(OrderStatusEnum.TR_TYPE_ORDER.getCode());
+        entity.setThirdUserId(onlineUserDo_other.getId());
+        entity.setThirdUserName(onlineUserDo_other.getName());
+        list.add(entity);
+
+
+        /**
+         * 返现
+         */
+        OnlineTransactionHistoryDo entity2=new OnlineTransactionHistoryDo();
+        entity2.setCreateTime(createTime);
+        entity2.setOrderId(onlineOrderInfoDo.getId());
+        entity2.setThirdId(onlineOrderInfoDo.getThirdId());
+        entity2.setTotalAmonunt(onlineOrderInfoDo.getTotalAmonuntFee());
+        entity2.setUserId(onlineUserDo_other.getId());
+        entity2.setType(OrderStatusEnum.TR_TYPE_PERSON.getCode());
+        entity2.setCashBackFee(onlineOrderInfoDo.getCashBackFee());
+        entity2.setThirdUserId(onlineUserDo.getId());
+        entity2.setThirdUserName(onlineUserDo.getName());
+        list.add(entity2);
+
+        onlineTransactionHistoryServiceImpl.saveBatch(list);
+        /**
+         * 更新个人用户账号
+         */
+        StringBuilder sb=new StringBuilder(onlineUserDo.getBalance()).append("+").append(onlineOrderInfoDo.getTotalAmonuntFee());
+        BigDecimal cal = CalculateUtil.cal(sb.toString());
+        onlineUserDo.setBalance(cal.toString());
+        onlineUserServiceImpl.updateById(onlineUserDo);
+        /**
+         * 返现用户用户账号余额
+         */
+        StringBuilder sb_other=new StringBuilder(onlineUserDo_other.getBalance()).append("+").append(onlineOrderInfoDo.getCashBackFee());
+        BigDecimal cal_other = CalculateUtil.cal(sb_other.toString());
+        onlineUserDo_other.setBalance(cal_other.toString());
+        onlineUserServiceImpl.updateById(onlineUserDo_other);
+    }
+
 }

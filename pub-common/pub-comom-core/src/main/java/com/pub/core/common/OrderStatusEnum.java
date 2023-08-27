@@ -18,6 +18,14 @@ public enum OrderStatusEnum {
     TR_TYPE_RECOD(3, "提现", "TR_status"),
 
     /**
+     * 管理员审核状态
+     */
+    IS_INSPECT_NO(-1, "不需要审核", "INSPECT_status"),
+    IS_INSPECT_WAITING(0, "审核中", "INSPECT_status"),
+    IS_INSPECT_SUCESS(9, "审核完成", "INSPECT_status"),
+
+
+    /**
      * 状态  9成功  -1失败  0 取消  1 初始化
      */
     DrawalFee_STATUS_INIT(1, "审核中", "DrawalFee_status"),

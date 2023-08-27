@@ -96,4 +96,18 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
 
     @TableField(exist = false)
     private String  countryImage;
+    /**
+     *客服回复金额
+     */
+    private String  replyFee;
+
+    /**
+     *  不需要  -1  审核中 1  审核不通过 0   9需要审核
+     */
+    private Integer  isInspect;
+
+    /**
+     * 审核人员回复金额
+     */
+    private String inspectFee;
 }

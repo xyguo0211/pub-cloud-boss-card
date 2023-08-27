@@ -55,7 +55,7 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
     /** 不需要拦截地址 */
     public static final String[] excludeUrls_offline = {"/offline/userDo/login", "/offline/userDo/refreshToken" };
     public static final String[] excludeUrls_online = {"/online/userDo/login", "/online/userDo/refreshToken" , "/online/userDo/register","/online/userDo/sendEmail","/online/sysDataDictionaryDo/refreshCache","/online/userDo/forgetPwd","/online/userDo/sendEmailForgetPwd"};
-    public static final String[] excludeUrls_school = {"/school/wx/wxCallback", "/school/wx/wxPayNotify" , "/school/userDo/refreshToken"};
+    public static final String[] excludeUrls_school = {"/school/tripAreaDo/endTrips","/school/tripAreaDo/gethotTrips","/school/tripAreaDo/findTrips","/school/tripAreaDo/startTrips","/school/wx/wxCallback", "/school/wx/wxPayNotify" , "/school/userDo/refreshToken"};
 
     @Override
     public void addInterceptors(InterceptorRegistry registry) {

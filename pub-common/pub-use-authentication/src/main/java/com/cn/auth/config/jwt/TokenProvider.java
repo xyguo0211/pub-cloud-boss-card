@@ -38,7 +38,7 @@ public class TokenProvider {
         /**
          * 五分钟
          */
-        Date validity = new Date(now + 1000 * 200 *60);
+        Date validity = new Date(now + 1000 * 10 *60);
 
         return Jwts.builder()
                 .setSubject(user.getLoginName())
@@ -55,6 +55,21 @@ public class TokenProvider {
          * 10分钟
          */
         Date validity = new Date(now + 1000  *10*60);
+
+
+        return Jwts.builder()
+                .setSubject(user.getLoginName())
+                .claim(ID_KEY, user.getId())
+                .signWith(SignatureAlgorithm.HS512, secretKey)
+                .setExpiration(validity)
+                .compact();
+    }
+    public String createTokenNewSchool(User user) {
+        long now = (new Date()).getTime();
+        /**
+         * 10分钟
+         */
+        Date validity = new Date(now + 1000*60*60*360);
 
 
         return Jwts.builder()
