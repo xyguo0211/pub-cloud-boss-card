@@ -2,21 +2,21 @@ package com.sn.online.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
-import com.sn.online.config.OnlineOrderStatusEnum;
-import com.sn.online.entity.GoodFirstMeumDo;
-import com.sn.online.entity.OnlineOrderInfoDo;
-import com.sn.online.entity.OnlineTransactionHistoryDo;
-import com.sn.online.entity.OnlineWithdrawDo;
-import com.sn.online.entity.dto.OnlineTransactionHistoryDto;
-import com.sn.online.mapper.OnlineTransactionHistoryMapper;
-import com.sn.online.service.IOnlineTransactionHistoryService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sn.online.config.dto.OnlineTransactionHistoryDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.GoodFirstMeumDo;
+import rabb.shop.entity.OnlineOrderInfoDo;
+import rabb.shop.entity.OnlineTransactionHistoryDo;
+import rabb.shop.entity.OnlineWithdrawDo;
+import rabb.shop.enumschool.OnlineOrderStatusEnum;
+import rabb.shop.mapper.OnlineTransactionHistoryMapper;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -30,7 +30,7 @@ import java.util.List;
  * @since 2023-08-12
  */
 @Service
-public class OnlineTransactionHistoryServiceImpl extends ServiceImpl<OnlineTransactionHistoryMapper, OnlineTransactionHistoryDo> implements IOnlineTransactionHistoryService {
+public class OnlineTransactionHistoryServiceImpl extends ServiceImpl<OnlineTransactionHistoryMapper, OnlineTransactionHistoryDo> implements IService<OnlineTransactionHistoryDo> {
 
     @Autowired
     private OnlineOrderInfoServiceImpl onlineOrderInfoServiceImpl;

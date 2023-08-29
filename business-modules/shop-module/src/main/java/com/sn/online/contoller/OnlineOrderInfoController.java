@@ -10,14 +10,14 @@ import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import com.sn.online.config.Decrypt;
 import com.sn.online.config.Encrypt;
-import com.sn.online.entity.GoodThirdRateDo;
-import com.sn.online.entity.OnlineOrderInfoDo;
-import com.sn.online.entity.dto.OnlineOrderSubmitDto;
+import com.sn.online.config.dto.OnlineOrderSubmitDto;
 import com.sn.online.service.impl.OnlineOrderInfoServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
+import rabb.shop.entity.GoodThirdRateDo;
+import rabb.shop.entity.OnlineOrderInfoDo;
 
 import java.util.List;
 

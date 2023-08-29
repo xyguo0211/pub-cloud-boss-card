@@ -140,5 +140,9 @@ public class TripOrderDo extends Model<TripOrderDo> {
      * 手机号
      */
     private String phone;
+    /**
+     * 退款订单号
+     */
+    private String refundOrderId;
 
 }

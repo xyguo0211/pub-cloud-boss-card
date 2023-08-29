@@ -1,27 +1,17 @@
 package com.sn.online.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.cn.auth.entity.User;
-import com.cn.auth.util.UserContext;
-import com.pub.core.exception.BusinessException;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.pub.core.utils.StringUtils;
 import com.sn.online.config.FilePathOnlineConfig;
-import com.sn.online.entity.*;
-import com.sn.online.entity.dto.OnlineOrderSubmitDto;
-import com.sn.online.mapper.GoodFirstMeumMapper;
-import com.sn.online.service.IGoodFirstMeumService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.multipart.MultipartFile;
+import rabb.shop.entity.*;
+import rabb.shop.mapper.GoodFirstMeumMapper;
 
 import java.io.File;
-import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.UUID;
 
@@ -34,7 +24,7 @@ import java.util.UUID;
  * @since 2023-08-02
  */
 @Service
-public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, GoodFirstMeumDo> implements IGoodFirstMeumService {
+public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, GoodFirstMeumDo> implements IService<GoodFirstMeumDo> {
 
     @Autowired
     private GoodSecondCountryServiceImpl  goodSecondCountryServiceImpl;

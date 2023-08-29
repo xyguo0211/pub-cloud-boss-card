@@ -50,6 +50,8 @@ public class WxController extends BaseController {
 
     @Value("${short_token_redis_cache_time}")
     private  Long short_token_redis_cache_time ;
+    @Value("${pagePath}")
+    private  String pagePath ;
 
     @Autowired
     private RedisCache redisCache;
@@ -214,7 +216,7 @@ public class WxController extends BaseController {
     public AjaxResult getImageByte(@RequestParam Integer orderId){
         try{
             UnlimitedQRCodeParam body=new UnlimitedQRCodeParam();
-            body.setPage("main/test");
+            body.setPage(pagePath);
             body.setScene(orderId+"");
             body.setCheckPath(false);
             byte[] imageByte = tripOrderService.getImageByte(body);

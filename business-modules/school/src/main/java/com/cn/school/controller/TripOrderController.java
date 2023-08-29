@@ -84,7 +84,10 @@ public class TripOrderController extends BaseController {
              * 再保存订单信息,因为要减票所以这样做
              */
             tripOrderService.addTripOrder(tripOrderDo);
-            return AjaxResult.success(prepayWithRequestPaymentResponse);
+            JSONObject json=new JSONObject();
+            json.put("orderId",tripOrderDo.getOrderId());
+            json.put("prepayWithRequestPaymentResponse",prepayWithRequestPaymentResponse);
+            return AjaxResult.success(json);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());
@@ -118,8 +121,8 @@ public class TripOrderController extends BaseController {
     @ResponseBody
     public AjaxResult checkTripOrder(@RequestParam Integer carId,@RequestParam Integer orderId){
         try{
-            tripOrderService.checkTripOrder(orderId,carId);
-            return AjaxResult.success();
+            TripOrderDo tripOrderDo = tripOrderService.checkTripOrder(orderId, carId);
+            return AjaxResult.success(tripOrderDo);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());
@@ -134,9 +137,9 @@ public class TripOrderController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/refundsTripOrder", method = RequestMethod.GET)
     @ResponseBody
-    public AjaxResult refundsTripOrder(@RequestParam Integer carId,@RequestParam Integer orderId){
+    public AjaxResult refundsTripOrder(@RequestParam Integer orderId){
         try{
-            tripOrderService.checkTripOrder(orderId,carId);
+            tripOrderService.refundsTripOrder(orderId);
             return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();

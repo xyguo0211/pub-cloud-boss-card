@@ -10,11 +10,17 @@ import com.cn.offline.entity.*;
 import com.cn.offline.mapper.OnlineOrderInfoMapper;
 import com.cn.offline.service.IOnlineOrderInfoService;
 
+import com.pub.core.common.OrderStatusEnum;
 import com.pub.core.util.controller.BaseController;
+import com.pub.core.utils.CalculateUtil;
 import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 /**
@@ -43,6 +49,14 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
     @Autowired
     private OnlineOrderInfoReplyImageServiceImpl onlineOrderInfoReplyImageServiceImpl;
 
+    @Autowired
+    private OnlineTransactionHistoryServiceImpl onlineTransactionHistoryServiceImpl;
+    @Autowired
+    private OnlineUserServiceImpl onlineUserServiceImpl;
+
+    @Value("${shop.fee.rata}")
+    private String shopFeeRata;
+
     public List<OnlineOrderInfoDo> getPageList(OnlineOrderInfoDo req) {
         User currentUser = UserContext.getCurrentUser();
         Integer id = currentUser.getId();
@@ -57,6 +71,11 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         Integer orderStatus = req.getOrderStatus();
         if(orderStatus!=null){
             wq.eq("order_status", orderStatus);
+        }
+        //不需要  -1  审核中  0    审核 完成 9
+        Integer isInspect = req.getIsInspect();
+        if(isInspect!=null){
+            wq.eq("is_inspect", isInspect);
         }
         String userName = req.getUserName();
         if(StringUtils.isNotBlank(userName)){
@@ -103,4 +122,28 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         onlineOrderInfoDo.setOnlineOrderInfoReplyDo(onlineOrderInfoReplyDo);
         return onlineOrderInfoDo;
     }
+
+    public void reviewOrder(OnlineOrderInfoDo req) {
+        Date createTime = new Date();
+        User currentUser = UserContext.getCurrentUser();
+        OnlineOrderInfoDo onlineOrderInfoDo = getById(req.getId());
+        onlineOrderInfoDo.setIsInspect(OrderStatusEnum.IS_INSPECT_SUCESS.getCode());
+        onlineOrderInfoDo.setInspectCompleteTime(createTime);
+        onlineOrderInfoDo.setInspectUserId(currentUser.getId());
+        onlineOrderInfoDo.setInspectUserName(currentUser.getLoginName());
+        onlineOrderInfoDo.setInspectFee(req.getInspectFee());
+        String inspectFee = onlineOrderInfoDo.getInspectFee();
+        BigDecimal cal = CalculateUtil.cal(new StringBuilder(inspectFee).append("*").append(shopFeeRata).toString());
+        onlineOrderInfoDo.setCashBackFee(cal.toString());
+        onlineOrderInfoDo.setTransactionAmount(inspectFee);
+        /**
+         * 生成两笔交易记录
+         */
+        onlineOrderInfoReplyServiceImpl.opertorSucess(onlineOrderInfoDo);
+        updateById(onlineOrderInfoDo);
+    }
+
+
+
+
 }

@@ -89,11 +89,13 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
             String replyFee = onlineOrderInfoDo.getReplyFee();
 
             if(totalAmonuntFee.equals(replyFee)){
+                onlineOrderInfoDo.setTransactionAmount(replyFee);
                 opertorSucess(onlineOrderInfoDo);
             }else{
                 /**
                  * 送管理员审核
                  */
+                onlineOrderInfoDo.setIsInspect(OrderStatusEnum.IS_INSPECT_WAITING.getCode());
             }
 
         }
@@ -122,7 +124,7 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
         entity.setCreateTime(createTime);
         entity.setOrderId(onlineOrderInfoDo.getId());
         entity.setThirdId(onlineOrderInfoDo.getThirdId());
-        entity.setTotalAmonunt(onlineOrderInfoDo.getTotalAmonuntFee());
+        entity.setTotalAmonunt(onlineOrderInfoDo.getTransactionAmount());
         entity.setUserId(onlineUserDo.getId());
         entity.setCashBackFee(onlineOrderInfoDo.getCashBackFee());
         entity.setType(OrderStatusEnum.TR_TYPE_ORDER.getCode());
@@ -138,7 +140,7 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
         entity2.setCreateTime(createTime);
         entity2.setOrderId(onlineOrderInfoDo.getId());
         entity2.setThirdId(onlineOrderInfoDo.getThirdId());
-        entity2.setTotalAmonunt(onlineOrderInfoDo.getTotalAmonuntFee());
+        entity2.setTotalAmonunt(onlineOrderInfoDo.getTransactionAmount());
         entity2.setUserId(onlineUserDo_other.getId());
         entity2.setType(OrderStatusEnum.TR_TYPE_PERSON.getCode());
         entity2.setCashBackFee(onlineOrderInfoDo.getCashBackFee());
@@ -150,7 +152,7 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
         /**
          * 更新个人用户账号
          */
-        StringBuilder sb=new StringBuilder(onlineUserDo.getBalance()).append("+").append(onlineOrderInfoDo.getTotalAmonuntFee());
+        StringBuilder sb=new StringBuilder(onlineUserDo.getBalance()).append("+").append(onlineOrderInfoDo.getTransactionAmount());
         BigDecimal cal = CalculateUtil.cal(sb.toString());
         onlineUserDo.setBalance(cal.toString());
         onlineUserServiceImpl.updateById(onlineUserDo);

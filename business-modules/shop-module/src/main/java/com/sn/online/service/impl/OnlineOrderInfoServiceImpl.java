@@ -1,27 +1,24 @@
 package com.sn.online.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.baomidou.mybatisplus.core.toolkit.AES;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
-import com.pub.core.common.OnlineConstants;
+import com.pub.core.common.OrderStatusEnum;
 import com.pub.core.exception.BusinessException;
-import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.utils.CalculateUtil;
 import com.pub.core.utils.StringUtils;
 import com.pub.core.util.controller.BaseController;
 import com.sn.online.config.FilePathOnlineConfig;
-import com.sn.online.entity.*;
-import com.sn.online.entity.dto.OnlineOrderSubmitDto;
-import com.sn.online.mapper.OnlineOrderInfoMapper;
-import com.sn.online.service.IOnlineOrderInfoService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sn.online.config.dto.OnlineOrderSubmitDto;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.*;
+import rabb.shop.mapper.OnlineOrderInfoMapper;
 
 import java.math.BigDecimal;
 import java.util.ArrayList;
@@ -37,7 +34,7 @@ import java.util.List;
  * @since 2023-08-02
  */
 @Service
-public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMapper, OnlineOrderInfoDo> implements IOnlineOrderInfoService {
+public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMapper, OnlineOrderInfoDo> implements IService<OnlineOrderInfoDo> {
 
     @Autowired
     private GoodSecondCountryServiceImpl  goodSecondCountryServiceImpl;
@@ -151,7 +148,14 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         onlineOrderInfoDo.setCreateTime(createTime);
         onlineOrderInfoDo.setUserId(currentUser.getId());
         onlineOrderInfoDo.setUserName(currentUser.getLoginName());
-        onlineOrderInfoDo.setOrderStatus(OnlineConstants.orderStats.initial);
+        /**
+         * 默认是初始化
+         */
+        onlineOrderInfoDo.setOrderStatus(OrderStatusEnum.TRACKING_STATUS_WAITING.getCode());
+        /**
+         * 默认是不需要审核的
+         */
+        onlineOrderInfoDo.setIsInspect(OrderStatusEnum.IS_INSPECT_NO.getCode());
         String totalAmonuntFee = onlineOrderInfoDo.getTotalAmonuntFee();
         BigDecimal cal = CalculateUtil.cal(new StringBuilder(totalAmonuntFee).append("*").append(shopFeeRata).toString());
         onlineOrderInfoDo.setCashBackFee(cal.toString());

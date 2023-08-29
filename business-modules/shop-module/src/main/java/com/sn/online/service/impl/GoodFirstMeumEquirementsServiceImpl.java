@@ -1,10 +1,10 @@
 package com.sn.online.service.impl;
 
-import com.sn.online.entity.GoodFirstMeumEquirementsDo;
-import com.sn.online.mapper.GoodFirstMeumEquirementsMapper;
-import com.sn.online.service.IGoodFirstMeumEquirementsService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.GoodFirstMeumEquirementsDo;
+import rabb.shop.mapper.GoodFirstMeumEquirementsMapper;
 
 /**
  * <p>
@@ -15,6 +15,6 @@ import org.springframework.stereotype.Service;
  * @since 2023-08-02
  */
 @Service
-public class GoodFirstMeumEquirementsServiceImpl extends ServiceImpl<GoodFirstMeumEquirementsMapper, GoodFirstMeumEquirementsDo> implements IGoodFirstMeumEquirementsService {
+public class GoodFirstMeumEquirementsServiceImpl extends ServiceImpl<GoodFirstMeumEquirementsMapper, GoodFirstMeumEquirementsDo> implements IService<GoodFirstMeumEquirementsDo> {
 
 }

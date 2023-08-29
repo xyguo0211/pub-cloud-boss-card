@@ -14,8 +14,7 @@ import com.pub.core.utils.AESUtil;
 import com.pub.redis.util.RedisCache;
 import com.sn.online.config.Decrypt;
 import com.sn.online.config.Encrypt;
-import com.sn.online.entity.OnlineUserDo;
-import com.sn.online.entity.dto.OnlineUserRegisterDto;
+import com.sn.online.config.dto.OnlineUserRegisterDto;
 import com.sn.online.service.impl.OnlineUserServiceImpl;
 import com.sn.online.service.impl.SysDataDictionaryServiceImpl;
 import org.apache.commons.lang3.StringUtils;
@@ -24,6 +23,7 @@ import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
+import rabb.shop.entity.OnlineUserDo;
 
 import javax.servlet.http.HttpServletRequest;
 import javax.validation.Valid;

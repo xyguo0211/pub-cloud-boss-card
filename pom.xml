@@ -50,7 +50,7 @@
         <protostuff-core.version>1.0.8</protostuff-core.version>
         <jdom.version>2.0.2</jdom.version>
         <spring-cloud-starter-bootstrap.version>3.1.1</spring-cloud-starter-bootstrap.version>
-        <mybatis-plus-generator.version>3.4.0</mybatis-plus-generator.version>
+        <mybatis-plus-generator.version>3.5.1</mybatis-plus-generator.version>
         <pub-common.version>1.0-SNAPSHOT</pub-common.version>
     </properties>
 
@@ -270,10 +270,20 @@
                 <artifactId>jdom</artifactId>
                 <version>${jdom.version}</version>
             </dependency>
-            <dependency>
+           <dependency>
                 <groupId>com.baomidou</groupId>
                 <artifactId>mybatis-plus-generator</artifactId>
                 <version>${mybatis-plus-generator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.baomidou</groupId>
+                <artifactId>mybatis-plus-extension</artifactId>
+                <version>${mybatis-plus-generator.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.example</groupId>
+                <artifactId>pub-modules-entity</artifactId>
+                <version>${pub-common.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

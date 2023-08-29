@@ -1,24 +1,19 @@
 package com.sn.online.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
 import com.pub.core.exception.BusinessException;
-import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.utils.StringUtils;
 import com.pub.redis.util.RedisCache;
 
-import com.sn.online.config.FilePathOnlineConfig;
 import com.sn.online.config.GmailConfig;
-import com.sn.online.entity.OnlineUserDo;
-import com.sn.online.entity.dto.OnlineUserRegisterDto;
-import com.sn.online.mapper.OnlineUserMapper;
-import com.sn.online.service.IOnlineUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.sn.online.config.dto.OnlineUserRegisterDto;
 import com.sn.online.utils.SendGmailUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.http.client.utils.DateUtils;
@@ -26,12 +21,12 @@ import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.OnlineUserDo;
+import rabb.shop.mapper.OnlineUserMapper;
 
 import javax.annotation.Resource;
 import java.util.Date;
-import java.util.Map;
 import java.util.Random;
-import java.util.UUID;
 
 
 /**
@@ -44,7 +39,7 @@ import java.util.UUID;
  */
 @Slf4j
 @Service
-public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineUserDo> implements IOnlineUserService {
+public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineUserDo> implements IService<OnlineUserDo> {
     
     @Resource
     private TokenProvider tokenProvider;
@@ -109,8 +104,8 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         /**
          * 生成邀请码
          */
-        getMyInvitationCode();
-        onlineUserDo_save.setMyInvitationCode(UUID.randomUUID().toString().replaceAll("-",""));
+        String myInvitationCode = getMyInvitationCode();
+        onlineUserDo_save.setMyInvitationCode(myInvitationCode);
         onlineUserDo_save.setRole(OnlineConstants.onlineRole.system_no);
         save(onlineUserDo_save);
         redisCache.deleteCache(name);
@@ -122,11 +117,11 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
         String hincr = redisCache.hincr(yyyyMMddStr, yyyyMMddStr, 1, 1000*60*60*48)+"";
         if(hincr.contains(".")){
             String[] split = hincr.split("\\.");
-            String rtn = String.format("%04d", Integer.valueOf(split[0]));
+            String rtn = String.format("%03d", Integer.valueOf(split[0]));
             int i = (int)(Math.random()*90 + 10);
             return "team"+yyyyMMddStr+rtn+i;
         }else{
-            String rtn = String.format("%04d", Integer.valueOf(hincr));
+            String rtn = String.format("%03d", Integer.valueOf(hincr));
             int i = (int)(Math.random()*90 + 10);
             return "team"+yyyyMMddStr+rtn+i;
         }

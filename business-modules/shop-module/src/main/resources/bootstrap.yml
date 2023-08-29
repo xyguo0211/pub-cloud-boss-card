@@ -31,9 +31,9 @@ spring:
     #    include: druid-dev
     active: dev
 
-mybatis-plus:
-  mapper-locations: classpath*:mapper/**/*Mapper.xml
-  type-aliases-package: com.xhx.basicdata.**.entity
+#mybatis-plus:
+#  mapper-locations: classpath*:mapper/**/*Mapper.xml
+
 
 # PageHelper分页插件
 pagehelper:

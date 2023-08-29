@@ -65,6 +65,10 @@ public enum OrderStatusEnum {
         String targetColumnName = "tracking_status";
         return getStr(targetColumnName, trackingStatus);
     }
+    public static String getIsInspectStr(Integer trackingStatus) {
+        String targetColumnName = "INSPECT_status";
+        return getStr(targetColumnName, trackingStatus);
+    }
 
     /**
      * 状态  9成功  -1失败  0 取消  1 初始化

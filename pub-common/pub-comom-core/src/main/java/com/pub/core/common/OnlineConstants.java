@@ -14,11 +14,7 @@ public interface OnlineConstants {
         public static final Integer delete_no=9;
         public static final Integer delete=-1;
     }
-    public interface orderStats {
-        public static final Integer initial =0;
-        public static final Integer error=-1;
-        public static final Integer finish=1;
-    }
+
 
     /**
      * 状态  9成功  -1失败  0 取消  1 初始化

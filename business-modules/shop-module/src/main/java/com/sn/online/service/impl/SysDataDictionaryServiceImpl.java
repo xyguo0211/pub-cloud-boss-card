@@ -3,14 +3,14 @@ package com.sn.online.service.impl;
 import com.alibaba.druid.support.logging.Log;
 import com.alibaba.druid.support.logging.LogFactory;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.cn.auth.config.Constant;
 import com.pub.core.exception.BusinessException;
-import com.sn.online.entity.SysDataDictionaryDo;
-import com.sn.online.mapper.SysDataDictionaryMapper;
-import com.sn.online.service.ISysDataDictionaryService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.SysDataDictionaryDo;
+import rabb.shop.mapper.SysDataDictionaryMapper;
 
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +25,7 @@ import java.util.Map;
  * @since 2023-08-01
  */
 @Service
-public class SysDataDictionaryServiceImpl extends ServiceImpl<SysDataDictionaryMapper, SysDataDictionaryDo> implements ISysDataDictionaryService {
+public class SysDataDictionaryServiceImpl extends ServiceImpl<SysDataDictionaryMapper, SysDataDictionaryDo> implements IService<SysDataDictionaryDo> {
 
 
     private static Log log = LogFactory.getLog(SysDataDictionaryServiceImpl.class);

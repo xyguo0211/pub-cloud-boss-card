@@ -1,10 +1,10 @@
 package com.sn.online.service.impl;
 
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.sn.online.entity.OnlineWithdrawImageDo;
-import com.sn.online.mapper.OnlineWithdrawImageMapper;
-import com.sn.online.service.IOnlineWithdrawImageService;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.OnlineWithdrawImageDo;
+import rabb.shop.mapper.OnlineWithdrawImageMapper;
 
 /**
  * <p>
@@ -15,6 +15,6 @@ import org.springframework.stereotype.Service;
  * @since 2023-08-14
  */
 @Service
-public class OnlineWithdrawImageServiceImpl extends ServiceImpl<OnlineWithdrawImageMapper, OnlineWithdrawImageDo> implements IOnlineWithdrawImageService {
+public class OnlineWithdrawImageServiceImpl extends ServiceImpl<OnlineWithdrawImageMapper, OnlineWithdrawImageDo> implements IService<OnlineWithdrawImageDo> {
 
 }

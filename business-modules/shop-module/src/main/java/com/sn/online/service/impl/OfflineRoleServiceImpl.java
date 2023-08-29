@@ -1,14 +1,14 @@
 package com.sn.online.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
-import com.sn.online.entity.OfflineRoleDo;
-import com.sn.online.mapper.OfflineRoleMapper;
-import com.sn.online.service.IOfflineRoleService;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.OfflineRoleDo;
+import rabb.shop.mapper.OfflineRoleMapper;
 
 import java.util.Date;
 import java.util.List;
@@ -22,7 +22,7 @@ import java.util.List;
  * @since 2023-08-03
  */
 @Service
-public class OfflineRoleServiceImpl extends ServiceImpl<OfflineRoleMapper, OfflineRoleDo> implements IOfflineRoleService {
+public class OfflineRoleServiceImpl extends ServiceImpl<OfflineRoleMapper, OfflineRoleDo> implements IService<OfflineRoleDo> {
 
     public void addRole(OfflineRoleDo req) throws Exception{
         String name = req.getName();

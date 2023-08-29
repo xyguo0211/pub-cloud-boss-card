@@ -1,10 +1,10 @@
 package com.sn.online.service.impl;
 
-import com.sn.online.entity.GoodThirdRateDo;
-import com.sn.online.mapper.GoodThirdRateMapper;
-import com.sn.online.service.IGoodThirdRateService;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.GoodThirdRateDo;
+import rabb.shop.mapper.GoodThirdRateMapper;
 
 /**
  * <p>
@@ -15,6 +15,6 @@ import org.springframework.stereotype.Service;
  * @since 2023-08-02
  */
 @Service
-public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, GoodThirdRateDo> implements IGoodThirdRateService {
+public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, GoodThirdRateDo> implements IService<GoodThirdRateDo> {
 
 }

@@ -11,15 +11,13 @@ import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import com.sn.online.config.Decrypt;
 import com.sn.online.config.Encrypt;
-import com.sn.online.entity.OnlineOrderInfoDo;
-import com.sn.online.entity.OnlineUserBankAccountDo;
-import com.sn.online.entity.OnlineWithdrawDo;
 import com.sn.online.service.impl.OnlineWithdrawServiceImpl;
 import com.sn.online.utils.AESUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
+import rabb.shop.entity.OnlineWithdrawDo;
 
 import java.util.List;
 

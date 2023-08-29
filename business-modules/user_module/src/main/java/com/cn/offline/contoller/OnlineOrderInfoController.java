@@ -6,6 +6,7 @@ import com.cn.auth.config.TimingLog;
 import com.cn.offline.config.OfflineAuthMenuKeyConstant;
 import com.cn.offline.entity.GoodFirstMeumDo;
 import com.cn.offline.entity.OnlineOrderInfoDo;
+import com.cn.offline.entity.OnlineOrderInfoReplyDo;
 import com.cn.offline.service.impl.OnlineOrderInfoServiceImpl;
 import com.pub.core.util.controller.BaseController;
 
@@ -69,6 +70,24 @@ public class OnlineOrderInfoController extends BaseController {
             return AjaxResult.error(e.getMessage());
         }
 
+    }
+
+    /**
+     * 订单审核
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/reviewOrder", method = RequestMethod.POST)
+    @ResponseBody
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_ORDER)
+    public AjaxResult reviewOrder(@RequestBody OnlineOrderInfoDo req){
+        try{
+            onlineOrderInfoService.reviewOrder(req);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
     }
 
 }

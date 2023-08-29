@@ -12,8 +12,6 @@ import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.sn.online.config.Decrypt;
 import com.sn.online.config.Encrypt;
-import com.sn.online.entity.OnlineUserBankAccountDo;
-import com.sn.online.entity.OnlineUserDo;
 import com.sn.online.service.impl.OnlineUserBankAccountServiceImpl;
 import com.sn.online.service.impl.OnlineUserServiceImpl;
 import com.sn.online.service.impl.SysDataDictionaryServiceImpl;
@@ -24,6 +22,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.RequestMethod;
 import org.springframework.web.bind.annotation.ResponseBody;
+import rabb.shop.entity.OnlineUserBankAccountDo;
+import rabb.shop.entity.OnlineUserDo;
 
 import java.util.List;
 import java.util.Map;

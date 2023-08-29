@@ -20,5 +20,6 @@
         <module>pub-comom-core</module>
         <module>pub-mybits-plus-generator</module>
         <module>pub-use-authentication</module>
+        <module>pub-modules-entity</module>
     </modules>
 </project>

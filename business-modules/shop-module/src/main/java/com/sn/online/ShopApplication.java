@@ -19,8 +19,12 @@ import java.lang.annotation.*;
 
 @EnableScheduling  //开启定时任务
 @EnableAsync // 启动异步调用
-@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class })
+@SpringBootApplication(exclude = { DataSourceAutoConfiguration.class },scanBasePackages = {"com.sn.online","rabb.shop"})
 @EnableSwagger2
+/**
+ * 一定加上mapper扫描。因为默认扫描application下
+ */
+@MapperScan("rabb.shop.mapper")
 public class ShopApplication {
 
     public static void main(String[] args) {

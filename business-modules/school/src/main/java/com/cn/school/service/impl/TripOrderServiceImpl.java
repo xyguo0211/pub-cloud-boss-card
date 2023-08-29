@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.cn.school.config.BaseWxConfig;
 import com.cn.school.config.Constant;
 import com.cn.school.config.WxPayConfig;
 import com.cn.school.entity.TripCarDo;
@@ -22,6 +23,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pub.core.exception.BusinessException;
 import com.pub.redis.util.RedisCache;
+import com.sun.org.apache.regexp.internal.RE;
 import com.wechat.pay.contrib.apache.httpclient.WechatPayHttpClientBuilder;
 import com.wechat.pay.contrib.apache.httpclient.auth.PrivateKeySigner;
 import com.wechat.pay.contrib.apache.httpclient.auth.Verifier;
@@ -100,6 +102,8 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
 
     @Autowired
     private RestTemplate restTemplate;
+    @Autowired
+    private com.cn.school.config.BaseWxConfig baseWxConfig;
 
 
     public List<TripOrderDo> myTripOrderDo(Integer status) {
@@ -208,6 +212,24 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         }
     }
 
+    /**
+     * 生成退款订单号
+     * @return
+     */
+    public  String createRefundsTaskNo() {
+        String yyyyMMddStr = DateUtils.formatDate(new Date(), "yyyyMMdd");
+        //设置两天过期  1000*60*60*48
+        String hincr = redisCache.hincr(yyyyMMddStr, yyyyMMddStr, 1, 1000*60*60*48)+"";
+        if(hincr.contains(".")){
+            String[] split = hincr.split("\\.");
+            String rtn = String.format("%08d", Integer.valueOf(split[0]));
+            return "RF"+yyyyMMddStr+rtn;
+        }else{
+            String rtn = String.format("%08d", Integer.valueOf(hincr));
+            return "RF"+yyyyMMddStr+rtn;
+        }
+    }
+
 
     public String tets(TripOrderDo tripOrderDo,String openid) throws Exception {
         HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/pay/transactions/jsapi");
@@ -265,19 +287,24 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         Integer amountInteger = Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getTotalFee()));
         // 一个商户号只能初始化一个配置，否则会因为重复的下载任务报错
         if (config == null) {
-            config = new RSAAutoCertificateConfig.Builder()
-                    .merchantId(wxPayConfig.getMchid())
-                    .privateKey(Constant.privateKey)
-                    .merchantSerialNumber(wxPayConfig.getBusinessPayId())
-                    //.apiV3Key("llikjdkYY2546525llYkjdk2546525ll")
-                    .apiV3Key(wxPayConfig.getApiV3Key())
-                    .build();
-        }
-        // 构建service
-        if (service == null) {
-            service = new JsapiServiceExtension.Builder().config(config).build();
-        }
+            synchronized ("createConfig"){
+                if (config == null) {
+                    config = new RSAAutoCertificateConfig.Builder()
+                            .merchantId(wxPayConfig.getMchid())
+                            .privateKey(Constant.privateKey)
+                            .merchantSerialNumber(wxPayConfig.getBusinessPayId())
+                            //.apiV3Key("llikjdkYY2546525llYkjdk2546525ll")
+                            .apiV3Key(wxPayConfig.getApiV3Key())
+                            .build();
+                    // 构建service
+                    if (service == null) {
+                        service = new JsapiServiceExtension.Builder().config(config).build();
+                    }
+                }
 
+            }
+
+        }
         //组装预约支付的实体
         PrepayRequest request = new PrepayRequest();
         //计算金额
@@ -411,7 +438,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
      * @param carId
      * @throws Exception
      */
-    public synchronized void checkTripOrder(Integer orderId, Integer carId) throws Exception{
+    public synchronized TripOrderDo checkTripOrder(Integer orderId, Integer carId) throws Exception{
         TripOrderDo tripOrderDo = getById(orderId);
         Integer onCarStatus = tripOrderDo.getOnCarStatus();
         /**
@@ -427,5 +454,53 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         tripOrderDo.setOnCarStatus(1);
         tripOrderDo.setOncarTime(new Date());
         updateById(tripOrderDo);
+        return tripOrderDo;
     }
+
+    public void refundsTripOrder(Integer orderId) throws Exception {
+        TripOrderDo tripOrderDo = getById(orderId);
+        HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/refund/domestic/refunds");
+        httpPost.addHeader("Accept", "application/json");
+        httpPost.addHeader("Content-type","application/json; charset=utf-8");
+
+        ByteArrayOutputStream bos = new ByteArrayOutputStream();
+        ObjectMapper objectMapper = new ObjectMapper();
+
+        ObjectNode rootNode = objectMapper.createObjectNode();
+        rootNode.put("out_trade_no",tripOrderDo.getOrderId());
+        /**
+         * 退款订单号
+         */
+        String refundsTaskNo = createRefundsTaskNo();
+        tripOrderDo.setRefundOrderId(refundsTaskNo);
+        rootNode.put("out_refund_no", refundsTaskNo);
+        rootNode.putObject("amount")
+                /**
+                 * 退款金额
+                 */
+                .put("refund",1)
+                /**
+                 * 原订单金额
+                 */
+                .put("total", 1)
+                .put("currency", "CNY");
+
+        objectMapper.writeValue(bos, rootNode);
+        httpPost.setEntity(new StringEntity(bos.toString("UTF-8"), "UTF-8"));
+        /**
+         *
+         merchantId商户号。
+         merchantSerialNumber商户API证书的证书序列号。
+         merchantPrivateKey商户API私钥，如何加载商户API私钥请看常见问题。
+         wechatPayCertificates微信支付平台证书列表。你也可以使用后面章节提到的“定时更新平台证书功能”，而不需要关心平台证书的来龙去脉。
+
+         */
+        CloseableHttpClient httpClient = baseWxConfig.getHttpClient();
+        CloseableHttpResponse response = httpClient.execute(httpPost);
+
+        String prepay_id = EntityUtils.toString(response.getEntity());
+
+    }
+
+
 }

@@ -1,8 +1,8 @@
 package com.sn.online.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.pub.core.common.OnlineConstants;
@@ -10,15 +10,14 @@ import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
 import com.sn.online.config.FilePathOnlineConfig;
-import com.sn.online.entity.OnlineUserBankAccountDo;
-import com.sn.online.entity.OnlineUserDo;
-import com.sn.online.entity.OnlineWithdrawDo;
-import com.sn.online.entity.OnlineWithdrawImageDo;
-import com.sn.online.mapper.OnlineWithdrawMapper;
-import com.sn.online.service.IOnlineWithdrawService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.OnlineUserBankAccountDo;
+import rabb.shop.entity.OnlineUserDo;
+import rabb.shop.entity.OnlineWithdrawDo;
+import rabb.shop.entity.OnlineWithdrawImageDo;
+import rabb.shop.mapper.OnlineWithdrawMapper;
 
 import java.util.Date;
 import java.util.List;
@@ -32,7 +31,7 @@ import java.util.List;
  * @since 2023-08-06
  */
 @Service
-public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper, OnlineWithdrawDo> implements IOnlineWithdrawService {
+public class OnlineWithdrawServiceImpl extends ServiceImpl<OnlineWithdrawMapper, OnlineWithdrawDo> implements IService<OnlineWithdrawDo> {
 
     @Autowired
     private OnlineUserServiceImpl onlineUserService;

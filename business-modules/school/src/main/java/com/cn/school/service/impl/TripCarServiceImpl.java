@@ -1,12 +1,18 @@
 package com.cn.school.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.school.config.Constant;
 import com.cn.school.entity.TripCarDo;
 import com.cn.school.mapper.TripCarMapper;
 import com.cn.school.service.ITripCarService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pub.core.exception.BusinessException;
+import com.pub.core.utils.DateUtils;
 import org.springframework.stereotype.Service;
+
+import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -42,5 +48,11 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
             tripCarDo.setSellNum(sellNum+num);
             updateById(tripCarDo);
         }
+    }
+
+    public List<TripCarDo> getCarCheck() {
+        QueryWrapper<TripCarDo> wq=new QueryWrapper<>();
+        wq.like("start_time", DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD,new Date()));
+        return list(wq);
     }
 }

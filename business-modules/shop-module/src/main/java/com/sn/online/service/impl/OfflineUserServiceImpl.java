@@ -1,32 +1,16 @@
 package com.sn.online.service.impl;
 
-import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.extension.service.IService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
-import com.cn.auth.config.Constant;
-import com.cn.auth.config.jwt.TokenProvider;
-import com.cn.auth.entity.User;
-import com.cn.auth.util.UserContext;
-import com.pub.core.common.OfflineConstants;
-import com.pub.core.common.OnlineConstants;
-import com.pub.core.exception.BusinessException;
-import com.pub.core.util.controller.BaseController;
-import com.pub.core.utils.DateUtils;
-import com.pub.core.utils.MD5Util;
-import com.pub.core.utils.StringUtils;
-import com.pub.redis.util.RedisCache;
-import com.sn.online.entity.OfflineRoleDo;
-import com.sn.online.entity.OfflineUserDo;
-import com.sn.online.entity.OnlineOrderInfoDo;
-import com.sn.online.mapper.OfflineUserMapper;
-import com.sn.online.service.IOfflineUserService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
+import rabb.shop.entity.OfflineRoleDo;
+import rabb.shop.entity.OfflineUserDo;
+import rabb.shop.entity.OnlineOrderInfoDo;
+import rabb.shop.mapper.OfflineUserMapper;
 
-import javax.annotation.Resource;
 import java.util.*;
 
 /**
@@ -39,7 +23,7 @@ import java.util.*;
  */
 @Slf4j
 @Service
-public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, OfflineUserDo> implements IOfflineUserService {
+public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, OfflineUserDo> implements IService<OfflineUserDo> {
 
     @Autowired
     private OfflineRoleServiceImpl offlineRoleService;

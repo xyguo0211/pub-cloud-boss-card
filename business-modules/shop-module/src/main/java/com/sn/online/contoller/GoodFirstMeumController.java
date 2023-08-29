@@ -5,9 +5,6 @@ import com.alibaba.fastjson.JSONObject;
 import com.cn.auth.config.TimingLog;
 
 import com.pub.core.util.domain.AjaxResult;
-import com.sn.online.entity.GoodFirstMeumDo;
-import com.sn.online.entity.GoodThirdRateDo;
-import com.sn.online.entity.dto.OnlineOrderSubmitDto;
 import com.sn.online.service.impl.GoodFirstMeumServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -15,6 +12,7 @@ import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
 import org.springframework.web.multipart.MultipartFile;
+import rabb.shop.entity.GoodFirstMeumDo;
 
 import java.util.List;
 
