@@ -46,9 +46,9 @@ public class TripAreaController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/addTripAreaDo", method = RequestMethod.POST)
     @ResponseBody
-    public AjaxResult addFirstCard(@RequestBody TripAreaDo tripAreaDo){
+    public AjaxResult addTripAreaDo(@RequestBody TripAreaDo tripAreaDo){
         try{
-            tripAreaService.addFirstCard(tripAreaDo);
+            tripAreaService.addTripAreaDo(tripAreaDo);
             return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();
@@ -130,6 +130,41 @@ public class TripAreaController extends BaseController {
             List<TripAreaDo> pageList = tripAreaService.getPageList(req);
             TableDataInfo dataTable = getDataTable(pageList);
             return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
+    /**
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/editTripAreaDo", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult editTripAreaDo(@RequestBody TripAreaDo tripAreaDo){
+        try{
+            tripAreaService.editTripAreaDo(tripAreaDo);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+
+    /**
+     * 车次下拉选框
+     * @param
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getCheckBox", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getCheckBox(){
+        try{
+            List<TripAreaDo> pageList = tripAreaService.getCheckBox();
+            return AjaxResult.success(pageList);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

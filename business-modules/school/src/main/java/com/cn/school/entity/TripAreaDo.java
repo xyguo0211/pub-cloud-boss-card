@@ -51,6 +51,10 @@ public class TripAreaDo extends Model<TripAreaDo> {
     private Integer isHot;
 
     private String cityName;
+    /**
+     * -1  已下线   9未下线
+     */
+    private Integer deleteStatus;
 
 
 }

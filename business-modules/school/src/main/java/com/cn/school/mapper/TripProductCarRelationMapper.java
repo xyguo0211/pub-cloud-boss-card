@@ -24,7 +24,7 @@ public interface TripProductCarRelationMapper extends BaseMapper<TripProductCarR
     @Select({
             "<script>",
             " SELECT t.start_time,t.id as car_id ,t.order_num-t.sell_num as sell_num ,n.fee,n.id as product_id,k.city_name,k.origin,k.destination FROM trip_car t LEFT JOIN trip_product_car_relation m on t.id=m.car_id LEFT JOIN trip_product n on m.product_id=n.id LEFT JOIN trip_area k on n.trip_area_id=k.id    ",
-            "   WHERE LEFT(t.start_time ,10)= #{data} AND n.trip_area_id=#{trip_area_id}  ",
+            "   WHERE LEFT(t.start_time ,10)= #{data} AND n.trip_area_id=#{trip_area_id} AND n.delete_status=9  AND t.is_departed=-1 ",
             "</script>"
     })
     List<Map> findTrips(@Param(value="trip_area_id")Integer trip_area_id, @Param(value="data")String data);

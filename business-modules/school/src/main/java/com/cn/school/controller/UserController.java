@@ -9,12 +9,14 @@ import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.UserDo;
 import com.cn.school.service.impl.UserServiceImpl;
 import com.cn.school.util.RpcBaseResponseResult;
 import com.cn.school.util.SmsSendServiceUtil;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.util.page.TableDataInfo;
 import com.pub.core.utils.RandomUtil;
 import com.pub.redis.util.RedisCache;
 import org.apache.commons.lang3.StringUtils;
@@ -25,6 +27,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import javax.servlet.http.HttpServletRequest;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
 
 /**
@@ -170,6 +173,43 @@ public class UserController extends BaseController {
         return AjaxResult.error("失败，请联系管理员！");
     }
 
+    /**
+     * 分页数据
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult getPageList(@RequestBody UserDo req){
+        try{
+            List<UserDo> pageList = userService.getPageList(req);
+            TableDataInfo dataTable = getDataTable(pageList);
+            return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 拉黑接口
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/addBlack", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult addBlack(@RequestBody UserDo req){
+        try{
+            userService.addBlack(req);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
 
 }
 

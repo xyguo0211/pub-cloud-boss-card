@@ -10,6 +10,8 @@ import com.cn.school.mapper.UserMapper;
 import com.cn.school.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pub.core.common.OnlineConstants;
+import com.pub.core.util.controller.BaseController;
+import com.pub.core.utils.StringUtils;
 import com.pub.redis.util.RedisCache;
 import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,6 +19,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.util.List;
 
 /**
  * <p>
@@ -81,4 +84,31 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
         UserDo one = getOne(wq);
        return one;
     }
+
+    public List<UserDo> getPageList(UserDo req) {
+        QueryWrapper<UserDo> wq=new QueryWrapper<>();
+        String phone = req.getPhone();
+        if(StringUtils.isNotBlank(phone)){
+            wq.like("phone",phone);
+        }
+        String identityName = req.getIdentityName();
+        if(StringUtils.isNotBlank(identityName)){
+            wq.like("identity_name",identityName);
+        }
+        Integer isDelete = req.getIsDelete();
+        if(isDelete!=null){
+            wq.eq("is_delete",isDelete);
+        }
+        String school = req.getSchool();
+        if(StringUtils.isNotBlank(school)){
+            wq.like("school",school);
+        }
+        BaseController.startPage();
+        return  list(wq);
+    }
+
+    public void addBlack(UserDo req) {
+        updateById(req);
+    }
+
 }

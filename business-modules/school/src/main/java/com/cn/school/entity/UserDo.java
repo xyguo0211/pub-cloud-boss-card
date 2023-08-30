@@ -57,4 +57,6 @@ public class UserDo extends Model<UserDo> {
     @TableField(exist = false)
     private String phoneCode;
 
+    private Integer roleId;
+
 }

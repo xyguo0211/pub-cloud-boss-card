@@ -10,6 +10,9 @@ import com.cn.school.entity.TripProductDo;
 import com.cn.school.mapper.TripAreaMapper;
 import com.cn.school.service.ITripAreaService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.pub.core.exception.BusinessException;
+import com.pub.core.util.controller.BaseController;
+import com.pub.core.utils.StringUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
@@ -37,13 +40,23 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
     @Autowired
     private TripProductCarRelationServiceImpl tripProductCarRelationServiceImpl;
 
-    public void addFirstCard(TripAreaDo tripAreaDo) {
+    public void addTripAreaDo(TripAreaDo tripAreaDo) throws Exception{
+        QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
+        wq.eq("origin",tripAreaDo.getOrigin());
+        wq.eq("destination",tripAreaDo.getDestination());
+        TripAreaDo one = getOne(wq);
+        if(one!=null){
+            throw new BusinessException("线路已存在！");
+        }
         tripAreaDo.setCreateTime(new Date());
+        tripAreaDo.setDeleteStatus(9);
         save(tripAreaDo);
     }
 
     public Map<String,List<String>> startTrips() {
-        List<TripAreaDo> list = list();
+        QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
+        wq.eq("delete_status",9);
+        List<TripAreaDo> list = list(wq);
         Map<String,List<String>> map=new HashedMap();
         for (TripAreaDo tripAreaDo : list) {
             String cityName = tripAreaDo.getCityName();
@@ -61,6 +74,7 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
     public Map<String, List<TripAreaDo>> endTrips(String startTrips) {
         QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
         wq.eq("origin",startTrips);
+        wq.eq("delete_status",9);
         List<TripAreaDo> list = list(wq);
         Map<String,List<TripAreaDo>> map=new HashedMap();
         for (TripAreaDo tripAreaDo : list) {
@@ -78,15 +92,59 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
     public List<TripAreaDo> gethotTrips() {
         QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
         wq.eq("is_hot",1);
+        wq.eq("delete_status",9);
         List<TripAreaDo> list = list(wq);
         return list;
     }
 
     public List<TripAreaDo> getPageList(TripAreaDo req) {
-        return null;
+
+        QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
+        String origin = req.getOrigin();
+        if(StringUtils.isNotBlank(origin)){
+            wq.like("origin",origin);
+        }
+        String destination = req.getDestination();
+        if(StringUtils.isNotBlank(destination)){
+            wq.like("destination",destination);
+        }
+        String cityName = req.getCityName();
+        if(StringUtils.isNotBlank(cityName)){
+            wq.like("city_name",cityName);
+        }
+        Integer isHot = req.getIsHot();
+        if(isHot!=null){
+            wq.eq("is_hot",isHot);
+        }
+        Integer deleteStatus = req.getDeleteStatus();
+        if(deleteStatus!=null){
+            wq.eq("delete_status",deleteStatus);
+        }
+        BaseController.startPage();
+        List<TripAreaDo> list = list(wq);
+        return list;
     }
 
     public List<Map> findTrips(Integer trip_area_id,String data) {
         return tripProductCarRelationServiceImpl.findTrips(trip_area_id, data);
+    }
+
+    public void editTripAreaDo(TripAreaDo tripAreaDo) throws Exception{
+        QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
+        wq.eq("origin",tripAreaDo.getOrigin());
+        wq.eq("destination",tripAreaDo.getDestination());
+        wq.ne("id",tripAreaDo.getId());
+        TripAreaDo one = getOne(wq);
+        if(one!=null){
+            throw new BusinessException("线路已存在！");
+        }
+        updateById(tripAreaDo);
+    }
+
+    public List<TripAreaDo> getCheckBox() {
+        QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
+        wq.eq("delete_status",9);
+        List<TripAreaDo> list = list(wq);
+        return list;
     }
 }

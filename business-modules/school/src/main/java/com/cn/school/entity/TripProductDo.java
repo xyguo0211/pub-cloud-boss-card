@@ -1,6 +1,7 @@
 package com.cn.school.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -47,5 +48,17 @@ public class TripProductDo extends Model<TripProductDo> {
 
 
     private Integer deleteStatus;
+
+    /**
+     * 出发点
+     */
+    @TableField(exist = false)
+    private String origin;
+
+    /**
+     * 目的地
+     */
+    @TableField(exist = false)
+    private String destination;
 
 }
