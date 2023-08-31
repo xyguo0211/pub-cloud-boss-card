@@ -19,6 +19,8 @@ public class OnlineTransactionHistoryDto {
 
     private String thirdUserName;
 
+    private String invitationCode;
+
     /**
      * 交易类型  1 售卡  2 邀请码奖励  3 提现
      */

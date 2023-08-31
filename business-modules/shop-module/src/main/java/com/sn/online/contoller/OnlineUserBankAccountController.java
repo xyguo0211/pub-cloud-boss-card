@@ -105,6 +105,7 @@ public class OnlineUserBankAccountController extends BaseController {
             QueryWrapper<OnlineUserBankAccountDo> wq=new QueryWrapper<>();
             wq.eq("user_id",currentUser.getId());
             wq.eq("delete_status", OnlineConstants.deleteStats.delete_no);
+            wq.orderByDesc("id");
             List<OnlineUserBankAccountDo> list = onlineUserBankAccountService.list(wq);
             return AjaxResult.success(list);
         }catch (Exception e){

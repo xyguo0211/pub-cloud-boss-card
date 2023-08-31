@@ -14,6 +14,7 @@ import com.pub.core.common.OrderStatusEnum;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.utils.CalculateUtil;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -45,6 +46,9 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
     @Autowired
     private OnlineUserServiceImpl onlineUserServiceImpl;
 
+    @Value("${shop.fee.rata}")
+    private String shopFeeRata;
+
     @Transactional
     public void addOrderInfoReply(OnlineOrderInfoReplyDo req) throws  Exception{
         Date createTime = new Date();
@@ -59,6 +63,7 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
         onlineOrderInfoDo.setCompleteUserName(currentUser.getLoginName());
         onlineOrderInfoDo.setOrderStatus(req.getStatus());
         onlineOrderInfoDo.setCompleteTime(createTime);
+        onlineOrderInfoDo.setReplyFee(req.getReplyFee());
         req.setCreateTime(createTime);
         req.setReplyUserId(currentUser.getId());
         req.setReplyUserName(currentUser.getLoginName());
@@ -81,13 +86,13 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
         /**
          * 生成一笔交易记录
          */
+
         if(req.getStatus()==OrderStatusEnum.TRACKING_STATUS_EXCEPTION.getCode()){
+            String replyFee = req.getReplyFee();
             /**
              * 如果客户输入金额和客服输入金额不一致需要管理员审核
              */
             String totalAmonuntFee = onlineOrderInfoDo.getTotalAmonuntFee();
-            String replyFee = onlineOrderInfoDo.getReplyFee();
-
             if(totalAmonuntFee.equals(replyFee)){
                 onlineOrderInfoDo.setTransactionAmount(replyFee);
                 opertorSucess(onlineOrderInfoDo);
@@ -95,6 +100,11 @@ public class OnlineOrderInfoReplyServiceImpl extends ServiceImpl<OnlineOrderInfo
                 /**
                  * 送管理员审核
                  */
+                /**
+                 * 重新算一遍返现
+                 */
+                BigDecimal cal = CalculateUtil.cal(new StringBuilder(replyFee).append("*").append(shopFeeRata).toString());
+                onlineOrderInfoDo.setCashBackFee(cal.toString());
                 onlineOrderInfoDo.setIsInspect(OrderStatusEnum.IS_INSPECT_WAITING.getCode());
             }
 

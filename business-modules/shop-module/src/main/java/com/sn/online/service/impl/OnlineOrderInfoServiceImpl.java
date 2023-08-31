@@ -77,7 +77,7 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         if(StringUtils.isNotBlank(endTime)){
             wq.lt("create_time",endTime);
         }
-        wq.orderByDesc("id");
+        wq.orderByDesc("update_time");
         BaseController.startPage();
         List<OnlineOrderInfoDo> list = list(wq);
         return list;

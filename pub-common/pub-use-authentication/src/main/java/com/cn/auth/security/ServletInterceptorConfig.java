@@ -71,13 +71,13 @@ public class ServletInterceptorConfig implements WebMvcConfigurer {
          */
         registry.addInterceptor(new OnlineAuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_online)
-                .addPathPatterns("/online/test/**");
+                .addPathPatterns("/online/**");
         /**
          * 在线的拦截器
          */
         registry.addInterceptor(new SchoolAuthorityInterceptor(tokenProvider,redisCache))
                 .excludePathPatterns(excludeUrls_school)
-                .addPathPatterns("/school/**");
+                .addPathPatterns("/school/test/**");
 
 
 

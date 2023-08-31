@@ -11,10 +11,7 @@ import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.sn.online.config.dto.OnlineTransactionHistoryDto;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
-import rabb.shop.entity.GoodFirstMeumDo;
-import rabb.shop.entity.OnlineOrderInfoDo;
-import rabb.shop.entity.OnlineTransactionHistoryDo;
-import rabb.shop.entity.OnlineWithdrawDo;
+import rabb.shop.entity.*;
 import rabb.shop.enumschool.OnlineOrderStatusEnum;
 import rabb.shop.mapper.OnlineTransactionHistoryMapper;
 
@@ -38,6 +35,8 @@ public class OnlineTransactionHistoryServiceImpl extends ServiceImpl<OnlineTrans
     private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
     @Autowired
     private OnlineWithdrawServiceImpl onlineWithdrawServiceImpl;
+    @Autowired
+    private OnlineUserServiceImpl onlineUserServiceImpl;
 
     public List<OnlineTransactionHistoryDto> getPageList(JSONObject req) {
         User currentUser = UserContext.getCurrentUser();
@@ -51,7 +50,7 @@ public class OnlineTransactionHistoryServiceImpl extends ServiceImpl<OnlineTrans
         if(StringUtils.isNotBlank(endTime)){
             wq.lt("create_time",endTime);
         }
-        wq.orderByDesc("id");
+        wq.orderByDesc("update_time");
         BaseController.startPage();
         List<OnlineTransactionHistoryDo> list = list(wq);
         List<OnlineTransactionHistoryDto> rtn=new ArrayList<>();
@@ -73,9 +72,16 @@ public class OnlineTransactionHistoryServiceImpl extends ServiceImpl<OnlineTrans
             Integer type = onlineTransactionHistoryDo.getType();
             if(OnlineOrderStatusEnum.TR_TYPE_ORDER.getCode()==type){
                 onlineTransactionHistoryDto.setTotalAmonunt(onlineTransactionHistoryDo.getTotalAmonunt());
+                Integer userId = onlineTransactionHistoryDo.getUserId();
+                OnlineUserDo byId = onlineUserServiceImpl.getById(userId);
+                onlineTransactionHistoryDto.setInvitationCode(byId.getRandomCode());
             } else if(OnlineOrderStatusEnum.TR_TYPE_PERSON.getCode()==type){
                 //只有返现的是金额(不是提现)
                 onlineTransactionHistoryDto.setTotalAmonunt(onlineTransactionHistoryDo.getCashBackFee());
+                Integer userId = onlineTransactionHistoryDo.getUserId();
+                OnlineUserDo byId = onlineUserServiceImpl.getById(userId);
+                onlineTransactionHistoryDto.setInvitationCode(byId.getRandomCode());
+                onlineTransactionHistoryDto.setInvitationCode(byId.getRandomCode());
             }else{
                 //提现
                  onlineTransactionHistoryDto.setTotalAmonunt(onlineTransactionHistoryDo.getTotalAmonunt());

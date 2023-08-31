@@ -319,6 +319,7 @@ public class OfflineUserServiceImpl extends ServiceImpl<OfflineUserMapper, Offli
             wq.eq("role_id", roleId);
         }
         BaseController.startPage();
+        wq.orderByDesc("update_time");
         List<OfflineUserDo> list = list(wq);
         for (OfflineUserDo offlineUserDo : list) {
             Integer roleId1 = offlineUserDo.getRoleId();
