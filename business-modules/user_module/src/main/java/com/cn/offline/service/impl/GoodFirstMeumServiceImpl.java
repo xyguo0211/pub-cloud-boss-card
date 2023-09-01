@@ -1,5 +1,6 @@
 package com.cn.offline.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -10,6 +11,7 @@ import com.cn.offline.service.IGoodFirstMeumService;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.StringUtils;
+import com.pub.redis.util.RedisCache;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
@@ -46,15 +48,22 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
     @Autowired
     private OfflineFilePathOnlineConfig filePathOnlineConfig;
 
+    @Autowired
+    private RedisCache redisCache;
 
 
-    public List<GoodFirstMeumDo> getFirstPage() {
+
+    public void putFirstDataRedis(){
         QueryWrapper<GoodFirstMeumDo> wq_goodfirstmeum=new QueryWrapper<>();
         List<GoodFirstMeumDo> list = list(wq_goodfirstmeum);
         if(list!=null&&list.size()>0){
             for (GoodFirstMeumDo goodFirstMeumDo : list) {
                 QueryWrapper<GoodFirstMeumEquirementsDo> wq_equirements=new QueryWrapper<>();
                 wq_equirements.eq("first_id",goodFirstMeumDo.getId());
+                String cardImgeUrl = goodFirstMeumDo.getCardImgeUrl();
+                if(StringUtils.isNotBlank(cardImgeUrl)){
+                    goodFirstMeumDo.setCardImgeUrl(filePathOnlineConfig.getBaseUrl()+"/"+cardImgeUrl);
+                }
                 List<GoodFirstMeumEquirementsDo> listequirements = goodFirstMeumEquirementsServiceImpl.list(wq_equirements);
                 if(listequirements!=null&&listequirements.size()>0){
                     goodFirstMeumDo.setListEquirements(listequirements);
@@ -63,8 +72,9 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
                 wq_goodsecond.eq("first_id",goodFirstMeumDo.getId());
                 List<GoodSecondCountryDo> list_goodsecond = goodSecondCountryServiceImpl.list(wq_goodsecond);
                 if(list_goodsecond!=null&&list_goodsecond.size()>0){
-                    goodFirstMeumDo.setListSencond(list_goodsecond);
+
                     for (GoodSecondCountryDo goodSecondCountryDo : list_goodsecond) {
+                        goodSecondCountryDo.setCountryImage(filePathOnlineConfig.getBaseUrl()+"/"+goodSecondCountryDo.getCountryImage());
                         QueryWrapper<GoodThirdRateDo> wq_third=new QueryWrapper<>();
                         wq_third.eq("second_id",goodSecondCountryDo.getId());
                         wq_third.eq("first_id",goodSecondCountryDo.getFirstId());
@@ -81,12 +91,12 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
                             }
                         }
                     }
+                    goodFirstMeumDo.setListSencond(list_goodsecond);
                 }
 
             }
         }
-        return list;
-
+        redisCache.putCache("GoodFirstMeumList", JSONArray.toJSONString(list));
     }
 
 
@@ -155,6 +165,10 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
             goodFirstMeumEquirementsServiceImpl.saveBatch(listEquirements);
         }
 
+        /**
+         * 更新数据库缓存数据
+         */
+        putFirstDataRedis();
     }
 
     public void updateFirstCard(GoodFirstMeumDo req) {
@@ -183,6 +197,7 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
             }
             goodFirstMeumEquirementsServiceImpl.saveBatch(listEquirements);
         }
+        putFirstDataRedis();
     }
 
     public GoodFirstMeumDo getByIdEntity(Integer id) {
@@ -209,6 +224,7 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
         QueryWrapper<GoodThirdRateDo> third_rm=new QueryWrapper<>();
         third_rm.eq("first_id",id);
         goodThirdRateServiceImpl.remove(third_rm);
+        putFirstDataRedis();
     }
 
     public List<GoodFirstMeumDo> getPageList(GoodFirstMeumDo req) {

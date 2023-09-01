@@ -51,6 +51,7 @@ public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, G
             }
             goodThirdCardTypeServiceImpl.saveBatch(listCardType);
         }
+        goodFirstMeumServiceImpl.putFirstDataRedis();
     }
 
     public void updateThirdRate(GoodThirdRateDo req) {
@@ -69,6 +70,7 @@ public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, G
             }
             goodThirdCardTypeServiceImpl.saveBatch(listCardType);
         }
+        goodFirstMeumServiceImpl.putFirstDataRedis();
     }
 
     public GoodThirdRateDo getEntityById(Integer id) {
@@ -82,6 +84,7 @@ public class GoodThirdRateServiceImpl extends ServiceImpl<GoodThirdRateMapper, G
 
     public void deleteById(Integer id) {
         removeById(id);
+        goodFirstMeumServiceImpl.putFirstDataRedis();
     }
 
     public List<GoodThirdRateDo> getPageList(GoodThirdRateDo goodThirdRateDo) {

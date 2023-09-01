@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.offline.config.OfflineFilePathOnlineConfig;
+import com.cn.offline.contoller.GoodFirstMeumController;
 import com.cn.offline.entity.*;
 import com.cn.offline.mapper.GoodSecondCountryMapper;
 import com.cn.offline.service.IGoodSecondCountryService;
@@ -37,6 +38,7 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
     @Autowired
     private OfflineFilePathOnlineConfig filePathOnlineConfig;;
 
+
     public void addSecondCountry(GoodSecondCountryDo req)throws  Exception {
 
         QueryWrapper<GoodSecondCountryDo> wq_un=new QueryWrapper<>();
@@ -54,12 +56,14 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
         req.setCreateTime(createTime);
         req.setUpdateTime(createTime);
         save(req);
+        goodFirstMeumServiceImpl.putFirstDataRedis();
     }
 
     public void updateSecondCountry(GoodSecondCountryDo req) {
         Date createTime = new Date();
         req.setUpdateTime(createTime);
         updateById(req);
+        goodFirstMeumServiceImpl.putFirstDataRedis();
     }
 
     public void deleteById(Integer id) {
@@ -67,6 +71,7 @@ public class GoodSecondCountryServiceImpl extends ServiceImpl<GoodSecondCountryM
         QueryWrapper<GoodThirdRateDo> third_rm=new QueryWrapper<>();
         third_rm.eq("second_id",id);
         goodThirdRateServiceImpl.remove(third_rm);
+        goodFirstMeumServiceImpl.putFirstDataRedis();
     }
 
     public List<GoodSecondCountryDo> getPageList(GoodSecondCountryDo req) {

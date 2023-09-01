@@ -1,8 +1,11 @@
 package com.sn.online.service.impl;
 
+import com.alibaba.fastjson.JSONArray;
+import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.IService;
 import com.pub.core.utils.StringUtils;
+import com.pub.redis.util.RedisCache;
 import com.sn.online.config.FilePathOnlineConfig;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,9 +45,24 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
     @Autowired
     private FilePathOnlineConfig filePathOnlineConfig;
 
+    @Autowired
+    private  RedisCache  redisCache;
+
 
 
     public List<GoodFirstMeumDo> getFirstPage() {
+        String goodFirstMeumList = redisCache.getStringCache("GoodFirstMeumList");
+        if(StringUtils.isNotBlank(goodFirstMeumList)){
+            return JSONObject.parseArray(goodFirstMeumList,GoodFirstMeumDo.class);
+        }else{
+            List<GoodFirstMeumDo> goodFirstMeumDos = putFirstDataRedis();
+            return goodFirstMeumDos;
+        }
+
+    }
+
+
+    public List<GoodFirstMeumDo> putFirstDataRedis(){
         QueryWrapper<GoodFirstMeumDo> wq_goodfirstmeum=new QueryWrapper<>();
         List<GoodFirstMeumDo> list = list(wq_goodfirstmeum);
         if(list!=null&&list.size()>0){
@@ -87,11 +105,9 @@ public class GoodFirstMeumServiceImpl extends ServiceImpl<GoodFirstMeumMapper, G
 
             }
         }
+        redisCache.putCache("GoodFirstMeumList", JSONArray.toJSONString(list));
         return list;
-
     }
-
-
 
 
     public String uploadImage(MultipartFile file) throws Exception {

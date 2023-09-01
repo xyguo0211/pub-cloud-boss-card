@@ -20,7 +20,7 @@ public enum OrderStatusEnum {
     /**
      * 管理员审核状态
      */
-    IS_INSPECT_NO(-1, "不需要审核", "INSPECT_status"),
+    IS_INSPECT_NO(-1, "不审核", "INSPECT_status"),
     IS_INSPECT_WAITING(0, "审核中", "INSPECT_status"),
     IS_INSPECT_SUCESS(9, "审核完成", "INSPECT_status"),
 

@@ -9,6 +9,7 @@ import com.cn.offline.config.OfflineAuthMenuKeyConstant;
 import com.cn.offline.config.OfflineFilePathOnlineConfig;
 import com.cn.offline.entity.OfflineCountryDo;
 import com.cn.offline.entity.OfflineRoleDo;
+import com.cn.offline.service.impl.GoodFirstMeumServiceImpl;
 import com.cn.offline.service.impl.OfflineCountryServiceImpl;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
@@ -38,6 +39,9 @@ public class OfflineCountryController extends BaseController {
 
     @Autowired
     private OfflineFilePathOnlineConfig filePathOnlineConfig;
+
+    @Autowired
+    private GoodFirstMeumServiceImpl goodFirstMeumServiceImpl;
     /**
      * @return
      */
@@ -62,6 +66,7 @@ public class OfflineCountryController extends BaseController {
                 req.setImageUrl(split[0]);
             }
             offlineCountryServiceImpl.save(req);
+            goodFirstMeumServiceImpl.putFirstDataRedis();
             return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();
@@ -100,6 +105,7 @@ public class OfflineCountryController extends BaseController {
     public AjaxResult delete(@RequestParam Integer id){
         try{
             offlineCountryServiceImpl.removeById(id);
+            goodFirstMeumServiceImpl.putFirstDataRedis();
             return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();
