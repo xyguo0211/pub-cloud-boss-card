@@ -69,7 +69,7 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
     public List<TripCarDo> getPageList(TripCarDo req) {
         QueryWrapper<TripCarDo> wq=new QueryWrapper<>();
         Integer isDeparted = req.getIsDeparted();
-        if(isDeparted==null){
+        if(isDeparted!=null){
             wq.eq("is_departed",isDeparted);
         }
         String carNumber = req.getCarNumber();

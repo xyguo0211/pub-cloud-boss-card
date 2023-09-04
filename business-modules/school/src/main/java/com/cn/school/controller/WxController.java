@@ -14,6 +14,7 @@ import com.cn.school.service.impl.TripOrderServiceImpl;
 import com.cn.school.service.impl.UserServiceImpl;
 import com.cn.school.util.WXPayUtil;
 import com.cn.school.util.WxPayRequstUtil;
+import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.redis.util.RedisCache;
@@ -215,6 +216,12 @@ public class WxController extends BaseController {
     @ResponseBody
     public AjaxResult getImageByte(@RequestParam Integer orderId){
         try{
+            TripOrderDo tripOrderDo = tripOrderService.getById(orderId);
+            Integer num = tripOrderDo.getNum();
+            Integer onCarStatus = tripOrderDo.getOnCarStatus();
+            if(onCarStatus>=num){
+                return AjaxResult.error("该车票已被核销完成!");
+            }
             UnlimitedQRCodeParam body=new UnlimitedQRCodeParam();
             body.setPage(pagePath);
             body.setScene(orderId+"");

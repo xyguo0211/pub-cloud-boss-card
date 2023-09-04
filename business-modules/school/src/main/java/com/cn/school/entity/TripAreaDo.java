@@ -51,6 +51,8 @@ public class TripAreaDo extends Model<TripAreaDo> {
     private Integer isHot;
 
     private String cityName;
+
+    private String destinationCityName;
     /**
      * -1  已下线   9未下线
      */

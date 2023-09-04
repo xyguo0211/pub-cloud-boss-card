@@ -40,8 +40,8 @@ public class TripProductServiceImpl extends ServiceImpl<TripProductMapper, TripP
         for (TripProductDo tripProductDo : list) {
             Integer tripAreaId = tripProductDo.getTripAreaId();
             TripAreaDo tripAreaDo = tripAreaServiceImpl.getById(tripAreaId);
-            tripAreaDo.setOrigin(tripAreaDo.getOrigin());
-            tripAreaDo.setDestination(tripAreaDo.getDestination());
+            tripProductDo.setOrigin(tripAreaDo.getOrigin());
+            tripProductDo.setDestination(tripAreaDo.getDestination());
         }
         return list;
     }

@@ -43,5 +43,6 @@ public class TripProductCarRelationServiceImpl extends ServiceImpl<TripProductCa
             throw  new BusinessException("该车次和车票已配置！");
         }
         tripProductCarRelationDo.setCreateTime(new Date());
+        save(tripProductCarRelationDo);
     }
 }

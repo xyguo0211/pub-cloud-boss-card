@@ -78,11 +78,11 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
         List<TripAreaDo> list = list(wq);
         Map<String,List<TripAreaDo>> map=new HashedMap();
         for (TripAreaDo tripAreaDo : list) {
-            String cityName = tripAreaDo.getCityName();
-            List<TripAreaDo> tripAreaDos = map.get(cityName);
+            String destinationCityName = tripAreaDo.getDestinationCityName();
+            List<TripAreaDo> tripAreaDos = map.get(destinationCityName);
             if(tripAreaDos==null){
                 tripAreaDos=new ArrayList<>();
-                map.put(cityName,tripAreaDos);
+                map.put(destinationCityName,tripAreaDos);
             }
             tripAreaDos.add(tripAreaDo);
         }

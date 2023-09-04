@@ -105,10 +105,10 @@ public class TripCarController extends BaseController {
     /**
      * @return
      */
-    @TimingLog
-    @RequestMapping(value = "/addTripCarDoProduct", method = RequestMethod.POST)
+    /*@TimingLog
+    @RequestMapping(value = "/editTripCarDo", method = RequestMethod.POST)
     @ResponseBody
-    public AjaxResult addTripCarDoProduct(@RequestBody TripCarDo tripCarDo){
+    public AjaxResult editTripCarDo(@RequestBody TripCarDo tripCarDo){
         try{
             tripCarService.editTripCarDo(tripCarDo);
             return AjaxResult.success();
@@ -116,7 +116,7 @@ public class TripCarController extends BaseController {
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());
         }
-    }
+    }*/
     /**
      * 车次配置车票下拉选框
      */

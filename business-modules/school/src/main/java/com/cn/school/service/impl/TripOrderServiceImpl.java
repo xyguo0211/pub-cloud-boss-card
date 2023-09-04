@@ -7,6 +7,7 @@ import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.cn.school.config.BaseWxConfig;
 import com.cn.school.config.Constant;
+import com.cn.school.config.TripConfig;
 import com.cn.school.config.WxPayConfig;
 import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.TripOrderDo;
@@ -22,6 +23,8 @@ import com.cn.school.util.WxPayRequstUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.pub.core.exception.BusinessException;
+import com.pub.core.utils.CalculateUtil;
+import com.pub.core.utils.DateUtils;
 import com.pub.redis.util.RedisCache;
 import com.sun.org.apache.regexp.internal.RE;
 import com.wechat.pay.contrib.apache.httpclient.WechatPayHttpClientBuilder;
@@ -48,7 +51,6 @@ import org.apache.http.HttpEntity;
 import org.apache.http.HttpHost;
 import org.apache.http.client.methods.CloseableHttpResponse;
 import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.utils.DateUtils;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
@@ -62,6 +64,7 @@ import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
 import java.security.PrivateKey;
@@ -103,7 +106,9 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     @Autowired
     private RestTemplate restTemplate;
     @Autowired
-    private com.cn.school.config.BaseWxConfig baseWxConfig;
+    private BaseWxConfig baseWxConfig;
+    @Autowired
+    private TripConfig tripConfig;
 
 
     public List<TripOrderDo> myTripOrderDo(Integer status) {
@@ -118,6 +123,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
                 wq.ge("star_time", new Date());
             }
         }
+        wq.eq("status",Constant.OrderStatus.SUCESS);
          wq.eq("user_id", id);
         List<TripOrderDo> list = list(wq);
         return list;
@@ -199,7 +205,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     }
 
     public  String createTaskNo() {
-        String yyyyMMddStr = DateUtils.formatDate(new Date(), "yyyyMMdd");
+        String yyyyMMddStr = DateUtils.dateTime();
         //设置两天过期  1000*60*60*48
         String hincr = redisCache.hincr(yyyyMMddStr, yyyyMMddStr, 1, 1000*60*60*48)+"";
         if(hincr.contains(".")){
@@ -217,7 +223,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
      * @return
      */
     public  String createRefundsTaskNo() {
-        String yyyyMMddStr = DateUtils.formatDate(new Date(), "yyyyMMdd");
+        String yyyyMMddStr = DateUtils.dateTime();
         //设置两天过期  1000*60*60*48
         String hincr = redisCache.hincr(yyyyMMddStr, yyyyMMddStr, 1, 1000*60*60*48)+"";
         if(hincr.contains(".")){
@@ -336,6 +342,31 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     }
 
     public void createTripOrder(TripOrderDo tripOrderDo) throws Exception{
+        /**
+         * 同一个班次订票不付款超过2次需要在1个小时后才能购票，超过3次不付款直接禁止当天所有的购票
+         */
+        User currentUser = UserContext.getCurrentUser();
+        Integer user_id = currentUser.getId();
+        UserDo userDo = userServiceImpl.getById(user_id);
+        QueryWrapper<TripOrderDo> wq_chech=new QueryWrapper<>();
+        wq_chech.eq("user_id",user_id);
+        wq_chech.eq("product_id",tripOrderDo.getProductId());
+        wq_chech.eq("status",Constant.OrderStatus.FAIL);
+        wq_chech.like("create_time", DateUtils.getDate());
+        wq_chech.orderByDesc("id");
+        List<TripOrderDo> list_check = list(wq_chech);
+
+        if(list_check.size()>tripConfig.getBlackCount()){
+            throw new BusinessException("该天超过3次不付款,已被禁止购票！");
+        }
+        if(list_check.size()>tripConfig.getWaitCount()){
+            TripOrderDo tripOrderDo_num = list_check.get(0);
+            Date createTime = tripOrderDo_num.getCreateTime();
+            if(createTime.before(DateUtils.addHours(new Date(),tripConfig.getWaitTimeCount()))){
+                throw new BusinessException("该天超过2次不付款,已被禁止一小时后购票！");
+            }
+        }
+
         TripCarDo tripCarDo = tripCarServiceImpl.getById(tripOrderDo.getCarId());
         Integer orderNum = tripCarDo.getOrderNum();
         Integer sellNum = tripCarDo.getSellNum();
@@ -343,15 +374,14 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
             //说明没票了
             throw  new BusinessException("余票不足！请刷新购买页面");
         }
-        User currentUser = UserContext.getCurrentUser();
-        Integer user_id = currentUser.getId();
-        UserDo userDo = userServiceImpl.getById(user_id);
+
         String taskNo = createTaskNo();
         tripOrderDo.setStarTime(tripCarDo.getStartTime());
         tripOrderDo.setEndTime(tripCarDo.getEndTime());
         tripOrderDo.setUserId(userDo.getId());
-        tripOrderDo.setPhone(tripOrderDo.getPhone());
-        tripOrderDo.setIdentityName(tripOrderDo.getIdentityName());
+        tripOrderDo.setPhone(userDo.getPhone());
+        tripOrderDo.setIdentityName(userDo.getIdentityName());
+        tripOrderDo.setSchool(userDo.getSchool());
         tripOrderDo.setOrderId(taskNo);
         /**
          * 初始化
@@ -441,17 +471,20 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     public synchronized TripOrderDo checkTripOrder(Integer orderId, Integer carId) throws Exception{
         TripOrderDo tripOrderDo = getById(orderId);
         Integer onCarStatus = tripOrderDo.getOnCarStatus();
-        /**
-         * 0 未上车  1 已上车  -1 已过期
-         */
-        if(onCarStatus!=0){
-            throw new BusinessException("该车票已被核销过！");
-        }
+        Integer num = tripOrderDo.getNum();
+
         Integer carIdDb = tripOrderDo.getCarId();
         if(carIdDb!=carId){
             throw new BusinessException("车次不正确！");
         }
-        tripOrderDo.setOnCarStatus(1);
+
+        /**
+         * 0 未上车  1 已上车1人  2 上车两人  n上车n人
+         */
+        if(onCarStatus>=num){
+            throw new BusinessException("该车票已被核销完成！");
+        }
+        tripOrderDo.setOnCarStatus(onCarStatus+1);
         tripOrderDo.setOncarTime(new Date());
         updateById(tripOrderDo);
         return tripOrderDo;
@@ -459,6 +492,13 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
 
     public void refundsTripOrder(Integer orderId) throws Exception {
         TripOrderDo tripOrderDo = getById(orderId);
+        //发车前一小时不允许退票
+        Date starTime = tripOrderDo.getStarTime();
+        if((DateUtils.addHours(new Date(),tripConfig.getNoRefundTime()).after(starTime))){
+            throw  new  BusinessException("发车前"+tripConfig.getNoRefundTime()+"小时不允许退票！");
+        }
+        String refundsFee = getRefundsFee(tripOrderDo);
+        tripOrderDo.setRefundFee(refundsFee);
         HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/refund/domestic/refunds");
         httpPost.addHeader("Accept", "application/json");
         httpPost.addHeader("Content-type","application/json; charset=utf-8");
@@ -478,11 +518,11 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
                 /**
                  * 退款金额
                  */
-                .put("refund",1)
+                .put("refund",refundsFee)
                 /**
                  * 原订单金额
                  */
-                .put("total", 1)
+                .put("total", tripOrderDo.getTotalFee())
                 .put("currency", "CNY");
 
         objectMapper.writeValue(bos, rootNode);
@@ -501,6 +541,31 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         String prepay_id = EntityUtils.toString(response.getEntity());
 
     }
+
+    private String getRefundsFee( TripOrderDo tripOrderDo ) {
+        int fee=0;
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        wq.eq("ticket_status",9);
+        wq.eq("user_id",tripOrderDo.getUserId());
+        wq.eq("car_id",tripOrderDo.getCarId());
+        List<TripOrderDo> list = list(wq);
+        if(list!=null&&list.size()>1){
+            //超过一次以上每次扣除10元
+            int refundOneFee = tripConfig.getRefundOneFee();
+            fee=fee+refundOneFee;
+
+        }
+        //发车前2小时扣除20元
+        Date starTime = tripOrderDo.getStarTime();
+        if((DateUtils.addHours(new Date(),tripConfig.getNoRefundCarTime()).after(starTime))){
+            int refundOneFee = tripConfig.getRefundCarFee();
+            fee=fee+refundOneFee;
+        }
+        String totalFee = tripOrderDo.getTotalFee();
+        return CalculateUtil.cal(totalFee + "-" + fee)+"";
+
+    }
+
 
 
 }

@@ -61,6 +61,14 @@ public class Constant {
         public static final Integer ADD = 1;
         public static final Integer DEL = -1;
     }
+    /**
+     *    0 初始  1成功  -1 失败
+     */
+    public interface OrderStatus{
+        public static final Integer WAIT = 0;
+        public static final Integer FAIL = -1;
+        public static final Integer SUCESS = 1;
+    }
 
 
 }

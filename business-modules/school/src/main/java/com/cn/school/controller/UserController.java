@@ -210,6 +210,24 @@ public class UserController extends BaseController {
         }
 
     }
+    /**
+     * 修改角色  1 系统管理员 2 扫描人员 3普通用户
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/addRole", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult addRole(@RequestBody UserDo req){
+        try{
+            userService.updateById(req);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
 
 }
 

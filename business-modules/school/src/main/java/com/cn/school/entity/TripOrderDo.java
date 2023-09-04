@@ -78,7 +78,7 @@ public class TripOrderDo extends Model<TripOrderDo> {
     private Date payTime;
 
     /**
-     * 0 未上车  1 已上车  -1 已过期 
+     *0 未上车  1 已上车1人  2 上车两人  n上车n人
      */
     private Integer onCarStatus;
 
@@ -144,5 +144,13 @@ public class TripOrderDo extends Model<TripOrderDo> {
      * 退款订单号
      */
     private String refundOrderId;
+    /**
+     * 退款订单号
+     */
+    private String refundFee;
+    /**
+     * 退款时间
+     */
+    private Date refundTime;
 
 }
