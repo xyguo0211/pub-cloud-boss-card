@@ -15,6 +15,7 @@
         <module>shop-module</module>
         <module>user_module</module>
         <module>school</module>
+        <module>ocrimage</module>
     </modules>
 <dependencies>
     <!-- springboot web -->
