@@ -25,6 +25,8 @@ import java.io.PrintWriter;
  */
 public class SchoolAuthorityInterceptor extends HandlerInterceptorAdapter {
 
+    private Logger log= LoggerFactory.getLogger("SchoolAuthorityInterceptor");
+
     private RedisCache redisCache;
 
     @Autowired
@@ -60,12 +62,14 @@ public class SchoolAuthorityInterceptor extends HandlerInterceptorAdapter {
         String jwt = request.getHeader(TokenProvider.AUTHORIZATION_HEADER_ONLINE);
         if(!StringUtils.hasText(jwt)){
             //未携带token
+            log.info("未携带token");
             responseMessage(response, AjaxResult.error(ResultMessageConstants.B00008.message()));
             return false;
         }
         //校验jwt是否合法
         if (!jwt.startsWith("BearerSchool")) {
             //格式不对
+            log.info("格式不对");
             responseMessage(response, AjaxResult.error(ResultMessageConstants.B00011.message()));
             return false;
         }
@@ -78,6 +82,7 @@ public class SchoolAuthorityInterceptor extends HandlerInterceptorAdapter {
                 JSONObject token_json=new JSONObject();
                 token_json.put("code","0");
                 token_json.put("message","请刷新token!");
+                log.info("请刷新token");
                 responseMessage(response, token_json);
                 return false;
             }
@@ -86,6 +91,7 @@ public class SchoolAuthorityInterceptor extends HandlerInterceptorAdapter {
         }
         User cache = redisCache.getCache(jwt, User.class);
         if(cache==null){
+            log.info("redisCache不存在token");
             responseMessage(response, AjaxResult.error(ResultMessageConstants.B00003.message()));
             return false;
         }else{

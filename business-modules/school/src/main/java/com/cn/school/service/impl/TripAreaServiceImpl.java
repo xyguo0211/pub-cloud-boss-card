@@ -17,10 +17,7 @@ import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.Date;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * <p>
@@ -53,16 +50,16 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
         save(tripAreaDo);
     }
 
-    public Map<String,List<String>> startTrips() {
+    public Map<String,Set<String>> startTrips() {
         QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
         wq.eq("delete_status",9);
         List<TripAreaDo> list = list(wq);
-        Map<String,List<String>> map=new HashedMap();
+        Map<String,Set<String>> map=new HashedMap();
         for (TripAreaDo tripAreaDo : list) {
             String cityName = tripAreaDo.getCityName();
-            List<String> tripAreaDos = map.get(cityName);
+            Set<String> tripAreaDos = map.get(cityName);
             if(tripAreaDos==null){
-                tripAreaDos=new ArrayList<>();
+                tripAreaDos=new HashSet<>();
                 map.put(cityName,tripAreaDos);
             }
             String origin = tripAreaDo.getOrigin();
@@ -145,6 +142,17 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
         QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
         wq.eq("delete_status",9);
         List<TripAreaDo> list = list(wq);
+        /**
+         * 获取车次价格表
+         */
+        for (TripAreaDo tripAreaDo : list) {
+            Integer id = tripAreaDo.getId();
+            QueryWrapper<TripProductDo> wqTripProductDo=new QueryWrapper<>();
+            wqTripProductDo.eq("trip_area_id",id);
+            wqTripProductDo.eq("delete_status",9);
+            List<TripProductDo> listTripProductDo = tripProductService.list(wqTripProductDo);
+            tripAreaDo.setListTripProductDo(listTripProductDo);
+        }
         return list;
     }
 }

@@ -22,7 +22,9 @@ import com.cn.school.util.WeixinApiClient;
 import com.cn.school.util.WxPayRequstUtil;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.node.ObjectNode;
+import com.pub.core.common.OrderStatusEnum;
 import com.pub.core.exception.BusinessException;
+import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.CalculateUtil;
 import com.pub.core.utils.DateUtils;
 import com.pub.redis.util.RedisCache;
@@ -54,6 +56,8 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.entity.StringEntity;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.util.EntityUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpMethod;
 import org.springframework.http.ResponseEntity;
@@ -89,6 +93,11 @@ import org.springframework.web.client.RestTemplate;
 @Log4j2
 @Service
 public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrderDo> implements ITripOrderService {
+
+    private Logger addWXpayLog= LoggerFactory.getLogger("addWXpayLog");
+    private Logger addOrderLog= LoggerFactory.getLogger("addOrderLog");
+    private Logger logOnCarLog= LoggerFactory.getLogger("logOnCarLog");
+    private Logger refundsTripOrderLog= LoggerFactory.getLogger("refundsTripOrderLog");
 
     @Autowired
     private TripProductServiceImpl tripProductService;
@@ -334,10 +343,12 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         //订单号
         request.setOutTradeNo(tripOrderDo.getOrderId());
         // 加密
+        addWXpayLog.info("{}订单号拉起支付,请求支付参数为{}",tripOrderDo.getOrderId(),JSONObject.toJSONString(request));
         PrepayWithRequestPaymentResponse payment = service.prepayWithRequestPayment(request);
         //默认加密类型为RSA
         payment.setSignType("MD5");
         //返回数据，前端调起支付
+        addWXpayLog.info("{}订单号拉起支付,返回结果为{}",tripOrderDo.getOrderId(),JSONObject.toJSONString(payment));
         return payment;
     }
 
@@ -347,6 +358,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
          */
         User currentUser = UserContext.getCurrentUser();
         Integer user_id = currentUser.getId();
+        addOrderLog.info("用户id为{}下单,下单请求参数为{}",user_id,JSONObject.toJSONString(tripOrderDo));
         UserDo userDo = userServiceImpl.getById(user_id);
         QueryWrapper<TripOrderDo> wq_chech=new QueryWrapper<>();
         wq_chech.eq("user_id",user_id);
@@ -375,6 +387,19 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
             throw  new BusinessException("余票不足！请刷新购买页面");
         }
 
+        /**
+         * 校验购买金额是否一致
+         */
+        TripProductDo tripProductDo = tripProductService.getById(tripOrderDo.getProductId());
+        String fee = tripProductDo.getFee();
+       /* if(!fee.equals(tripOrderDo.getPrice())){
+            throw  new BusinessException("车票单价被改动！");
+        }*/
+        String totalFee = tripOrderDo.getTotalFee();
+        String cal_totalFee = CalculateUtil.cal(new StringBuilder(fee).append("*").append(tripOrderDo.getNum()).toString())+"";
+        if(!totalFee.equals(cal_totalFee)){
+            throw  new BusinessException("车票总价格被改动！");
+        }
         String taskNo = createTaskNo();
         tripOrderDo.setStarTime(tripCarDo.getStartTime());
         tripOrderDo.setEndTime(tripCarDo.getEndTime());
@@ -464,15 +489,14 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
 
     /**
      * 单机部署，不存在分布式，加个锁就行了
-     * @param orderId
      * @param carId
      * @throws Exception
      */
-    public synchronized TripOrderDo checkTripOrder(Integer orderId, Integer carId) throws Exception{
-        TripOrderDo tripOrderDo = getById(orderId);
+    public synchronized TripOrderDo checkTripOrder(Integer id, Integer carId) throws Exception{
+        TripOrderDo tripOrderDo = getById(id);
         Integer onCarStatus = tripOrderDo.getOnCarStatus();
         Integer num = tripOrderDo.getNum();
-
+        logOnCarLog.info("订单号为{}验票上车,车票总数{},当前验票人数为{}",tripOrderDo.getOrderId(),tripOrderDo.getNum(),tripOrderDo.getOnCarStatus()+1);
         Integer carIdDb = tripOrderDo.getCarId();
         if(carIdDb!=carId){
             throw new BusinessException("车次不正确！");
@@ -490,11 +514,20 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         return tripOrderDo;
     }
 
-    public void refundsTripOrder(Integer orderId) throws Exception {
-        TripOrderDo tripOrderDo = getById(orderId);
+    public void refundsTripOrder(String orderId) throws Exception {
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        wq.eq("order_id",orderId);
+        TripOrderDo tripOrderDo = getOne(wq);
+        Integer ticketStatus = tripOrderDo.getTicketStatus();
+        if(-1!=ticketStatus){
+            throw  new  BusinessException("订单已全额退款！");
+        }
+        refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},",orderId,tripOrderDo.getIdentityName());
         //发车前一小时不允许退票
         Date starTime = tripOrderDo.getStarTime();
-        if((DateUtils.addHours(new Date(),tripConfig.getNoRefundTime()).after(starTime))){
+        Date date = DateUtils.addHours(new Date(), tripConfig.getNoRefundTime());
+        if((date.after(starTime))){
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},发车前{}小时不允许退票！",orderId,tripOrderDo.getIdentityName(),tripConfig.getNoRefundTime());
             throw  new  BusinessException("发车前"+tripConfig.getNoRefundTime()+"小时不允许退票！");
         }
         String refundsFee = getRefundsFee(tripOrderDo);
@@ -514,17 +547,18 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         String refundsTaskNo = createRefundsTaskNo();
         tripOrderDo.setRefundOrderId(refundsTaskNo);
         rootNode.put("out_refund_no", refundsTaskNo);
+
         rootNode.putObject("amount")
                 /**
-                 * 退款金额
+                 * 退款金额,需要转换
                  */
-                .put("refund",refundsFee)
+                .put("refund", Integer.valueOf(WxPayRequstUtil.getMoney(refundsFee)))
                 /**
                  * 原订单金额
                  */
-                .put("total", tripOrderDo.getTotalFee())
+                .put("total", Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getTotalFee())))
                 .put("currency", "CNY");
-
+        refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},请求参数{}",orderId,tripOrderDo.getIdentityName(),JSONObject.toJSONString(rootNode));
         objectMapper.writeValue(bos, rootNode);
         httpPost.setEntity(new StringEntity(bos.toString("UTF-8"), "UTF-8"));
         /**
@@ -537,8 +571,23 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
          */
         CloseableHttpClient httpClient = baseWxConfig.getHttpClient();
         CloseableHttpResponse response = httpClient.execute(httpPost);
-
         String prepay_id = EntityUtils.toString(response.getEntity());
+        refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},返回结果{}",orderId,tripOrderDo.getIdentityName(),prepay_id);
+        JSONObject jsonObject = JSONObject.parseObject(prepay_id);
+        String status = jsonObject.getString("status");
+        /**
+         * SUCCESS：退款成功
+         * CLOSED：退款关闭
+         * PROCESSING：退款处理中
+         * ABNORMAL：退款异常
+         */
+        if(StringUtils.isNotBlank(status)&&("SUCCESS".equals(status)||"PROCESSING".equals(status))){
+            tripOrderDo.setRefundTime(new Date());
+            tripOrderDo.setTicketStatus(9);
+            updateById(tripOrderDo);
+        }else{
+            throw  new  BusinessException("退款失败，返回为{}！",prepay_id);
+        }
 
     }
 
@@ -553,6 +602,8 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
             //超过一次以上每次扣除10元
             int refundOneFee = tripConfig.getRefundOneFee();
             fee=fee+refundOneFee;
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},超过一次以上每次扣除{}元！",tripOrderDo.getOrderId(),tripOrderDo.getIdentityName(),refundOneFee);
+
 
         }
         //发车前2小时扣除20元
@@ -560,6 +611,8 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         if((DateUtils.addHours(new Date(),tripConfig.getNoRefundCarTime()).after(starTime))){
             int refundOneFee = tripConfig.getRefundCarFee();
             fee=fee+refundOneFee;
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},发车前{}小时扣除{}元！",tripOrderDo.getOrderId(),tripOrderDo.getIdentityName(),tripConfig.getNoRefundCarTime(),refundOneFee);
+
         }
         String totalFee = tripOrderDo.getTotalFee();
         return CalculateUtil.cal(totalFee + "-" + fee)+"";
@@ -567,5 +620,51 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     }
 
 
+    public Integer checkPaySucess(String orderId) {
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        wq.eq("order_id",orderId);
+        TripOrderDo one = getOne(wq);
+        /**
+         * 订单状态   0 初始  1成功  -1 失败
+         */
+        if(one.getStatus()== 1){
+            return 1;
+        }
+        return 0;
+    }
 
+    public List<TripOrderDo> getPageList(TripOrderDo req) {
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        String orderId = req.getOrderId();
+        if(StringUtils.isNotBlank(orderId)){
+            wq.eq("order_id",orderId);
+        }
+        Integer status = req.getStatus();
+        if(status!=null){
+            wq.eq("status",status);
+        }
+        Integer carId = req.getCarId();
+        if(carId!=null){
+            wq.eq("car_id",carId);
+        }
+        Integer onCarStatus = req.getOnCarStatus();
+        if(onCarStatus!=null){
+            wq.eq("on_car_status",onCarStatus);
+        }
+        String identityName = req.getIdentityName();
+        if(StringUtils.isNotBlank(identityName)){
+            wq.eq("identity_name",identityName);
+        }
+        String phone = req.getPhone();
+        if(StringUtils.isNotBlank(phone)){
+            wq.eq("phone",phone);
+        }
+        String createTime = req.getCreateTimeStr();
+        if(StringUtils.isNotBlank(createTime)){
+            wq.like("create_time",createTime);
+        }
+        BaseController.startPage();
+        List<TripOrderDo> list = list(wq);
+        return list;
+    }
 }

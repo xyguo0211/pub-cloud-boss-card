@@ -12,6 +12,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -58,5 +59,6 @@ public class TripAreaDo extends Model<TripAreaDo> {
      */
     private Integer deleteStatus;
 
+     private List<TripProductDo> listTripProductDo;
 
 }

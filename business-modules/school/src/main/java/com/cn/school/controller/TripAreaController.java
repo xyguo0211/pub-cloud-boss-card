@@ -18,6 +18,7 @@ import org.springframework.stereotype.Controller;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 /**
  * <p>
@@ -63,7 +64,7 @@ public class TripAreaController extends BaseController {
     @ResponseBody
     public AjaxResult startTrips(){
         try{
-            Map<String, List<String>> stringListMap = tripAreaService.startTrips();
+            Map<String, Set<String>> stringListMap = tripAreaService.startTrips();
             return AjaxResult.success(stringListMap);
         }catch (Exception e){
             e.printStackTrace();

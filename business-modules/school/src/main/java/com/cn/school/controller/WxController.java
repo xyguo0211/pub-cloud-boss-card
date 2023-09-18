@@ -1,6 +1,8 @@
 package com.cn.school.controller;
 
+import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
@@ -18,6 +20,7 @@ import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.redis.util.RedisCache;
+import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
 import org.apache.commons.io.output.ByteArrayOutputStream;
 import org.apache.commons.lang3.StringUtils;
@@ -39,7 +42,9 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.Map;
 
 @RestController
@@ -48,6 +53,7 @@ import java.util.Map;
 public class WxController extends BaseController {
 
     private Logger log= LoggerFactory.getLogger("wxLogger");
+    private Logger callBackLog= LoggerFactory.getLogger("callBackLog");
 
     @Value("${short_token_redis_cache_time}")
     private  Long short_token_redis_cache_time ;
@@ -56,6 +62,8 @@ public class WxController extends BaseController {
 
     @Autowired
     private RedisCache redisCache;
+    @Autowired
+    private TripOrderServiceImpl tripOrderServiceImpl;
 
 
 
@@ -214,9 +222,9 @@ public class WxController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/getImageByte", method = RequestMethod.GET)
     @ResponseBody
-    public AjaxResult getImageByte(@RequestParam Integer orderId){
+    public AjaxResult getImageByte(@RequestParam Integer id){
         try{
-            TripOrderDo tripOrderDo = tripOrderService.getById(orderId);
+            TripOrderDo tripOrderDo = tripOrderService.getById(id);
             Integer num = tripOrderDo.getNum();
             Integer onCarStatus = tripOrderDo.getOnCarStatus();
             if(onCarStatus>=num){
@@ -224,7 +232,7 @@ public class WxController extends BaseController {
             }
             UnlimitedQRCodeParam body=new UnlimitedQRCodeParam();
             body.setPage(pagePath);
-            body.setScene(orderId+"");
+            body.setScene(id+"");
             body.setCheckPath(false);
             byte[] imageByte = tripOrderService.getImageByte(body);
             HttpServletResponse response = getResponse();
@@ -237,5 +245,66 @@ public class WxController extends BaseController {
         }
 
     }
+
+    @TimingLog
+    @RequestMapping(value = "/payCallBack", method = RequestMethod.POST)
+    @ResponseBody
+    public Map<String, String> payCallBack(@RequestBody JSONObject jsonObject) {
+        callBackLog.info("支付回调请求参数{}"+jsonObject.toJSONString());
+        try {
+            String key = wxPayConfig.getApiV3Key();
+            String json = jsonObject.toString();
+            String associated_data = (String) JSONUtil.getByPath(JSONUtil.parse(json), "resource.associated_data");
+            String ciphertext = (String) JSONUtil.getByPath(JSONUtil.parse(json), "resource.ciphertext");
+            String nonce = (String) JSONUtil.getByPath(JSONUtil.parse(json), "resource.nonce");
+
+            String decryptData = new AesUtil(key.getBytes(StandardCharsets.UTF_8)).decryptToString(associated_data.getBytes(StandardCharsets.UTF_8), nonce.getBytes(StandardCharsets.UTF_8), ciphertext);
+            //验签成功
+            JSONObject decryptDataObj = JSONObject.parseObject(decryptData, JSONObject.class);
+            callBackLog.info("支付回调解析后请求参数参数{}"+decryptDataObj.toJSONString());
+            //decryptDataObj 为解码后的obj，其内容如下。之后便是验签成功后的业务处理
+            //{
+            //	"sp_appid": "wx8888888888888888",
+            //	"sp_mchid": "1230000109",
+            //	"sub_appid": "wxd678efh567hg6999",
+            //	"sub_mchid": "1900000109",
+            //	"out_trade_no": "1217752501201407033233368018",
+            //	"trade_state_desc": "支付成功",
+            //	"trade_type": "MICROPAY",
+            //	"attach": "自定义数据",
+            //	"transaction_id": "1217752501201407033233368018",
+            //	"trade_state": "SUCCESS",
+            //	"bank_type": "CMC",
+            //	"success_time": "2018-06-08T10:34:56+08:00",
+            //    ...
+            //	"payer": {
+            //		"openid": "oUpF8uMuAJO_M2pxb1Q9zNjWeS6o"
+            //	},
+            //	"scene_info": {
+            //		"device_id": "013467007045764"
+            //	}
+            //}
+            String out_trade_no = decryptDataObj.getString("out_trade_no");
+            String trade_state_desc = decryptDataObj.getString("trade_state_desc");
+            QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+            wq.eq("order_id",out_trade_no);
+            TripOrderDo tripOrderDo = tripOrderServiceImpl.getOne(wq);
+            if("支付成功".equals(trade_state_desc)){
+                tripOrderDo.setStatus(1);
+            }else{
+                tripOrderDo.setStatus(-1);
+            }
+            tripOrderServiceImpl.wxPayNotify(tripOrderDo);
+        }catch (Exception e){
+            e.printStackTrace();
+            callBackLog.error("支付回调处理异常{}"+jsonObject.toJSONString());
+        }
+
+        Map<String, String> res = new HashMap<>();
+        res.put("code", "SUCCESS");
+        res.put("message", "成功");
+        return res;
+    }
+
 
 }

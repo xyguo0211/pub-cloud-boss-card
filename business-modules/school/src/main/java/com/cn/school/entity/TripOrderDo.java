@@ -2,16 +2,19 @@ package com.cn.school.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
 import com.fasterxml.jackson.annotation.JsonFormat;
+import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
 import org.springframework.format.annotation.DateTimeFormat;
 
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.Objects;
 
 /**
  * <p>
@@ -52,6 +55,20 @@ public class TripOrderDo extends Model<TripOrderDo> {
      */
     private Integer status;
 
+    @ApiModelProperty("订单状态")
+    public String isStatusStr() {
+        if (Objects.isNull(status)) {
+            return "";
+        }
+        if(0==status){
+            return "待支付";
+        }else if(1==status){
+            return "支付成功";
+        }else{
+            return "支付失败";
+        }
+    }
+
     /**
      * 发车时间
      */
@@ -69,6 +86,9 @@ public class TripOrderDo extends Model<TripOrderDo> {
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date createTime;
+
+    @TableField(exist = false)
+    private String createTimeStr;
     /**
      * 支付时间
      */
@@ -81,6 +101,19 @@ public class TripOrderDo extends Model<TripOrderDo> {
      *0 未上车  1 已上车1人  2 上车两人  n上车n人
      */
     private Integer onCarStatus;
+
+    @ApiModelProperty("上车人数")
+    public String onCarStatusStr() {
+        if (Objects.isNull(onCarStatus)) {
+            return "";
+        }
+        if(0==onCarStatus){
+            return "未上车";
+        }else{
+            return "已上车"+onCarStatus+"人";
+        }
+    }
+
 
     /**
      * 车次

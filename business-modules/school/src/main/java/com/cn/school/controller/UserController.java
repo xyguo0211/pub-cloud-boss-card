@@ -12,13 +12,17 @@ import com.cn.auth.util.UserContext;
 import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.UserDo;
 import com.cn.school.service.impl.UserServiceImpl;
+import com.cn.school.util.RandomUtilSendMsg;
 import com.cn.school.util.RpcBaseResponseResult;
+import com.cn.school.util.SendSmsTx;
 import com.cn.school.util.SmsSendServiceUtil;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import com.pub.core.utils.RandomUtil;
 import com.pub.redis.util.RedisCache;
+import com.tencentcloudapi.sms.v20210111.models.SendSmsResponse;
+import com.tencentcloudapi.sms.v20210111.models.SendStatus;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -51,6 +55,9 @@ public class UserController extends BaseController {
 
     @Autowired
     private SmsSendServiceUtil smsSendServiceUtil;
+
+    @Autowired
+    private SendSmsTx sendSmsTx;
 
     /**
      * 0是测试  1是正式
@@ -157,11 +164,14 @@ public class UserController extends BaseController {
                 redisCache.putCacheWithExpireTime(phone,"1111",5*60);
                 return AjaxResult.success();
             }else{
-                int randomLenFours = RandomUtil.getRandomLenFours();
-                RpcBaseResponseResult rpcBaseResponseResult = smsSendServiceUtil.sendMassage("您好，您的验证码是:" + randomLenFours, phone);
-                int status = rpcBaseResponseResult.getStatus();
-                if(0==status){
-                    redisCache.putCacheWithExpireTime(phone,String.valueOf(randomLenFours),5*60);
+                /**
+                 * 六位数验证码
+                 */
+                String sixBitRandom = RandomUtilSendMsg.getSixBitRandom();
+                SendSmsResponse sendSmsResponse = sendSmsTx.sendMsg(phone, sixBitRandom);
+                SendStatus[] sendStatusSet = sendSmsResponse.getSendStatusSet();
+                if(sendStatusSet!=null&&sendStatusSet.length>0){
+                    redisCache.putCacheWithExpireTime(phone,String.valueOf(sixBitRandom),5*60);
                     return AjaxResult.success();
                 }
             }

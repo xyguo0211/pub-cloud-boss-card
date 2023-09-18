@@ -67,8 +67,6 @@ public class TripOrderController extends BaseController {
     @ResponseBody
     public AjaxResult addTripOrder(@RequestBody TripOrderDo tripOrderDo){
         try{
-
-
             /**
              * 创建订单号
              */
@@ -119,9 +117,9 @@ public class TripOrderController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/checkTripOrder", method = RequestMethod.GET)
     @ResponseBody
-    public AjaxResult checkTripOrder(@RequestParam Integer carId,@RequestParam Integer orderId){
+    public AjaxResult checkTripOrder(@RequestParam Integer carId,@RequestParam Integer id){
         try{
-            TripOrderDo tripOrderDo = tripOrderService.checkTripOrder(orderId, carId);
+            TripOrderDo tripOrderDo = tripOrderService.checkTripOrder(id, carId);
             return AjaxResult.success(tripOrderDo);
         }catch (Exception e){
             e.printStackTrace();
@@ -137,7 +135,7 @@ public class TripOrderController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/refundsTripOrder", method = RequestMethod.GET)
     @ResponseBody
-    public AjaxResult refundsTripOrder(@RequestParam Integer orderId){
+    public AjaxResult refundsTripOrder(@RequestParam String orderId){
         try{
             tripOrderService.refundsTripOrder(orderId);
             return AjaxResult.success();
@@ -147,8 +145,47 @@ public class TripOrderController extends BaseController {
         }
 
     }
+    /**
+     * 查询订单是否支付成功接口
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/checkPaySucess", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult checkPaySucess(@RequestParam String orderId){
+        try{
+            Integer integer = tripOrderService.checkPaySucess(orderId);
+            if(1==integer){
+                return AjaxResult.success("支付成功");
+            }else{
+                return AjaxResult.error("未支付");
+            }
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
 
+    }
 
+    /**
+     * 分页数据
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getPageList", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult getPageList(@RequestBody TripOrderDo req){
+        try{
+            List<TripOrderDo> pageList = tripOrderService.getPageList(req);
+            TableDataInfo dataTable = getDataTable(pageList);
+            return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
 
 
 

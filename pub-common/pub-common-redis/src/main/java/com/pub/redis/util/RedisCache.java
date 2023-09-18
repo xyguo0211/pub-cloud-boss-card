@@ -64,7 +64,14 @@ public class RedisCache {
 		});
 		return result;
 	}
-	
+
+	/**
+	 * 单位是秒
+	 * @param key
+	 * @param obj
+	 * @param expireTime
+	 * @param <T>
+	 */
 	public <T> void putCacheWithExpireTime(String key, T obj, final long expireTime) {
 		final byte[] bkey = key.getBytes();
 		final byte[] bvalue = ProtoStuffSerializerUtil.serialize(obj);

@@ -67,9 +67,9 @@ public class TokenProvider {
     public String createTokenNewSchool(User user) {
         long now = (new Date()).getTime();
         /**
-         * 1分钟
+         * 10分钟
          */
-        Date validity = new Date(now + 1000*60);
+        Date validity = new Date(now + 1000*60*10);
 
 
         return Jwts.builder()
