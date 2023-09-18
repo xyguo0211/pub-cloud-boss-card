@@ -225,6 +225,14 @@ public class WxController extends BaseController {
     public AjaxResult getImageByte(@RequestParam Integer id){
         try{
             TripOrderDo tripOrderDo = tripOrderService.getById(id);
+            Integer status = tripOrderDo.getStatus();
+            if(status!=1){
+                return AjaxResult.error("未支付!");
+            }
+            Integer ticketStatus = tripOrderDo.getTicketStatus();
+            if(ticketStatus!=9){
+                return AjaxResult.error("该车票已退票!");
+            }
             Integer num = tripOrderDo.getNum();
             Integer onCarStatus = tripOrderDo.getOnCarStatus();
             if(onCarStatus>=num){
