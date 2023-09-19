@@ -177,48 +177,6 @@ public class WxController extends BaseController {
         return jwt;
     }
 
-    @RequestMapping(value = "/wxPayNotify", method = RequestMethod.POST)
-    public String wxNotify(HttpServletRequest request){
-        //用于处理结束后返回的xml
-        String resXml = "";
-        String key = "&key="+ Constant.privateKey;
-        try {
-            InputStream in = request.getInputStream();
-            ByteArrayOutputStream out = new ByteArrayOutputStream();
-            int len = 0;
-            byte[] b = new byte[1024];
-            while((len = in.read(b)) != -1){
-                out.write(b, 0, len);
-            }
-            out.close();
-            in.close();
-            //将流 转为字符串
-            String result = new String(out.toByteArray(), "utf-8");
-            Map<String, String> map = WxPayRequstUtil.getNotifyUrl(result);
-            String return_code = map.get("return_code").toString().toUpperCase();
-            if(return_code.equals("SUCCESS")){
-                //进行签名验证，看是否是从微信发送过来的，防止资金被盗
-                if(WxPayRequstUtil.verifyWeixinNotify(map, key)){
-                    //签名验证成功后按照微信要求返回的xml
-                    resXml = "<xml>" + "<return_code><![CDATA[SUCCESS]]></return_code>"
-                            + "<return_msg><![CDATA[OK]]></return_msg>" + "</xml> ";
-                    return resXml;
-                }
-            }else{
-                resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"
-                        + "<return_msg><![CDATA[sign check error]]></return_msg>" + "</xml> ";
-                return resXml;
-            }
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
-        resXml = "<xml>" + "<return_code><![CDATA[FAIL]]></return_code>"
-                + "<return_msg><![CDATA[xml error]]></return_msg>" + "</xml> ";
-        return resXml;
-
-    }
-
-
     @TimingLog
     @RequestMapping(value = "/getImageByte", method = RequestMethod.GET)
     @ResponseBody
@@ -226,12 +184,8 @@ public class WxController extends BaseController {
         try{
             TripOrderDo tripOrderDo = tripOrderService.getById(id);
             Integer status = tripOrderDo.getStatus();
-            if(status!=1){
-                return AjaxResult.error("未支付!");
-            }
-            Integer ticketStatus = tripOrderDo.getTicketStatus();
-            if(ticketStatus!=9){
-                return AjaxResult.error("该车票已退票!");
+            if(status!=Constant.OrderStatus.SUCESS){
+                return AjaxResult.error("未支付或者已退票!");
             }
             Integer num = tripOrderDo.getNum();
             Integer onCarStatus = tripOrderDo.getOnCarStatus();

@@ -5,6 +5,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.school.config.Constant;
 import com.cn.school.entity.TripAreaDo;
 import com.cn.school.entity.TripCarDo;
+import com.cn.school.entity.TripProductCarRelationDo;
 import com.cn.school.entity.TripProductDo;
 import com.cn.school.mapper.TripCarMapper;
 import com.cn.school.service.ITripCarService;
@@ -16,6 +17,7 @@ import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 
@@ -32,6 +34,10 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
 
     @Autowired
     private TripProductServiceImpl tripProductService;
+
+    @Autowired
+    private TripProductCarRelationServiceImpl tripProductCarRelationServiceImpl;
+
     @Autowired
     private TripAreaServiceImpl tripAreaServiceImpl;
 
@@ -76,12 +82,31 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
         if(StringUtils.isNotBlank(carNumber)){
             wq.eq("car_number",carNumber);
         }
-        Date startTime = req.getStartTime();
-        if(startTime!=null){
+        String startTime = req.getStartTimeStr();
+        if(StringUtils.isNotBlank(startTime)){
             wq.like("start_time",startTime);
         }
         BaseController.startPage();
         List<TripCarDo> list = list(wq);
+        for (TripCarDo tripCarDo : list) {
+            Integer id = tripCarDo.getId();
+            QueryWrapper<TripProductCarRelationDo> wqTripProductCarRelationDo=new QueryWrapper<>();
+            wqTripProductCarRelationDo.eq("car_id",id);
+            List<TripProductCarRelationDo> listTripProductCarRelationDo = tripProductCarRelationServiceImpl.list(wqTripProductCarRelationDo);
+            if(listTripProductCarRelationDo!=null&&listTripProductCarRelationDo.size()>0){
+                List<TripProductDo> listTripProductDo=new ArrayList<>();
+                for (TripProductCarRelationDo tripProductCarRelationDo : listTripProductCarRelationDo) {
+                    Integer productId = tripProductCarRelationDo.getProductId();
+                    TripProductDo tripProductDo = tripProductService.getById(productId);
+                    Integer tripAreaId = tripProductDo.getTripAreaId();
+                    TripAreaDo tripAreaDo = tripAreaServiceImpl.getById(tripAreaId);
+                    tripProductDo.setOrigin(tripAreaDo.getOrigin());
+                    tripProductDo.setDestination(tripAreaDo.getDestination());
+                    listTripProductDo.add(tripProductDo);
+                }
+                tripCarDo.setListTripProductDo(listTripProductDo);
+            }
+        }
         return list;
     }
 

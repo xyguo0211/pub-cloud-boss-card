@@ -6,6 +6,7 @@ import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
+import com.cn.school.config.Constant;
 import com.fasterxml.jackson.annotation.JsonFormat;
 import io.swagger.annotations.ApiModelProperty;
 import lombok.Data;
@@ -60,10 +61,12 @@ public class TripOrderDo extends Model<TripOrderDo> {
         if (Objects.isNull(status)) {
             return "";
         }
-        if(0==status){
+        if(Constant.OrderStatus.WAIT==status){
             return "待支付";
-        }else if(1==status){
+        }else if(Constant.OrderStatus.SUCESS==status){
             return "支付成功";
+        }else if(Constant.OrderStatus.REFUND ==status){
+            return "已退款";
         }else{
             return "支付失败";
         }
@@ -145,9 +148,10 @@ public class TripOrderDo extends Model<TripOrderDo> {
     private String transactionId;
 
     /**
-     * 是否已退票   9已退票  -1 未退票
+     * 是否释放车票   9已退票  -1 未退票
      */
     private Integer ticketStatus;
+
 
 
     /**

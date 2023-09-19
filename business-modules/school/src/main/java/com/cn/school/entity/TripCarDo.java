@@ -1,6 +1,7 @@
 package com.cn.school.entity;
 
 import com.alibaba.fastjson.annotation.JSONField;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableName;
 import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.extension.activerecord.Model;
@@ -12,6 +13,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 import java.time.LocalDateTime;
 import java.io.Serializable;
 import java.util.Date;
+import java.util.List;
 
 /**
  * <p>
@@ -37,6 +39,9 @@ public class TripCarDo extends Model<TripCarDo> {
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
     private Date startTime;
 
+    @TableField(exist = false)
+    private String startTimeStr;
+
     @JSONField(format = "yyyy-MM-dd HH:mm:ss")
     @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss", timezone = "GMT+8")
@@ -55,6 +60,9 @@ public class TripCarDo extends Model<TripCarDo> {
     private Date createTime;
 
     private Integer isDeparted;
+
+    @TableField(exist = false)
+    private List<TripProductDo> listTripProductDo;
 
 
 }

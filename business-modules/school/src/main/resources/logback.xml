@@ -193,11 +193,11 @@
         <appender-ref ref="refundsTripOrderLogAppender"/>
     </logger>
     <appender name="SendSmsTxAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${LOG_HOME}/SendSmsTx/SendSmsTx.log</File>
+        <File>${LOG_HOME}/sendSmsTx/sendSmsTx.log</File>
         <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
             <maxHistory>15</maxHistory>
             <maxFileSize>100MB</maxFileSize>
-            <fileNamePattern>${LOG_HOME}/SendSmsTx/SendSmsTx.%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
+            <fileNamePattern>${LOG_HOME}/sendSmsTx/sendSmsTx.%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
         </rollingPolicy>
         <encoder>
             <pattern>${FILE_LOG_PATTERN}</pattern>

@@ -155,11 +155,15 @@ public class TripOrderController extends BaseController {
     public AjaxResult checkPaySucess(@RequestParam String orderId){
         try{
             Integer integer = tripOrderService.checkPaySucess(orderId);
+            JSONObject js=new JSONObject();
             if(1==integer){
-                return AjaxResult.success("支付成功");
+                js.put("code",1);
+                js.put("msg","支付成功");
             }else{
-                return AjaxResult.error("未支付");
+                js.put("code",0);
+                js.put("msg","支付失败");
             }
+            return AjaxResult.success(js);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

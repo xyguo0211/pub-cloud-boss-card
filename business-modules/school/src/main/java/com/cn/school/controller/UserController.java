@@ -99,14 +99,18 @@ public class UserController extends BaseController {
     @ResponseBody
     public AjaxResult checkIdentity(){
         try{
+            JSONObject rtn=new JSONObject();
+            rtn.put("code",1);
+            rtn.put("msg","已认证");
             User currentUser = UserContext.getCurrentUser();
             Integer id = currentUser.getId();
             UserDo byIUserDod = userService.getById(id);
             String phone = byIUserDod.getPhone();
             if(com.pub.core.utils.StringUtils.isBlank(phone)){
-                return AjaxResult.error("请实名认证！");
+                rtn.put("code",0);
+                rtn.put("msg","请实名认证");
             }
-            return AjaxResult.success();
+            return AjaxResult.success(rtn);
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

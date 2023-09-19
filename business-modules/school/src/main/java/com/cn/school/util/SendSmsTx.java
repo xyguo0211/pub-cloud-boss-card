@@ -80,7 +80,7 @@ public class SendSmsTx {
 //            String sessionContext = "xxx";
 //            req.setSessionContext(sessionContext);
             //设置发送相关的参数
-            String[] phoneNumberSet1 = {"19925799382"};
+            String[] phoneNumberSet1 = {phone};
             req.setPhoneNumberSet(phoneNumberSet1);//发送的手机号
             //生成6位数随机验证码
             String[] templateParamSet1 = {randomCode};//模板的参数 第一个是验证码，第二个是过期时间

@@ -417,7 +417,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
          */
         tripOrderDo.setOnCarStatus(0);
         /**
-         * 未退票
+         * 未释放车票
          */
         tripOrderDo.setTicketStatus(-1);
         tripOrderDo.setCreateTime(new Date());
@@ -494,6 +494,14 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
      */
     public synchronized TripOrderDo checkTripOrder(Integer id, Integer carId) throws Exception{
         TripOrderDo tripOrderDo = getById(id);
+        Integer status = tripOrderDo.getStatus();
+        if(status==Constant.OrderStatus.FAIL){
+            throw new BusinessException("未支付！");
+        }else if(status==Constant.OrderStatus.REFUND){
+            throw new BusinessException("已退票！");
+        }else if(status==Constant.OrderStatus.WAIT){
+            throw new BusinessException("未支付！");
+        }
         Integer onCarStatus = tripOrderDo.getOnCarStatus();
         Integer num = tripOrderDo.getNum();
         logOnCarLog.info("订单号为{}验票上车,车票总数{},当前验票人数为{}",tripOrderDo.getOrderId(),tripOrderDo.getNum(),tripOrderDo.getOnCarStatus()+1);
@@ -518,9 +526,9 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
         wq.eq("order_id",orderId);
         TripOrderDo tripOrderDo = getOne(wq);
-        Integer ticketStatus = tripOrderDo.getTicketStatus();
-        if(-1!=ticketStatus){
-            throw  new  BusinessException("订单已全额退款！");
+        Integer ticketStatus = tripOrderDo.getStatus();
+        if(Constant.OrderStatus.SUCESS!=ticketStatus){
+            throw  new  BusinessException("订单已全额退款或者未支付成功！");
         }
         refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},",orderId,tripOrderDo.getIdentityName());
         //发车前一小时不允许退票
@@ -582,13 +590,28 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
          * ABNORMAL：退款异常
          */
         if(StringUtils.isNotBlank(status)&&("SUCCESS".equals(status)||"PROCESSING".equals(status))){
-            tripOrderDo.setRefundTime(new Date());
-            tripOrderDo.setTicketStatus(9);
-            updateById(tripOrderDo);
+            opertorRefundsTripOrderSucess(tripOrderDo);
         }else{
             throw  new  BusinessException("退款失败，返回为{}！",prepay_id);
         }
 
+    }
+
+    @Transactional
+    public void opertorRefundsTripOrderSucess( TripOrderDo tripOrderDo) throws Exception {
+        tripOrderDo.setRefundTime(new Date());
+        tripOrderDo.setStatus(Constant.OrderStatus.REFUND);
+        /**
+         * 释放车票
+         */
+        Integer ticketStatus = tripOrderDo.getTicketStatus();
+        if(ticketStatus!=9){
+            tripOrderDo.setTicketStatus(9);
+            Integer num = tripOrderDo.getNum();
+            Integer carId = tripOrderDo.getCarId();
+            tripCarServiceImpl.addTicket(carId,num,Constant.TicketAddStatus.ADD);
+        }
+        updateById(tripOrderDo);
     }
 
     private String getRefundsFee( TripOrderDo tripOrderDo ) {
