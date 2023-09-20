@@ -117,6 +117,7 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
         if(deleteStatus!=null){
             wq.eq("delete_status",deleteStatus);
         }
+        wq.orderByDesc("city_name","create_time");
         BaseController.startPage();
         List<TripAreaDo> list = list(wq);
         return list;

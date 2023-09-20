@@ -45,11 +45,11 @@ public class TripOrderController extends BaseController {
      * @return
      */
     @TimingLog
-    @RequestMapping(value = "/myTripOrder", method = RequestMethod.GET)
+    @RequestMapping(value = "/myTripOrder", method = RequestMethod.POST)
     @ResponseBody
-    public AjaxResult myTripOrder(Integer status){
+    public AjaxResult myTripOrder(@RequestBody TripOrderDo tripOrderDo){
         try{
-            List<TripOrderDo> pageList = tripOrderService.myTripOrderDo(status);
+            List<TripOrderDo> pageList = tripOrderService.myTripOrderDo(tripOrderDo);
             TableDataInfo dataTable = getDataTable(pageList);
             return AjaxResult.success(dataTable);
         }catch (Exception e){

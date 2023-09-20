@@ -18,11 +18,19 @@ public class ConstantSmsUtils implements InitializingBean {
     @Value("${tencent.sms.templateId}")
     private String templateID ;
 
+    @Value("${tencent.sms.carTimeTemplateID}")
+    private String carTimeTemplateID ;
+
+    @Value("${tencent.sms.noticeSystemTemplateID}")
+    private String noticeSystemTemplateID ;
+
     public static String SECRET_ID;
     public static String SECRET_KEY;
     public static String SMSSDKAPP_ID;
     public static String SIGN_NAME;
     public static String TEMPLATE_ID;
+    public static String CarTime_TEMPLATE_ID;
+    public static String NoticeSystem_TEMPLATE_ID;
 
 
     @Override
@@ -32,6 +40,8 @@ public class ConstantSmsUtils implements InitializingBean {
         SMSSDKAPP_ID = smsSdkAppID;
         SIGN_NAME = signName;
         TEMPLATE_ID = templateID;
+        CarTime_TEMPLATE_ID = carTimeTemplateID;
+        NoticeSystem_TEMPLATE_ID = noticeSystemTemplateID;
     }
 
 }

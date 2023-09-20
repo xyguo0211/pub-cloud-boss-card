@@ -117,6 +117,10 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
          * 设置已售为0
          */
         tripCarDo.setSellNum(0);
+        /**
+         * 余票通知未通知管理员，未通知
+         */
+        tripCarDo.setNoticeStatus(-1);
         save(tripCarDo);
     }
 

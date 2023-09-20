@@ -64,5 +64,8 @@ public class TripCarDo extends Model<TripCarDo> {
     @TableField(exist = false)
     private List<TripProductDo> listTripProductDo;
 
+    //余票不足通知  9 已通知  -1 未通知
+    private  Integer noticeStatus;
+
 
 }

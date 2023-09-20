@@ -36,6 +36,9 @@ public class UserDo extends Model<UserDo> {
 
     private String wxunionid;
 
+    /**
+     * 0 黑名单 9 否
+     */
     private Integer isDelete;
 
     private String nickName;

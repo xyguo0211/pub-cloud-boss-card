@@ -190,4 +190,7 @@ public class TripOrderDo extends Model<TripOrderDo> {
      */
     private Date refundTime;
 
+    //发车前通知  9 已通知  -1 未通知
+    private  Integer noticeStatus;
+
 }

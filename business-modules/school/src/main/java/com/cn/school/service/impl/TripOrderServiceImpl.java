@@ -2,7 +2,9 @@ package com.cn.school.service.impl;
 
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.cn.school.config.BaseWxConfig;
@@ -120,19 +122,29 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     private TripConfig tripConfig;
 
 
-    public List<TripOrderDo> myTripOrderDo(Integer status) {
+    public List<TripOrderDo> myTripOrderDo(TripOrderDo tripOrderDo) {
         User currentUser = UserContext.getCurrentUser();
         Integer id = currentUser.getId();
+        Integer status = tripOrderDo.getStatus();
         QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
         if(status!=null){
-            //0 未发车  1 已发车
+            //我的订单status=1 成功  其它失败的
             if(status==1){
+                wq.eq("status",Constant.OrderStatus.SUCESS);
+            }else{
+                wq.ne("status",Constant.OrderStatus.SUCESS);
+            }
+        }
+        Integer onCarStatus = tripOrderDo.getOnCarStatus();
+        if(onCarStatus!=null){
+            //车票那里onCarStatus=1 已发车  其它待发车
+            if(onCarStatus==1){
                 wq.le("star_time", new Date());
             }else{
                 wq.ge("star_time", new Date());
             }
+            wq.eq("status",Constant.OrderStatus.SUCESS);
         }
-        wq.eq("status",Constant.OrderStatus.SUCESS);
          wq.eq("user_id", id);
         List<TripOrderDo> list = list(wq);
         return list;
@@ -420,6 +432,10 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
          * 未释放车票
          */
         tripOrderDo.setTicketStatus(-1);
+        /**
+         * 发车前多少小时，默认未通知
+         */
+        tripOrderDo.setNoticeStatus(-1);
         tripOrderDo.setCreateTime(new Date());
     }
     @Transactional
@@ -519,6 +535,13 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         tripOrderDo.setOnCarStatus(onCarStatus+1);
         tripOrderDo.setOncarTime(new Date());
         updateById(tripOrderDo);
+        /**
+         * 设置已发车
+         */
+        TripCarDo tripCarDo = tripCarServiceImpl.getById(carId);
+        //-1未发车   9 已发车
+        tripCarDo.setIsDeparted(9);
+        tripCarServiceImpl.updateById(tripCarDo);
         return tripOrderDo;
     }
 
@@ -672,19 +695,37 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         }
         Integer onCarStatus = req.getOnCarStatus();
         if(onCarStatus!=null){
-            wq.eq("on_car_status",onCarStatus);
+            if(onCarStatus==0){
+                wq.eq("on_car_status",onCarStatus);
+            }else{
+                //已上车不等于0即可
+                wq.ne("on_car_status",0);
+            }
+
         }
         String identityName = req.getIdentityName();
         if(StringUtils.isNotBlank(identityName)){
+            identityName=identityName.trim();
             wq.eq("identity_name",identityName);
         }
         String phone = req.getPhone();
         if(StringUtils.isNotBlank(phone)){
+            phone=phone.trim();
             wq.eq("phone",phone);
         }
         String createTime = req.getCreateTimeStr();
         if(StringUtils.isNotBlank(createTime)){
             wq.like("create_time",createTime);
+        }
+        String origin = req.getOrigin();
+        if(StringUtils.isNotBlank(origin)){
+            origin=origin.trim();
+            wq.like("origin",origin);
+        }
+        String destination = req.getDestination();
+        if(StringUtils.isNotBlank(destination)){
+            destination=destination.trim();
+            wq.like("destination",destination);
         }
         BaseController.startPage();
         List<TripOrderDo> list = list(wq);

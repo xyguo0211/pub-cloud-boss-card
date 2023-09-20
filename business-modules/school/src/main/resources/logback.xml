@@ -192,22 +192,29 @@
     <logger name="refundsTripOrderLog" additivity="false" level="INFO">
         <appender-ref ref="refundsTripOrderLogAppender"/>
     </logger>
-    <appender name="SendSmsTxAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
-        <File>${LOG_HOME}/sendSmsTx/sendSmsTx.log</File>
-        <rollingPolicy class="ch.qos.logback.core.rolling.SizeAndTimeBasedRollingPolicy">
-            <maxHistory>15</maxHistory>
-            <maxFileSize>100MB</maxFileSize>
-            <fileNamePattern>${LOG_HOME}/sendSmsTx/sendSmsTx.%d{yyyy-MM-dd}.%i.zip</fileNamePattern>
+    <appender name="sendSmsTxLogAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/sendSmsTxLog/sendSmsTxLog.log</file>
+        <!-- 根据文件滚动最多50个文件数量 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/sendSmsTxLog/sendSmsTxLog-%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>50</maxIndex>
         </rollingPolicy>
+        <!-- 指定文件最大尺寸，达到该尺寸，就触发rollingPolicy对应的策略，maxFileSize属性指定文件大小 -->
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>40MB</maxFileSize>
+        </triggeringPolicy>
         <encoder>
-            <pattern>${FILE_LOG_PATTERN}</pattern>
-            <charset class="java.nio.charset.Charset">UTF-8</charset>
+            <pattern>%-4relative [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
         </encoder>
     </appender>
 
-    <logger name="com.cn.school.util.SendSmsTx" level="INFO" additivity="false">
-        <appender-ref ref="SendSmsTxAppender" />
+    <logger name="sendSmsTxLog" additivity="false" level="INFO">
+        <appender-ref ref="sendSmsTxLogAppender"/>
     </logger>
+
+
 
     <root level="INFO">
         <appender-ref ref="CONSOLE" />
