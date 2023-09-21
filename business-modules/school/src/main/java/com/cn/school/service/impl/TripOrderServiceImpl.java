@@ -1,5 +1,8 @@
 package com.cn.school.service.impl;
 
+import com.alibaba.excel.EasyExcel;
+import com.alibaba.excel.ExcelWriter;
+import com.alibaba.excel.write.metadata.WriteSheet;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
@@ -7,14 +10,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
-import com.cn.school.config.BaseWxConfig;
-import com.cn.school.config.Constant;
-import com.cn.school.config.TripConfig;
-import com.cn.school.config.WxPayConfig;
-import com.cn.school.entity.TripCarDo;
-import com.cn.school.entity.TripOrderDo;
-import com.cn.school.entity.TripProductDo;
-import com.cn.school.entity.UserDo;
+import com.cn.school.config.*;
+import com.cn.school.entity.*;
 import com.cn.school.entity.dto.UnlimitedQRCodeParam;
 import com.cn.school.mapper.TripOrderMapper;
 import com.cn.school.service.ITripOrderService;
@@ -66,10 +63,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.remoting.RemoteAccessException;
 import org.springframework.stereotype.Service;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
-import java.io.FileInputStream;
-import java.io.IOException;
+import java.io.*;
 import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.security.GeneralSecurityException;
@@ -100,6 +94,10 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     private Logger addOrderLog= LoggerFactory.getLogger("addOrderLog");
     private Logger logOnCarLog= LoggerFactory.getLogger("logOnCarLog");
     private Logger refundsTripOrderLog= LoggerFactory.getLogger("refundsTripOrderLog");
+
+    @Autowired
+    private FilePathOnlineConfig filePathOnlineConfig;
+
 
     @Autowired
     private TripProductServiceImpl tripProductService;
@@ -732,5 +730,124 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         BaseController.startPage();
         List<TripOrderDo> list = list(wq);
         return list;
+    }
+
+    public String importExcel(TripOrderDo req) {
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        String orderId = req.getOrderId();
+        if(StringUtils.isNotBlank(orderId)){
+            wq.eq("order_id",orderId);
+        }
+        Integer status = req.getStatus();
+        if(status!=null){
+            wq.eq("status",status);
+        }
+        Integer carId = req.getCarId();
+        if(carId!=null){
+            wq.eq("car_id",carId);
+        }
+        Integer onCarStatus = req.getOnCarStatus();
+        if(onCarStatus!=null){
+            if(onCarStatus==0){
+                wq.eq("on_car_status",onCarStatus);
+            }else{
+                //已上车不等于0即可
+                wq.ne("on_car_status",0);
+            }
+
+        }
+        String identityName = req.getIdentityName();
+        if(StringUtils.isNotBlank(identityName)){
+            identityName=identityName.trim();
+            wq.eq("identity_name",identityName);
+        }
+        String phone = req.getPhone();
+        if(StringUtils.isNotBlank(phone)){
+            phone=phone.trim();
+            wq.eq("phone",phone);
+        }
+        String createTime = req.getCreateTimeStr();
+        if(StringUtils.isNotBlank(createTime)){
+            createTime=createTime.trim();
+            wq.like("create_time",createTime);
+        }
+        String origin = req.getOrigin();
+        if(StringUtils.isNotBlank(origin)){
+            origin=origin.trim();
+            wq.like("origin",origin);
+        }
+        String destination = req.getDestination();
+        if(StringUtils.isNotBlank(destination)){
+            destination=destination.trim();
+            wq.like("destination",destination);
+        }
+        List<TripOrderDo> list = list(wq);
+        if(list.size()>0){
+            List<TripOrderExcelDo> listTripOrderExcelDo=new ArrayList<>();
+            for (TripOrderDo tripOrderDo : list) {
+                TripOrderExcelDo tripOrderExcelDo=new  TripOrderExcelDo();
+                tripOrderExcelDo.setOrderId(tripOrderDo.getOrderId());
+                Integer carId_list = tripOrderDo.getCarId();
+                TripCarDo byId = tripCarServiceImpl.getById(carId_list);
+                tripOrderExcelDo.setCarNumber(byId.getCarNumber());
+                tripOrderExcelDo.setCreateTime(DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,tripOrderDo.getCreateTime()));
+                tripOrderExcelDo.setDestination(tripOrderDo.getDestination());
+                tripOrderExcelDo.setOrigin(tripOrderDo.getOrigin());
+                tripOrderExcelDo.setIdentityName(tripOrderDo.getIdentityName());
+                tripOrderExcelDo.setNum(tripOrderDo.getNum());
+                tripOrderExcelDo.setPhone(tripOrderDo.getPhone());
+                tripOrderExcelDo.setSchool(tripOrderDo.getSchool());
+                Integer onCarStatus1 = tripOrderDo.getOnCarStatus();
+                if(onCarStatus1!=null){
+                    if(onCarStatus1==0){
+                        tripOrderExcelDo.setOnCarStatus("未上车");
+                    }else{
+                        tripOrderExcelDo.setOnCarStatus("上车"+onCarStatus1+"人");
+                    }
+                }
+                tripOrderExcelDo.setTotalFee(tripOrderDo.getTotalFee());
+                tripOrderExcelDo.setPrice(tripOrderDo.getPrice());
+                Date oncarTime = tripOrderDo.getOncarTime();
+                if(oncarTime!=null){
+                    tripOrderExcelDo.setOncarTime(DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,oncarTime));
+                }
+                tripOrderExcelDo.setRefundFee(tripOrderDo.getRefundFee());
+                Date refundTime = tripOrderDo.getRefundTime();
+                if(refundTime!=null){
+                    tripOrderExcelDo.setRefundTime(DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,refundTime));
+                }
+                Integer status1 = tripOrderDo.getStatus();
+                if(status1==0){
+                    tripOrderExcelDo.setStatus("待支付");
+                }else if(status1==1){
+                    tripOrderExcelDo.setStatus("支付成功");
+                }else if(status1==-1){
+                    tripOrderExcelDo.setStatus("支付失败");
+                }else if(status1==-2){
+                    tripOrderExcelDo.setStatus("已退款");
+                }
+                listTripOrderExcelDo.add(tripOrderExcelDo);
+            }
+            if(listTripOrderExcelDo.size()>0){
+                //存储文件路径
+                String root = filePathOnlineConfig.getRoot();
+                String baseUrl = filePathOnlineConfig.getBaseUrl();
+                String fileName = DateUtils.parseDateToStr(DateUtils.YYYYMMDDHHMMSS,new Date())+".xlsx";
+                String absolutePath=root+"/"+fileName;
+                // 创建ExcelWriter对象
+                ExcelWriter excelWriter = EasyExcel.write(absolutePath, TripOrderExcelDo.class).build();
+
+                // 创建WriteSheet对象
+                WriteSheet writeSheet = EasyExcel.writerSheet("订单导出").build();
+
+                // 将数据写入Excel
+                excelWriter.write(listTripOrderExcelDo, writeSheet);
+
+                // 关闭ExcelWriter对象
+                excelWriter.finish();
+                return baseUrl+"/"+fileName;
+            }
+        }
+        return null;
     }
 }

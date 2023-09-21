@@ -53,6 +53,7 @@
         <mybatis-plus-generator.version>3.5.1</mybatis-plus-generator.version>
         <pub-common.version>1.0-SNAPSHOT</pub-common.version>
         <pub-tencentcloudsms.version>3.1.767</pub-tencentcloudsms.version>
+        <pub-easyexcel.version>3.1.1</pub-easyexcel.version>
     </properties>
 
     <!-- 依赖声明 只有在子项目中写了该依赖项，并且没有指定具体版本，才会从父项目中继承该项-->
@@ -296,6 +297,11 @@
                 <groupId>com.tencentcloudapi</groupId>
                 <artifactId>tencentcloud-sdk-java-sms</artifactId>
                 <version>${pub-tencentcloudsms.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.alibaba</groupId>
+                <artifactId>easyexcel</artifactId>
+                <version>${pub-easyexcel.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

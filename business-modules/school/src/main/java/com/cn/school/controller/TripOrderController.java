@@ -190,6 +190,24 @@ public class TripOrderController extends BaseController {
         }
 
     }
+    /**
+     * 导出订单
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/importExcel", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult importExcel(@RequestBody TripOrderDo req){
+        try{
+            String url = tripOrderService.importExcel(req);
+            return AjaxResult.success("成功",url);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
 
 
 
