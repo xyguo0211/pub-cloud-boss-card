@@ -68,4 +68,12 @@ public class TripCarDo extends Model<TripCarDo> {
     private  Integer noticeStatus;
 
 
+    @TableField(exist = false)
+    private  Integer oncarTicks;
+
+    @TableField(exist = false)
+    private  List<TripOrderDo> waitcarList;
+
+
+
 }

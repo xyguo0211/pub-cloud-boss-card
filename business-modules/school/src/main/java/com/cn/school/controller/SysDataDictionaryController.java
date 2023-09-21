@@ -63,7 +63,7 @@ public class SysDataDictionaryController {
      * 添加退费规则的配置
      * @return
      */
-    @RequestMapping(value = "/addRefundsConfig", method = RequestMethod.GET)
+    @RequestMapping(value = "/addRefundsConfig", method = RequestMethod.POST)
     @ResponseBody
     public AjaxResult addRefundsConfig(@RequestBody JSONObject js) {
         try{

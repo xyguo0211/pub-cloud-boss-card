@@ -3,10 +3,7 @@ package com.cn.school.service.impl;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.school.config.Constant;
-import com.cn.school.entity.TripAreaDo;
-import com.cn.school.entity.TripCarDo;
-import com.cn.school.entity.TripProductCarRelationDo;
-import com.cn.school.entity.TripProductDo;
+import com.cn.school.entity.*;
 import com.cn.school.mapper.TripCarMapper;
 import com.cn.school.service.ITripCarService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
@@ -41,6 +38,9 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
     @Autowired
     private TripAreaServiceImpl tripAreaServiceImpl;
 
+    @Autowired
+    private TripOrderServiceImpl tripOrderServiceImpl;
+
     /**
      * 一定要加上锁，避免并发出错
      * @param carId
@@ -69,7 +69,52 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
     public List<TripCarDo> getCarCheck() {
         QueryWrapper<TripCarDo> wq=new QueryWrapper<>();
         wq.like("start_time", DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD,new Date()));
-        return list(wq);
+        List<TripCarDo> list = list(wq);
+        for (TripCarDo tripCarDo : list) {
+            //设置已核销的订单和核销出发点和目的地
+            Integer id = tripCarDo.getId();
+            QueryWrapper<TripProductCarRelationDo> wqTripProductCarRelationDo=new QueryWrapper<>();
+            wqTripProductCarRelationDo.eq("car_id",id);
+            List<TripProductCarRelationDo> listTripProductCarRelationDo = tripProductCarRelationServiceImpl.list(wqTripProductCarRelationDo);
+            if(listTripProductCarRelationDo!=null&&listTripProductCarRelationDo.size()>0){
+                List<TripProductDo> listTripProductDo=new ArrayList<>();
+                for (TripProductCarRelationDo tripProductCarRelationDo : listTripProductCarRelationDo) {
+                    Integer productId = tripProductCarRelationDo.getProductId();
+                    TripProductDo tripProductDo = tripProductService.getById(productId);
+                    Integer tripAreaId = tripProductDo.getTripAreaId();
+                    TripAreaDo tripAreaDo = tripAreaServiceImpl.getById(tripAreaId);
+                    tripProductDo.setOrigin(tripAreaDo.getOrigin());
+                    tripProductDo.setDestination(tripAreaDo.getDestination());
+                    listTripProductDo.add(tripProductDo);
+                }
+                tripCarDo.setListTripProductDo(listTripProductDo);
+            }
+            /**
+             * 设置已核销和未核销订单量
+             */
+            QueryWrapper<TripOrderDo> wq_car=new QueryWrapper<>();
+            wq_car.eq("car_id",tripCarDo.getId());
+            wq_car.eq("status",Constant.OrderStatus.SUCESS);
+            List<TripOrderDo> listTripOrderDo = tripOrderServiceImpl.list(wq_car);
+            List<TripOrderDo> waitcarList=new ArrayList<>();
+            int oncarTicks=0;
+            for (TripOrderDo tripOrderDo : listTripOrderDo) {
+                oncarTicks=oncarTicks+tripOrderDo.getOnCarStatus();
+                Integer onCarStatus = tripOrderDo.getOnCarStatus();
+                Integer num = tripOrderDo.getNum();
+                if(onCarStatus<num){
+                    //说明未上车
+                    waitcarList.add(tripOrderDo);
+                }
+            }
+            tripCarDo.setOncarTicks(oncarTicks);
+            /**
+             * 设置未上车的数据
+             */
+            tripCarDo.setWaitcarList(waitcarList);
+
+        }
+        return list;
     }
 
     public List<TripCarDo> getPageList(TripCarDo req) {
@@ -140,9 +185,13 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
                 throw  new BusinessException("已售票不能少于票总数！");
             }
             Date startTimedb = byId.getStartTime();
+            String s = DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS, startTimedb);
             Date startTime= tripCarDo.getStartTime();
-            if(startTime!=null&&startTime!=startTimedb){
-                throw  new BusinessException("已售票不能修改发车时间！");
+            if(startTime!=null){
+                String s1 = DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS, startTime);
+                if(!s.equals(s1)){
+                    throw  new BusinessException("已售票不能修改发车时间！");
+                }
             }
         }
         updateById(tripCarDo);
@@ -162,5 +211,12 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
             tripProductDo.setDestination(destination);
         }
         return list;
+    }
+
+    public void deleteCarPrductRelation(Integer productId,Integer carId) {
+        QueryWrapper<TripProductCarRelationDo> wq=new QueryWrapper<>();
+        wq.eq("car_id",carId);
+        wq.eq("product_id",productId);
+        tripProductCarRelationServiceImpl.remove(wq);
     }
 }

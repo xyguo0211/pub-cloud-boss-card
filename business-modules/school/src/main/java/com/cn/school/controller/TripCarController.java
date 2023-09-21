@@ -10,12 +10,9 @@ import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
-import org.springframework.web.bind.annotation.RequestMethod;
-import org.springframework.web.bind.annotation.ResponseBody;
 
 import java.util.List;
 
@@ -127,6 +124,21 @@ public class TripCarController extends BaseController {
         try{
             List<TripProductDo> tripProductDos = tripCarService.tripCarDoProductCheckBox();
             return AjaxResult.success(tripProductDos);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+    /**
+     * 删除车次和产品关联关系
+     */
+    @TimingLog
+    @RequestMapping(value = "/deleteCarPrductRelation", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult deleteCarPrductRelation(@RequestParam Integer productId,@RequestParam Integer carId){
+        try{
+           tripCarService.deleteCarPrductRelation(productId,carId);
+            return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error(e.getMessage());

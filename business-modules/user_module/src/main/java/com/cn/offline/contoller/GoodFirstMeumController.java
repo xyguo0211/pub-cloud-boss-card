@@ -13,12 +13,12 @@ import com.pub.core.util.page.TableDataInfo;
 /*import org.bytedeco.javacpp.opencv_core;
 import org.bytedeco.javacpp.opencv_imgcodecs;
 import org.bytedeco.javacpp.opencv_imgproc;*/
-import org.opencv.core.Core;
+/*import org.opencv.core.Core;
 import org.opencv.core.CvType;
 import org.opencv.core.Mat;
-import org.opencv.core.Scalar;
-import org.opencv.imgcodecs.Imgcodecs;
-import org.opencv.imgproc.Imgproc;
+import org.opencv.core.Scalar;*/
+/*import org.opencv.imgcodecs.Imgcodecs;
+import org.opencv.imgproc.Imgproc;*/
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Controller;

@@ -52,6 +52,7 @@
         <spring-cloud-starter-bootstrap.version>3.1.1</spring-cloud-starter-bootstrap.version>
         <mybatis-plus-generator.version>3.5.1</mybatis-plus-generator.version>
         <pub-common.version>1.0-SNAPSHOT</pub-common.version>
+        <pub-tencentcloudsms.version>3.1.767</pub-tencentcloudsms.version>
     </properties>
 
     <!-- 依赖声明 只有在子项目中写了该依赖项，并且没有指定具体版本，才会从父项目中继承该项-->
@@ -284,6 +285,17 @@
                 <groupId>org.example</groupId>
                 <artifactId>pub-modules-entity</artifactId>
                 <version>${pub-common.version}</version>
+            </dependency>
+            <!--腾讯发送短信的jar包-->
+            <dependency>
+                <groupId>com.tencentcloudapi</groupId>
+                <artifactId>tencentcloud-sdk-java-common</artifactId>
+                <version>${pub-tencentcloudsms.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>com.tencentcloudapi</groupId>
+                <artifactId>tencentcloud-sdk-java-sms</artifactId>
+                <version>${pub-tencentcloudsms.version}</version>
             </dependency>
         </dependencies>
     </dependencyManagement>

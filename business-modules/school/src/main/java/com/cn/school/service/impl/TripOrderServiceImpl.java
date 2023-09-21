@@ -146,6 +146,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
             wq.eq("status",Constant.OrderStatus.SUCESS);
         }
          wq.eq("user_id", id);
+        wq.orderByDesc("create_time");
         List<TripOrderDo> list = list(wq);
         return list;
     }
@@ -715,6 +716,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         }
         String createTime = req.getCreateTimeStr();
         if(StringUtils.isNotBlank(createTime)){
+            createTime=createTime.trim();
             wq.like("create_time",createTime);
         }
         String origin = req.getOrigin();
