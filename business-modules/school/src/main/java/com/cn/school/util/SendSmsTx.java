@@ -147,10 +147,13 @@ public class SendSmsTx {
     }
     /**
      * 发车前多少小时通知用户
-     * @param phone
+     *
+     * {1},您预订的车票，最晚发车时间{2}，提前达到集合点，请携带好您的行李,做好扫码上车准备,此次车牌号是{3}，任意一部车都可以坐，祝您一路顺风!
+     *
+     * 这个短信能不让他们手动来发呢。
      * @return
      */
-    public SendSmsResponse sendMsgCarTime(String phone,String name,String time){
+    public SendSmsResponse sendMsgCarTime(String phone ,String name,String time,String carNum){
         try{
             sendSmsTxLog.info("手机号{}发送短信，通知用户{}",phone,name);
             // 实例化一个认证对象，入参需要传入腾讯云账户 SecretId 和 SecretKey，此处还需注意密钥对的保密
@@ -178,7 +181,7 @@ public class SendSmsTx {
             String[] phoneNumberSet1 = {phone};
             req.setPhoneNumberSet(phoneNumberSet1);//发送的手机号
             //生成6位数随机验证码
-            String[] templateParamSet1 = {name,time};//模板的参数 第一个是验证码，第二个是过期时间
+            String[] templateParamSet1 = {name,time,carNum};//模板的参数 第一个是验证码，第二个是过期时间
             req.setTemplateParamSet(templateParamSet1);//发送验证码
             // 返回的resp是一个SendSmsResponse的实例，与请求对象对应
             SendSmsResponse resp = client.SendSms(req);

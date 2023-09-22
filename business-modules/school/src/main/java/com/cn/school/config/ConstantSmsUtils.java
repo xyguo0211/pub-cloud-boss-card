@@ -2,9 +2,10 @@ package com.cn.school.config;
 
 import org.springframework.beans.factory.InitializingBean;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.cloud.context.config.annotation.RefreshScope;
 import org.springframework.stereotype.Component;
 
-
+@RefreshScope
 @Component
 public class ConstantSmsUtils implements InitializingBean {
     @Value("${tencent.sms.secretId}")

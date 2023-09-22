@@ -373,7 +373,8 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         UserDo userDo = userServiceImpl.getById(user_id);
         QueryWrapper<TripOrderDo> wq_chech=new QueryWrapper<>();
         wq_chech.eq("user_id",user_id);
-        wq_chech.eq("product_id",tripOrderDo.getProductId());
+        /*wq_chech.eq("product_id",tripOrderDo.getProductId());
+        wq_chech.eq("car_id",tripOrderDo.getCarId());*/
         wq_chech.eq("status",Constant.OrderStatus.REFUND);
         wq_chech.like("create_time", DateUtils.getDate());
         wq_chech.orderByDesc("id");
@@ -382,7 +383,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         JSONObject refunds_notice_msg = JSONObject.parseObject(sysBaseParam);
         Integer blackCount = refunds_notice_msg.getInteger("blackCount");
         if(list_check.size()>blackCount){
-            throw new BusinessException("该天超过"+blackCount+"次退票,已被禁止购票！");
+            throw new BusinessException("当天超过"+blackCount+"次退票,已被禁止购票！");
         }
         Integer waitCount = refunds_notice_msg.getInteger("waitCount");
         Integer waitTimeCount = refunds_notice_msg.getInteger("waitTimeCount");
@@ -644,7 +645,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         jsRtn.put("totalFee",totalFee);
         jsRtn.put("num",num);
         QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
-        wq.isNotNull("refund_order_id");
+        wq.eq("status",Constant.OrderStatus.REFUND);
         wq.eq("user_id",tripOrderDo.getUserId());
         wq.eq("car_id",tripOrderDo.getCarId());
         wq.eq("product_id",tripOrderDo.getProductId());
@@ -652,7 +653,10 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         Integer refundOne = refunds_notice_msg.getInteger("refundOne");
         StringBuilder sb=new StringBuilder("0");
         jsRtn.put("refundCont",list.size());
-        if(list!=null&&list.size()>refundOne){
+        /**
+         * 退费次数要算上本次，所以必须加1
+         */
+        if(list!=null&&list.size()+1>refundOne){
             //超过一次以上每次每张票扣除10元
             String refundOneFee = refunds_notice_msg.getString("refundOneFee");
             sb.append("+").append(refundOneFee).append("*").append(num+"");

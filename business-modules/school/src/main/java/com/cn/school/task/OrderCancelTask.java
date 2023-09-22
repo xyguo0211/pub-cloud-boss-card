@@ -70,7 +70,7 @@ public class OrderCancelTask {
     private TripOrderServiceImpl tripOrderService;
 
     @Autowired
-    private SendSmsTx SendSmsTx;
+    private SendSmsTx sendSmsTx;
 
     /**
      * 未支付成功订单关闭按钮
@@ -157,7 +157,7 @@ public class OrderCancelTask {
                             append(DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,tripCarDo.getStartTime()))
                             .append("余票数量不足"+tickets_num+"张！");
                     //短信通知管理员
-                    SendSmsTx.sendMsgNoticeSystem(tickets_phone,sb.toString());
+                    sendSmsTx.sendMsgNoticeSystem(tickets_phone,sb.toString());
                 }
                 tripCarDo.setNoticeStatus(9);
                 tripCarServiceImpl.updateById(tripCarDo);
@@ -170,11 +170,11 @@ public class OrderCancelTask {
         }
 
     /**
-     *  发车前一小时通知
+     *  发车前一小时通知,已废弃，原因车牌号不固定
       * @throws ParseException
      */
-    @Scheduled(cron="${task.car_cron}")
-    public void carStartTime() throws ParseException {
+    /*@Scheduled(cron="${task.car_cron}")*/
+  /*  public void carStartTime() throws ParseException {
         log.info("开始执行发车前一小时通知任务");
         if(car_switch!= 9){
             log.info("发车前一小时通知开关未打开");
@@ -182,33 +182,33 @@ public class OrderCancelTask {
         }
         String dateFromat = DateUtils.dateTimeNow();
         try {
-            /**
+            *//**
              * 查询那些超过分钟未10分钟未支付订单
-             */
+             *//*
             QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
-            /**
+            *//**
              * 订单状态   0 初始  1成功  -1 失败
-             */
+             *//*
             wq.eq("status",1);
-            /**
+            *//**
              * 未提醒
-             */
+             *//*
             wq.eq("notice_status",-1);
-            /**
+            *//**
              * 未上车
-             */
+             *//*
             wq.eq("on_car_status",0);
             List<TripOrderDo> list = tripOrderService.list(wq);
             if(list!=null&&list.size()>0){
                 for (TripOrderDo tripOrderDo : list) {
                     tripOrderDo.setNoticeStatus(9);
-                    /**
+                    *//**
                      * 发送短信通知
-                     */
+                     *//*
                     Date starTime = tripOrderDo.getStarTime();
                     if(DateUtils.addHours(new Date(),1).after(starTime)){
                         String identityName = tripOrderDo.getIdentityName();
-                        SendSmsTx.sendMsgCarTime(tripOrderDo.getPhone(),identityName,DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,starTime));
+                        sendSmsTx.sendMsgCarTime(tripOrderDo.getPhone(),identityName,DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,starTime));
                         tripOrderService.updateById(tripOrderDo);
                     }
                 }
@@ -217,8 +217,8 @@ public class OrderCancelTask {
         }catch (Exception e){
                 e.printStackTrace();
                 log.error(dateFromat+"15分钟未支付订单取消，异常+"+e.getMessage());
-            }
         }
+    }
 
-
+*/
 }

@@ -7,10 +7,12 @@ import com.cn.school.entity.*;
 import com.cn.school.mapper.TripCarMapper;
 import com.cn.school.service.ITripCarService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.cn.school.util.SendSmsTx;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.DateUtils;
 import com.pub.core.utils.StringUtils;
+import lombok.extern.log4j.Log4j2;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -26,6 +28,7 @@ import java.util.List;
  * @author ganyongheng
  * @since 2023-08-16
  */
+@Log4j2
 @Service
 public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> implements ITripCarService {
 
@@ -40,6 +43,9 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
 
     @Autowired
     private TripOrderServiceImpl tripOrderServiceImpl;
+
+    @Autowired
+    private SendSmsTx sendSmsTx;
 
     /**
      * 一定要加上锁，避免并发出错
@@ -70,6 +76,7 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
     public List<TripCarDo> getCarCheck() {
         QueryWrapper<TripCarDo> wq=new QueryWrapper<>();
         wq.like("start_time", DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD,new Date()));
+        wq.orderByAsc("start_time");
         List<TripCarDo> list = list(wq);
         for (TripCarDo tripCarDo : list) {
             //设置已核销的订单和核销出发点和目的地
@@ -219,5 +226,36 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
         wq.eq("car_id",carId);
         wq.eq("product_id",productId);
         tripProductCarRelationServiceImpl.remove(wq);
+    }
+
+    public void sendMsgByPhone(Integer carId) {
+        try {
+            TripCarDo tripCarDo = getById(carId);
+            /**
+             * 查询那些超过分钟未10分钟未支付订单
+             */
+            QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+            /**
+             * 订单状态   0 初始  1成功  -1 失败
+             */
+            wq.eq("status",1);
+            wq.eq("car_id",carId);
+            List<TripOrderDo> list = tripOrderServiceImpl.list(wq);
+            if(list!=null&&list.size()>0){
+                for (TripOrderDo tripOrderDo : list) {
+                    String identityName = tripOrderDo.getIdentityName();
+                    try {
+                        sendSmsTx.sendMsgCarTime(tripOrderDo.getPhone(),identityName,DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,tripCarDo.getStartTime()),tripCarDo.getCarNumber());
+                    }catch (Exception e){
+                        e.printStackTrace();
+                        log.error("{}发送短信失败{}",identityName,e.getMessage());
+                    }
+
+                }
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+        }
     }
 }

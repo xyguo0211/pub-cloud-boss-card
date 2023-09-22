@@ -144,6 +144,21 @@ public class TripCarController extends BaseController {
             return AjaxResult.error(e.getMessage());
         }
     }
+    /**
+     * 给用户  发送短信按钮
+     */
+    @TimingLog
+    @RequestMapping(value = "/sendMsgByPhone", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult sendMsgByPhone(@RequestParam Integer carId){
+        try{
+           tripCarService.sendMsgByPhone(carId);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
 
 
 
