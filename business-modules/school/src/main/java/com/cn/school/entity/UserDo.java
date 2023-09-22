@@ -59,7 +59,7 @@ public class UserDo extends Model<UserDo> {
      */
     @TableField(exist = false)
     private String phoneCode;
-
+//1 系统管理员  2 扫描人员  3普通用户
     private Integer roleId;
 
 }

@@ -34,7 +34,13 @@ public class TripProductCarRelationServiceImpl extends ServiceImpl<TripProductCa
 
     public void addTripCarDoProduct(TripProductCarRelationDo tripProductCarRelationDo) throws Exception {
         Integer carId = tripProductCarRelationDo.getCarId();
+        if(carId==null){
+            throw  new BusinessException("请选择车次！");
+        }
         Integer productId = tripProductCarRelationDo.getProductId();
+        if(productId==null){
+            throw  new BusinessException("请选择产品！");
+        }
         QueryWrapper<TripProductCarRelationDo> wq=new QueryWrapper<>();
         wq.eq("car_id",tripProductCarRelationDo.getCarId());
         wq.eq("product_id",tripProductCarRelationDo.getProductId());

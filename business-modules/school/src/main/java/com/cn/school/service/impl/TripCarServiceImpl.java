@@ -61,7 +61,8 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
             updateById(tripCarDo);
 
         }else{
-            tripCarDo.setSellNum(sellNum+num);
+            //释放车票
+            tripCarDo.setSellNum(sellNum-num);
             updateById(tripCarDo);
         }
     }

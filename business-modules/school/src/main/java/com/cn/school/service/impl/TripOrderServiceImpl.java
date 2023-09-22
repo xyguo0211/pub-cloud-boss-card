@@ -116,9 +116,9 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
     private RestTemplate restTemplate;
     @Autowired
     private BaseWxConfig baseWxConfig;
-    @Autowired
-    private TripConfig tripConfig;
 
+    @Autowired
+    private SysDataDictionaryServiceImpl sysDataDictionaryServiceImpl;
 
     public List<TripOrderDo> myTripOrderDo(TripOrderDo tripOrderDo) {
         User currentUser = UserContext.getCurrentUser();
@@ -135,11 +135,11 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         }
         Integer onCarStatus = tripOrderDo.getOnCarStatus();
         if(onCarStatus!=null){
-            //车票那里onCarStatus=1 已发车  其它待发车
-            if(onCarStatus==1){
-                wq.le("star_time", new Date());
+            //0 未出行  非0已出行
+            if(onCarStatus==0){
+                wq.eq("on_car_status", 0);
             }else{
-                wq.ge("star_time", new Date());
+                wq.ne("on_car_status", 0);
             }
             wq.eq("status",Constant.OrderStatus.SUCESS);
         }
@@ -374,19 +374,23 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         QueryWrapper<TripOrderDo> wq_chech=new QueryWrapper<>();
         wq_chech.eq("user_id",user_id);
         wq_chech.eq("product_id",tripOrderDo.getProductId());
-        wq_chech.eq("status",Constant.OrderStatus.FAIL);
+        wq_chech.eq("status",Constant.OrderStatus.REFUND);
         wq_chech.like("create_time", DateUtils.getDate());
         wq_chech.orderByDesc("id");
         List<TripOrderDo> list_check = list(wq_chech);
-
-        if(list_check.size()>tripConfig.getBlackCount()){
-            throw new BusinessException("该天超过3次不付款,已被禁止购票！");
+        String sysBaseParam = sysDataDictionaryServiceImpl.getSysBaseParam("refunds_notice_msg", "refunds_notice_msg");
+        JSONObject refunds_notice_msg = JSONObject.parseObject(sysBaseParam);
+        Integer blackCount = refunds_notice_msg.getInteger("blackCount");
+        if(list_check.size()>blackCount){
+            throw new BusinessException("该天超过"+blackCount+"次退票,已被禁止购票！");
         }
-        if(list_check.size()>tripConfig.getWaitCount()){
+        Integer waitCount = refunds_notice_msg.getInteger("waitCount");
+        Integer waitTimeCount = refunds_notice_msg.getInteger("waitTimeCount");
+        if(list_check.size()>waitCount){
             TripOrderDo tripOrderDo_num = list_check.get(0);
             Date createTime = tripOrderDo_num.getCreateTime();
-            if(createTime.before(DateUtils.addHours(new Date(),tripConfig.getWaitTimeCount()))){
-                throw new BusinessException("该天超过2次不付款,已被禁止一小时后购票！");
+            if(createTime.before(DateUtils.addHours(new Date(),waitTimeCount))){
+                throw new BusinessException("该天超过"+waitCount+"次退票,已被禁止"+waitTimeCount+"小时后购票！");
             }
         }
 
@@ -544,7 +548,12 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         return tripOrderDo;
     }
 
-    public void refundsTripOrder(String orderId) throws Exception {
+    /**
+     * 不允许并发，防止出错
+     * @param orderId
+     * @throws Exception
+     */
+    public synchronized void refundsTripOrder(String orderId) throws Exception {
         QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
         wq.eq("order_id",orderId);
         TripOrderDo tripOrderDo = getOne(wq);
@@ -554,14 +563,6 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         }
         refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},",orderId,tripOrderDo.getIdentityName());
         //发车前一小时不允许退票
-        Date starTime = tripOrderDo.getStarTime();
-        Date date = DateUtils.addHours(new Date(), tripConfig.getNoRefundTime());
-        if((date.after(starTime))){
-            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},发车前{}小时不允许退票！",orderId,tripOrderDo.getIdentityName(),tripConfig.getNoRefundTime());
-            throw  new  BusinessException("发车前"+tripConfig.getNoRefundTime()+"小时不允许退票！");
-        }
-        String refundsFee = getRefundsFee(tripOrderDo);
-        tripOrderDo.setRefundFee(refundsFee);
         HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/refund/domestic/refunds");
         httpPost.addHeader("Accept", "application/json");
         httpPost.addHeader("Content-type","application/json; charset=utf-8");
@@ -582,7 +583,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
                 /**
                  * 退款金额,需要转换
                  */
-                .put("refund", Integer.valueOf(WxPayRequstUtil.getMoney(refundsFee)))
+                .put("refund", Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getRefundFee())))
                 /**
                  * 原订单金额
                  */
@@ -636,32 +637,51 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         updateById(tripOrderDo);
     }
 
-    private String getRefundsFee( TripOrderDo tripOrderDo ) {
-        int fee=0;
+    private JSONObject getRefundsFee( TripOrderDo tripOrderDo,JSONObject refunds_notice_msg ) {
+        JSONObject jsRtn=new JSONObject();
+        Integer num = tripOrderDo.getNum();
+        String totalFee = tripOrderDo.getTotalFee();
+        jsRtn.put("totalFee",totalFee);
+        jsRtn.put("num",num);
         QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
-        wq.eq("ticket_status",9);
+        wq.isNotNull("refund_order_id");
         wq.eq("user_id",tripOrderDo.getUserId());
         wq.eq("car_id",tripOrderDo.getCarId());
+        wq.eq("product_id",tripOrderDo.getProductId());
         List<TripOrderDo> list = list(wq);
-        if(list!=null&&list.size()>1){
-            //超过一次以上每次扣除10元
-            int refundOneFee = tripConfig.getRefundOneFee();
-            fee=fee+refundOneFee;
+        Integer refundOne = refunds_notice_msg.getInteger("refundOne");
+        StringBuilder sb=new StringBuilder("0");
+        jsRtn.put("refundCont",list.size());
+        if(list!=null&&list.size()>refundOne){
+            //超过一次以上每次每张票扣除10元
+            String refundOneFee = refunds_notice_msg.getString("refundOneFee");
+            sb.append("+").append(refundOneFee).append("*").append(num+"");
             refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},超过一次以上每次扣除{}元！",tripOrderDo.getOrderId(),tripOrderDo.getIdentityName(),refundOneFee);
+            BigDecimal cal = CalculateUtil.cal(refundOneFee + "*" + num);
+            jsRtn.put("refundFee",cal+"");
 
-
+        }else{
+            jsRtn.put("refundFee","0");
         }
-        //发车前2小时扣除20元
+        //发车前2小时每张票扣除20元
         Date starTime = tripOrderDo.getStarTime();
-        if((DateUtils.addHours(new Date(),tripConfig.getNoRefundCarTime()).after(starTime))){
-            int refundOneFee = tripConfig.getRefundCarFee();
-            fee=fee+refundOneFee;
-            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},发车前{}小时扣除{}元！",tripOrderDo.getOrderId(),tripOrderDo.getIdentityName(),tripConfig.getNoRefundCarTime(),refundOneFee);
-
+        jsRtn.put("starTime",DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,starTime));
+        Integer noRefundCarTime = refunds_notice_msg.getInteger("noRefundCarTime");
+        if((DateUtils.addHours(new Date(),noRefundCarTime).after(starTime))){
+            String refundCarFee = refunds_notice_msg.getString("refundCarFee");
+            sb.append("+").append(refundCarFee).append("*").append(num+"");;
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},发车前{}小时扣除{}元！",tripOrderDo.getOrderId(),tripOrderDo.getIdentityName(),noRefundCarTime,refundCarFee);
+            BigDecimal cal = CalculateUtil.cal(refundCarFee + "*" + num);
+            jsRtn.put("overTimeFee",cal+"");
+        }else{
+            jsRtn.put("overTimeFee","0");
         }
-        String totalFee = tripOrderDo.getTotalFee();
-        return CalculateUtil.cal(totalFee + "-" + fee)+"";
-
+        BigDecimal cal = CalculateUtil.cal(sb.toString());
+        String refundTotalFee = CalculateUtil.cal(totalFee + "-" + cal)+"";
+        jsRtn.put("refundTotalFee",refundTotalFee);
+        tripOrderDo.setRefundFee(refundTotalFee);
+        updateById(tripOrderDo);
+        return jsRtn;
     }
 
 
@@ -849,5 +869,30 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
             }
         }
         return null;
+    }
+
+    public synchronized JSONObject refundsTripOrderBefore(String orderId) throws Exception{
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        wq.eq("order_id",orderId);
+        TripOrderDo tripOrderDo = getOne(wq);
+        Integer ticketStatus = tripOrderDo.getStatus();
+        if(Constant.OrderStatus.SUCESS!=ticketStatus){
+            throw  new  BusinessException("订单已全额退款或者未支付成功！");
+        }
+        refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},",orderId,tripOrderDo.getIdentityName());
+        //发车前一小时不允许退票
+        Date starTime = tripOrderDo.getStarTime();
+        String sysBaseParam = sysDataDictionaryServiceImpl.getSysBaseParam("refunds_notice_msg", "refunds_notice_msg");
+        JSONObject refunds_notice_msg = JSONObject.parseObject(sysBaseParam);
+        Integer noRefundTime = refunds_notice_msg.getInteger("noRefundTime");
+        Date date = DateUtils.addHours(new Date(), noRefundTime);
+        if((date.after(starTime))){
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},发车前{}小时不允许退票！",orderId,tripOrderDo.getIdentityName(),noRefundTime);
+            throw  new  BusinessException("发车前"+noRefundTime+"小时不允许退票！");
+        }
+        /**
+         * 获取退费的费用
+         */
+        return getRefundsFee(tripOrderDo, refunds_notice_msg);
     }
 }

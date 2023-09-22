@@ -129,7 +129,25 @@ public class TripOrderController extends BaseController {
     }
 
     /**
-     * 退款接口
+     * 预备退款接口，告诉用户退款金额和扣除的费用
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/refundsTripOrderBefore", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult refundsTripOrderBefore(@RequestParam String orderId){
+        try{
+            JSONObject jsonObject = tripOrderService.refundsTripOrderBefore(orderId);
+            return AjaxResult.success(jsonObject);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
+    /**
+     * 退款确认接口
      * @return
      */
     @TimingLog

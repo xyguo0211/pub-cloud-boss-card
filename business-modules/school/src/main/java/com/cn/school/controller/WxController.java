@@ -145,7 +145,9 @@ public class WxController extends BaseController {
             userDo=new UserDo();
             userDo.setOpenid(openid);
             userDo.setWxunionid(sesssoin_key);
-            userDo.setIsDelete(1);
+            userDo.setIsDelete(9);
+            userDo.setRoleId(3);
+            userDo.setCreateTime(new Date());
             userServiceImpl.save(userDo);
             token = createToken(userDo);
         }else{
