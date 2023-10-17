@@ -63,4 +63,9 @@ public class TripAreaDo extends Model<TripAreaDo> {
     @TableField(exist = false)
      private List<TripProductDo> listTripProductDo;
 
+    /**
+     * 文字说明
+     */
+    private String textContext;
+
 }

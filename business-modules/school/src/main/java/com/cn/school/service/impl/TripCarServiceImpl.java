@@ -246,6 +246,7 @@ public class TripCarServiceImpl extends ServiceImpl<TripCarMapper, TripCarDo> im
                     String identityName = tripOrderDo.getIdentityName();
                     try {
                         sendSmsTx.sendMsgCarTime(tripOrderDo.getPhone(),identityName,DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD_HH_MM_SS,tripCarDo.getStartTime()),tripCarDo.getCarNumber());
+                        //返回发送的短信 String[] templateParamSet1 = {name,time,carNum}
                     }catch (Exception e){
                         e.printStackTrace();
                         log.error("{}发送短信失败{}",identityName,e.getMessage());

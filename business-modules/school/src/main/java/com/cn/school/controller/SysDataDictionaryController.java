@@ -8,6 +8,7 @@ import com.cn.auth.config.TimingLog;
 import com.cn.school.entity.SysDataDictionaryDo;
 import com.cn.school.service.impl.SysDataDictionaryServiceImpl;
 import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.utils.StringUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -137,6 +138,47 @@ public class SysDataDictionaryController {
         try{
             String sysBaseParam = sysDataDictionaryServiceImpl.getSysBaseParam("tickets_num", "tickets_num");
             return AjaxResult.success("成功",sysBaseParam);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error();
+        }
+    }
+    /**
+     * 获取学校下拉框
+     * @return
+     */
+    @RequestMapping(value = "/getSchoolName", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getSchool() {
+        try{
+            String school_name = sysDataDictionaryServiceImpl.getSysBaseParam("school_name", "school_name");
+            String[] split = school_name.split("##");
+            return AjaxResult.success("成功",split);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error();
+        }
+    }
+    /**
+     * 添加学校下拉框
+     * @return
+     */
+    @RequestMapping(value = "/addSchoolName", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult addSchoolName(@RequestParam String schoolName) {
+        try{
+            QueryWrapper<SysDataDictionaryDo> wq=new QueryWrapper<>();
+            wq.eq("param_key","school_name");
+            wq.eq("param_name","school_name");
+            SysDataDictionaryDo one = sysDataDictionaryServiceImpl.getOne(wq);
+            String school_name = one.getParamValue();
+           StringBuilder sb=new StringBuilder();
+           if(StringUtils.isNotBlank(school_name)){
+               sb.append(school_name).append("##").append(schoolName);
+           }
+            one.setParamValue(sb.toString());
+            sysDataDictionaryServiceImpl.updateById(one);
+            return AjaxResult.success();
         }catch (Exception e){
             e.printStackTrace();
             return AjaxResult.error();

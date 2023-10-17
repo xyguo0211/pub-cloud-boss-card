@@ -5,12 +5,16 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
+import com.cn.school.config.Constant;
+import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.UserDo;
 import com.cn.school.mapper.UserMapper;
 import com.cn.school.service.IUserService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pub.core.common.OnlineConstants;
+import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
+import com.pub.core.utils.CalculateUtil;
 import com.pub.core.utils.StringUtils;
 import com.pub.redis.util.RedisCache;
 import lombok.extern.log4j.Log4j2;
@@ -19,6 +23,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
+import java.math.BigDecimal;
 import java.util.List;
 
 /**
@@ -109,6 +114,29 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
 
     public void addBlack(UserDo req) {
         updateById(req);
+    }
+
+
+    /**
+     * 积分加减
+     * @param userId
+     * @param type  -1减分
+     */
+    public synchronized void addIntegral(Integer userId, String totalFee, Integer type) throws Exception {
+        UserDo byId = getById(userId);
+        String integral = byId.getIntegral();
+        if(Constant.TicketAddStatus.DEL==type){
+            //如果减票,查看余票释放充足
+            BigDecimal cal = CalculateUtil.cal(new StringBuilder(integral).append("-").append(totalFee).toString());
+            byId.setIntegral(cal+"");
+            updateById(byId);
+
+        }else{
+            //添加积分
+            BigDecimal cal = CalculateUtil.cal(new StringBuilder(integral).append("+").append(totalFee).toString());
+            byId.setIntegral(cal+"");
+            updateById(byId);
+        }
     }
 
 }

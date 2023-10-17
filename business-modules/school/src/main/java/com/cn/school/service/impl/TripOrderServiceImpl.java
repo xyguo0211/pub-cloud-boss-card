@@ -148,6 +148,17 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         List<TripOrderDo> list = list(wq);
         return list;
     }
+    public List<TripOrderDo> myInvitationTripOrder(TripOrderDo tripOrderDo) {
+        Integer invitationStatus = tripOrderDo.getInvitationStatus();
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        if(invitationStatus!=null){
+            wq.eq("invitation_status",invitationStatus);
+        }
+        wq.eq("invitation_openid", tripOrderDo.getInvitationOpenid());
+        wq.orderByDesc("create_time");
+        List<TripOrderDo> list = list(wq);
+        return list;
+    }
 
     /**
      * 这里一定要加上锁,此时一定要锁单
@@ -158,6 +169,24 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         save(tripOrderDo);
         Integer num = tripOrderDo.getNum();
         tripCarServiceImpl.addTicket(tripOrderDo.getCarId(),num,Constant.TicketAddStatus.DEL);
+    }
+    /**
+     * 这里一定要加上锁,此时一定要锁单 ,
+     * @param tripOrderDo
+     */
+    @Transactional
+    public  void addTripOrderByIntegral(TripOrderDo tripOrderDo) throws Exception{
+        /**
+         * 设置返现金额
+         */
+        setInvitationFee(tripOrderDo);
+        save(tripOrderDo);
+        Integer num = tripOrderDo.getNum();
+        tripCarServiceImpl.addTicket(tripOrderDo.getCarId(),num,Constant.TicketAddStatus.DEL);
+        /**
+         * 积分扣除
+         */
+        userServiceImpl.addIntegral(tripOrderDo.getUserId(),tripOrderDo.getTotalFee(),Constant.TicketAddStatus.DEL);
     }
 
     /**
@@ -427,7 +456,7 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         /**
          * 初始化
          */
-        tripOrderDo.setStatus(0);
+        tripOrderDo.setStatus(Constant.OrderStatus.WAIT);
         /**
          * 未上车
          */
@@ -435,11 +464,105 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         /**
          * 未释放车票
          */
-        tripOrderDo.setTicketStatus(-1);
+        tripOrderDo.setTicketStatus(Constant.TicketStatus.NO);
         /**
          * 发车前多少小时，默认未通知
          */
         tripOrderDo.setNoticeStatus(-1);
+        tripOrderDo.setCreateTime(new Date());
+        tripOrderDo.setPayType(Constant.PayType.wx);
+
+    }
+    public void createTripOrderByIntegral(TripOrderDo tripOrderDo) throws Exception{
+        /**
+         * 同一个班次订票不付款超过2次需要在1个小时后才能购票，超过3次不付款直接禁止当天所有的购票
+         */
+        User currentUser = UserContext.getCurrentUser();
+        Integer user_id = currentUser.getId();
+        addOrderLog.info("用户id为{}下单,下单请求参数为{}",user_id,JSONObject.toJSONString(tripOrderDo));
+        UserDo userDo = userServiceImpl.getById(user_id);
+        QueryWrapper<TripOrderDo> wq_chech=new QueryWrapper<>();
+        wq_chech.eq("user_id",user_id);
+        /*wq_chech.eq("product_id",tripOrderDo.getProductId());
+        wq_chech.eq("car_id",tripOrderDo.getCarId());*/
+        wq_chech.eq("status",Constant.OrderStatus.REFUND);
+        wq_chech.like("create_time", DateUtils.getDate());
+        wq_chech.orderByDesc("id");
+        List<TripOrderDo> list_check = list(wq_chech);
+        String sysBaseParam = sysDataDictionaryServiceImpl.getSysBaseParam("refunds_notice_msg", "refunds_notice_msg");
+        JSONObject refunds_notice_msg = JSONObject.parseObject(sysBaseParam);
+        Integer blackCount = refunds_notice_msg.getInteger("blackCount");
+        if(list_check.size()>blackCount){
+            throw new BusinessException("当天超过"+blackCount+"次退票,已被禁止购票！");
+        }
+        Integer waitCount = refunds_notice_msg.getInteger("waitCount");
+        Integer waitTimeCount = refunds_notice_msg.getInteger("waitTimeCount");
+        if(list_check.size()>waitCount){
+            TripOrderDo tripOrderDo_num = list_check.get(0);
+            Date createTime = tripOrderDo_num.getCreateTime();
+            if(createTime.before(DateUtils.addHours(new Date(),waitTimeCount))){
+                throw new BusinessException("该天超过"+waitCount+"次退票,已被禁止"+waitTimeCount+"小时后购票！");
+            }
+        }
+
+        TripCarDo tripCarDo = tripCarServiceImpl.getById(tripOrderDo.getCarId());
+        Integer orderNum = tripCarDo.getOrderNum();
+        Integer sellNum = tripCarDo.getSellNum();
+        if( orderNum-sellNum-tripOrderDo.getNum()<0){
+            //说明没票了
+            throw  new BusinessException("余票不足！请刷新购买页面");
+        }
+
+        /**
+         * 校验购买金额是否一致
+         */
+        TripProductDo tripProductDo = tripProductService.getById(tripOrderDo.getProductId());
+        String fee = tripProductDo.getFee();
+       /* if(!fee.equals(tripOrderDo.getPrice())){
+            throw  new BusinessException("车票单价被改动！");
+        }*/
+        String totalFee = tripOrderDo.getTotalFee();
+        String cal_totalFee = CalculateUtil.cal(new StringBuilder(fee).append("*").append(tripOrderDo.getNum()).toString())+"";
+        if(!totalFee.equals(cal_totalFee)){
+            throw  new BusinessException("车票总价格被改动！");
+        }
+        /**
+         * 积分是否够用
+         */
+        String integral = userDo.getIntegral();
+        BigDecimal cal = CalculateUtil.cal(new StringBuilder(integral).append("-").append(totalFee).toString());
+        if(cal.compareTo(BigDecimal.ZERO) < 0){
+            //说明积分不够
+            throw  new BusinessException("积分不够!");
+        }
+        String taskNo = createTaskNo();
+        tripOrderDo.setStarTime(tripCarDo.getStartTime());
+        tripOrderDo.setEndTime(tripCarDo.getEndTime());
+        tripOrderDo.setUserId(userDo.getId());
+        tripOrderDo.setPhone(userDo.getPhone());
+        tripOrderDo.setIdentityName(userDo.getIdentityName());
+        tripOrderDo.setSchool(userDo.getSchool());
+        tripOrderDo.setOrderId(taskNo);
+        /**
+         * 初始化
+         */
+        tripOrderDo.setStatus(Constant.OrderStatus.SUCESS);
+        /**
+         * 未上车
+         */
+        tripOrderDo.setOnCarStatus(0);
+        /**
+         * 未释放车票
+         */
+        tripOrderDo.setTicketStatus(Constant.TicketStatus.NO);
+        /**
+         * 发车前多少小时，默认未通知
+         */
+        tripOrderDo.setNoticeStatus(-1);
+        /**
+         * 积分支付方式
+         */
+        tripOrderDo.setPayType(Constant.PayType.jf);
         tripOrderDo.setCreateTime(new Date());
     }
     @Transactional
@@ -542,10 +665,10 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         /**
          * 设置已发车
          */
-        TripCarDo tripCarDo = tripCarServiceImpl.getById(carId);
+       /* TripCarDo tripCarDo = tripCarServiceImpl.getById(carId);
         //-1未发车   9 已发车
         tripCarDo.setIsDeparted(9);
-        tripCarServiceImpl.updateById(tripCarDo);
+        tripCarServiceImpl.updateById(tripCarDo);*/
         return tripOrderDo;
     }
 
@@ -562,65 +685,99 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
         if(Constant.OrderStatus.SUCESS!=ticketStatus){
             throw  new  BusinessException("订单已全额退款或者未支付成功！");
         }
-        refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},",orderId,tripOrderDo.getIdentityName());
-        //发车前一小时不允许退票
-        HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/refund/domestic/refunds");
-        httpPost.addHeader("Accept", "application/json");
-        httpPost.addHeader("Content-type","application/json; charset=utf-8");
-
-        ByteArrayOutputStream bos = new ByteArrayOutputStream();
-        ObjectMapper objectMapper = new ObjectMapper();
-
-        ObjectNode rootNode = objectMapper.createObjectNode();
-        rootNode.put("out_trade_no",tripOrderDo.getOrderId());
         /**
-         * 退款订单号
+         * 积分支付，微信支付
          */
-        String refundsTaskNo = createRefundsTaskNo();
-        tripOrderDo.setRefundOrderId(refundsTaskNo);
-        rootNode.put("out_refund_no", refundsTaskNo);
+        Integer payType = tripOrderDo.getPayType();
+        if(Constant.PayType.wx==payType){
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},",orderId,tripOrderDo.getIdentityName());
+            //发车前一小时不允许退票
+            HttpPost httpPost = new HttpPost("https://api.mch.weixin.qq.com/v3/refund/domestic/refunds");
+            httpPost.addHeader("Accept", "application/json");
+            httpPost.addHeader("Content-type","application/json; charset=utf-8");
 
-        rootNode.putObject("amount")
-                /**
-                 * 退款金额,需要转换
-                 */
-                .put("refund", Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getRefundFee())))
-                /**
-                 * 原订单金额
-                 */
-                .put("total", Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getTotalFee())))
-                .put("currency", "CNY");
-        refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},请求参数{}",orderId,tripOrderDo.getIdentityName(),JSONObject.toJSONString(rootNode));
-        objectMapper.writeValue(bos, rootNode);
-        httpPost.setEntity(new StringEntity(bos.toString("UTF-8"), "UTF-8"));
-        /**
-         *
-         merchantId商户号。
-         merchantSerialNumber商户API证书的证书序列号。
-         merchantPrivateKey商户API私钥，如何加载商户API私钥请看常见问题。
-         wechatPayCertificates微信支付平台证书列表。你也可以使用后面章节提到的“定时更新平台证书功能”，而不需要关心平台证书的来龙去脉。
+            ByteArrayOutputStream bos = new ByteArrayOutputStream();
+            ObjectMapper objectMapper = new ObjectMapper();
 
-         */
-        CloseableHttpClient httpClient = baseWxConfig.getHttpClient();
-        CloseableHttpResponse response = httpClient.execute(httpPost);
-        String prepay_id = EntityUtils.toString(response.getEntity());
-        refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},返回结果{}",orderId,tripOrderDo.getIdentityName(),prepay_id);
-        JSONObject jsonObject = JSONObject.parseObject(prepay_id);
-        String status = jsonObject.getString("status");
-        /**
-         * SUCCESS：退款成功
-         * CLOSED：退款关闭
-         * PROCESSING：退款处理中
-         * ABNORMAL：退款异常
-         */
-        if(StringUtils.isNotBlank(status)&&("SUCCESS".equals(status)||"PROCESSING".equals(status))){
-            opertorRefundsTripOrderSucess(tripOrderDo);
+            ObjectNode rootNode = objectMapper.createObjectNode();
+            rootNode.put("out_trade_no",tripOrderDo.getOrderId());
+            /**
+             * 退款订单号
+             */
+            String refundsTaskNo = createRefundsTaskNo();
+            tripOrderDo.setRefundOrderId(refundsTaskNo);
+            rootNode.put("out_refund_no", refundsTaskNo);
+
+            rootNode.putObject("amount")
+                    /**
+                     * 退款金额,需要转换
+                     */
+                    .put("refund", Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getRefundFee())))
+                    /**
+                     * 原订单金额
+                     */
+                    .put("total", Integer.valueOf(WxPayRequstUtil.getMoney(tripOrderDo.getTotalFee())))
+                    .put("currency", "CNY");
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},请求参数{}",orderId,tripOrderDo.getIdentityName(),JSONObject.toJSONString(rootNode));
+            objectMapper.writeValue(bos, rootNode);
+            httpPost.setEntity(new StringEntity(bos.toString("UTF-8"), "UTF-8"));
+            /**
+             *
+             merchantId商户号。
+             merchantSerialNumber商户API证书的证书序列号。
+             merchantPrivateKey商户API私钥，如何加载商户API私钥请看常见问题。
+             wechatPayCertificates微信支付平台证书列表。你也可以使用后面章节提到的“定时更新平台证书功能”，而不需要关心平台证书的来龙去脉。
+
+             */
+            CloseableHttpClient httpClient = baseWxConfig.getHttpClient();
+            CloseableHttpResponse response = httpClient.execute(httpPost);
+            String prepay_id = EntityUtils.toString(response.getEntity());
+            refundsTripOrderLog.info("订单号{}发起退票申请,退票用户为{},返回结果{}",orderId,tripOrderDo.getIdentityName(),prepay_id);
+            JSONObject jsonObject = JSONObject.parseObject(prepay_id);
+            String status = jsonObject.getString("status");
+            /**
+             * SUCCESS：退款成功
+             * CLOSED：退款关闭
+             * PROCESSING：退款处理中
+             * ABNORMAL：退款异常
+             */
+            if(StringUtils.isNotBlank(status)&&("SUCCESS".equals(status)||"PROCESSING".equals(status))){
+                opertorRefundsTripOrderSucess(tripOrderDo);
+            }else{
+                throw  new  BusinessException("退款失败，返回为{}！",prepay_id);
+            }
         }else{
-            throw  new  BusinessException("退款失败，返回为{}！",prepay_id);
+            opertorRefundsTripOrderSucessByInvitation(tripOrderDo);
         }
+
 
     }
 
+    /**
+     * 积分退票处理
+     * @param tripOrderDo
+     * @throws Exception
+     */
+    @Transactional
+    public void opertorRefundsTripOrderSucessByInvitation( TripOrderDo tripOrderDo) throws Exception {
+        tripOrderDo.setRefundTime(new Date());
+        tripOrderDo.setStatus(Constant.OrderStatus.REFUND);
+        /**
+         * 释放车票
+         */
+        Integer ticketStatus = tripOrderDo.getTicketStatus();
+        if(ticketStatus!=9){
+            tripOrderDo.setTicketStatus(9);
+            Integer num = tripOrderDo.getNum();
+            Integer carId = tripOrderDo.getCarId();
+            tripCarServiceImpl.addTicket(carId,num,Constant.TicketAddStatus.ADD);
+        }
+        /**
+         * 添加积分
+         */
+        userServiceImpl.addIntegral(tripOrderDo.getUserId(),tripOrderDo.getRefundFee(),Constant.TicketAddStatus.ADD);
+        updateById(tripOrderDo);
+    }
     @Transactional
     public void opertorRefundsTripOrderSucess( TripOrderDo tripOrderDo) throws Exception {
         tripOrderDo.setRefundTime(new Date());
@@ -898,5 +1055,31 @@ public class TripOrderServiceImpl extends ServiceImpl<TripOrderMapper, TripOrder
          * 获取退费的费用
          */
         return getRefundsFee(tripOrderDo, refunds_notice_msg);
+    }
+
+    /**
+     * 统一设置返现金额，初始化
+     * @param tripOrderDo
+     */
+    public void setInvitationFee(TripOrderDo tripOrderDo) throws Exception {
+        /**
+         * 设置返现金额
+         */
+        UserDo userDo = userServiceImpl.getById(tripOrderDo.getUserId());
+        String invitationOpenid = userDo.getInvitationOpenid();
+        if (StringUtils.isNotBlank(invitationOpenid)) {
+            tripOrderDo.setInvitationOpenid(invitationOpenid);
+            String invitation_rate = sysDataDictionaryServiceImpl.getSysBaseParam("invitation_rate", "invitation_rate");
+            BigDecimal cal = CalculateUtil.cal(new StringBuilder().append(tripOrderDo.getTotalFee()).append("*").append(invitation_rate).append("/100").toString());
+
+            tripOrderDo.setInvitationFee(cal + "");
+            /**
+             * 初始化，真正返现，等到无法退票以后，发车以后
+             */
+            tripOrderDo.setInvitationStatus(Constant.InvitationStatus.WAIT);
+        }else{
+            //没有邀请码，就没有返现
+            tripOrderDo.setInvitationStatus(Constant.InvitationStatus.NO);
+        }
     }
 }

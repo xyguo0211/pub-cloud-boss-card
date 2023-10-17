@@ -12,6 +12,7 @@ import com.cn.school.config.WxPayConfig;
 import com.cn.school.entity.TripOrderDo;
 import com.cn.school.entity.UserDo;
 import com.cn.school.entity.dto.UnlimitedQRCodeParam;
+import com.cn.school.service.impl.SysDataDictionaryServiceImpl;
 import com.cn.school.service.impl.TripOrderServiceImpl;
 import com.cn.school.service.impl.UserServiceImpl;
 import com.cn.school.util.WXPayUtil;
@@ -19,6 +20,7 @@ import com.cn.school.util.WxPayRequstUtil;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
+import com.pub.core.utils.CalculateUtil;
 import com.pub.redis.util.RedisCache;
 import com.wechat.pay.contrib.apache.httpclient.util.AesUtil;
 import com.wechat.pay.java.service.payments.jsapi.model.PrepayWithRequestPaymentResponse;
@@ -42,6 +44,7 @@ import javax.servlet.http.HttpServletResponse;
 import java.io.File;
 import java.io.IOException;
 import java.io.InputStream;
+import java.math.BigDecimal;
 import java.nio.charset.StandardCharsets;
 import java.util.Date;
 import java.util.HashMap;
@@ -85,14 +88,15 @@ public class WxController extends BaseController {
     @Autowired
     private TripOrderServiceImpl tripOrderService;
 
-
+    @Autowired
+    private SysDataDictionaryServiceImpl sysDataDictionaryServiceImpl;
 
     /**
      * 扫码成功回调
      */
     @RequestMapping(value = "/wxCallback", method = RequestMethod.GET)
     @ResponseBody
-    public AjaxResult wxCallback(@RequestParam String code)  {
+    public AjaxResult wxCallback(@RequestParam String code,@RequestParam(required = false)String invitationOpenid)  {
         JSONObject jsonObject=new JSONObject();
         jsonObject.put("code",200);
         if (code == null || "".equals(code)) {
@@ -141,13 +145,17 @@ public class WxController extends BaseController {
         UserDo userDo = userServiceImpl.getOne(wq_user);
         String token=null;
         if(userDo==null){
-           //说明是新用户，需要榜单手机
+           //说明是新用户，需要绑定手机
             userDo=new UserDo();
             userDo.setOpenid(openid);
             userDo.setWxunionid(sesssoin_key);
             userDo.setIsDelete(9);
             userDo.setRoleId(3);
             userDo.setCreateTime(new Date());
+            if(StringUtils.isNotBlank(invitationOpenid)){
+                userDo.setInvitationOpenid(invitationOpenid);
+                userDo.setIntegral("0");
+            }
             userServiceImpl.save(userDo);
             token = createToken(userDo);
         }else{
@@ -255,6 +263,8 @@ public class WxController extends BaseController {
             TripOrderDo tripOrderDo = tripOrderServiceImpl.getOne(wq);
             if("支付成功".equals(trade_state_desc)){
                 tripOrderDo.setStatus(1);
+                tripOrderServiceImpl.setInvitationFee(tripOrderDo);
+
             }else{
                 tripOrderDo.setStatus(-1);
             }

@@ -7,6 +7,7 @@ import com.cn.school.mapper.TripProductCarRelationMapper;
 import com.cn.school.service.ITripProductCarRelationService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pub.core.exception.BusinessException;
+import com.pub.core.utils.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -29,7 +30,13 @@ public class TripProductCarRelationServiceImpl extends ServiceImpl<TripProductCa
     private TripProductCarRelationMapper tripProductCarRelationMapper;
 
     public List<Map> findTrips(Integer trip_area_id, String data) {
-       return tripProductCarRelationMapper.findTrips(trip_area_id, data);
+        if(StringUtils.isNotBlank(data)){
+            return tripProductCarRelationMapper.findTrips(trip_area_id, data);
+        }else{
+            return tripProductCarRelationMapper.findTripsNoDate(trip_area_id);
+        }
+
+
     }
 
     public void addTripCarDoProduct(TripProductCarRelationDo tripProductCarRelationDo) throws Exception {

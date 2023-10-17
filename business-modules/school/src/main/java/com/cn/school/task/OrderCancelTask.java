@@ -7,8 +7,10 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.school.config.Constant;
 import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.TripOrderDo;
+import com.cn.school.entity.UserDo;
 import com.cn.school.service.impl.TripCarServiceImpl;
 import com.cn.school.service.impl.TripOrderServiceImpl;
+import com.cn.school.service.impl.UserServiceImpl;
 import com.cn.school.util.SendSmsTx;
 import com.pub.core.utils.DateUtils;
 import org.slf4j.Logger;
@@ -58,6 +60,11 @@ public class OrderCancelTask {
     @Value("${task.car_switch}")
     private Integer car_switch;
     /**
+     * 添加积分的逻辑
+     */
+    @Value("${task.invitation_switch}")
+    private Integer invitation_switch;
+    /**
      * 发车前多少小时提醒
      */
     @Value("${task.car_time}")
@@ -71,6 +78,8 @@ public class OrderCancelTask {
 
     @Autowired
     private SendSmsTx sendSmsTx;
+    @Autowired
+    private UserServiceImpl userServiceImpl;
 
     /**
      * 未支付成功订单关闭按钮
@@ -221,4 +230,57 @@ public class OrderCancelTask {
     }
 
 */
+
+    /**
+     *  返现积分
+     * @throws ParseException
+     */
+    @Scheduled(cron="${task.invitation_cron}")
+    public void invitationTask() throws ParseException {
+        log.info("开始执行积分返现发送通知任务");
+        if(invitation_switch!= 9){
+            log.info("积分返现开关未打开");
+            return;
+        }
+        String dateFromat = DateUtils.dateTimeNow();
+        try {
+            /**
+             * 查询那些超过分钟未10分钟未支付订单
+             */
+            QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+            /**
+             * 订单状态    0 初始  1成功  -1 失败   -2退票
+             */
+            wq.eq("status",Constant.OrderStatus.SUCESS);
+            /**
+             * 1 初始化   9 成功     2 没有返现
+             */
+            wq.eq("invitation_status",Constant.InvitationStatus.WAIT);
+            /**
+             * 大于发车时间2小时
+             */
+            wq.gt("star_time",DateUtils.addHours(new Date(),-2));
+
+            List<TripOrderDo> list = tripOrderService.list(wq);
+            if(list!=null&&list.size()>0){
+                for (TripOrderDo tripOrderDo : list) {
+                    tripOrderDo.setInvitationStatus(Constant.InvitationStatus.SUCESS);
+                    /**
+                     * 添加返现积分给邀请人
+                     */
+                    QueryWrapper<UserDo> wq_user=new QueryWrapper<>();
+                    wq_user.eq("openid",tripOrderDo.getInvitationOpenid());
+                    UserDo userDo = userServiceImpl.getOne(wq_user);
+                    userServiceImpl.addIntegral(userDo.getId(),tripOrderDo.getInvitationFee(),Constant.TicketAddStatus.ADD);
+                    tripOrderService.updateById(tripOrderDo);
+
+                }
+            }
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+            log.error(dateFromat+"15分钟未支付订单取消，异常+"+e.getMessage());
+        }
+    }
 }

@@ -62,4 +62,13 @@ public class UserDo extends Model<UserDo> {
 //1 系统管理员  2 扫描人员  3普通用户
     private Integer roleId;
 
+    /**
+     * 邀请人的openid
+     */
+    private String invitationOpenid;
+    /**
+     * 积分
+     */
+    private String integral;
+
 }

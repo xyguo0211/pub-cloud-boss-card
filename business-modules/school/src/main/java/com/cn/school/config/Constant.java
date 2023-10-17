@@ -71,5 +71,29 @@ public class Constant {
         public static final Integer REFUND = -2;
     }
 
+    /**
+     * 1微信  2积分
+     */
+    public interface PayType{
+        public static final Integer wx = 1;
+        public static final Integer jf = 2;
+    }
+    /**
+     *是否释放车票   9已退票  -1 未退票
+     */
+    public interface TicketStatus{
+        public static final Integer YES = 9;
+        public static final Integer NO = -1;
+    }
+    /**
+     *  1 初始化   9 成功  0失败   2 没有返现
+     */
+    public interface InvitationStatus{
+        public static final Integer SUCESS = 9;
+        public static final Integer FALE = 0;
+        public static final Integer WAIT = 1;
+        public static final Integer NO = 2;
+    }
+
 
 }

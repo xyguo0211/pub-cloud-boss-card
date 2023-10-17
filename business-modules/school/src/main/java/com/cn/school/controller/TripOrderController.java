@@ -59,6 +59,28 @@ public class TripOrderController extends BaseController {
 
     }
     /**
+     * 我的返现订单
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/myInvitationTripOrder", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult myInvitationTripOrder(@RequestBody TripOrderDo tripOrderDo){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byIUserDod = userServiceImpl.getById(id);
+            tripOrderDo.setInvitationOpenid(byIUserDod.getOpenid());
+            List<TripOrderDo> pageList = tripOrderService.myInvitationTripOrder(tripOrderDo);
+            TableDataInfo dataTable = getDataTable(pageList);
+            return AjaxResult.success(dataTable);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
      * 下单
      * @return
      */
@@ -226,7 +248,29 @@ public class TripOrderController extends BaseController {
         }
 
     }
+    /**
+     * 积分下单
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/addTripOrderByIntegral", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult addTripOrderByIntegral(@RequestBody TripOrderDo tripOrderDo){
+        try{
+            /**
+             * 创建订单号
+             */
+            tripOrderService.createTripOrderByIntegral(tripOrderDo);
+            tripOrderService.addTripOrderByIntegral(tripOrderDo);
+            JSONObject json=new JSONObject();
+            json.put("orderId",tripOrderDo.getOrderId());
+            return AjaxResult.success(json);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
 
+    }
 
 
 }

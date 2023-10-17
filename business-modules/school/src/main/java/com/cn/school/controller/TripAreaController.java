@@ -12,9 +12,11 @@ import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.web.bind.annotation.*;
 
 import org.springframework.stereotype.Controller;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.Map;
@@ -40,6 +42,9 @@ public class TripAreaController extends BaseController {
 
     @Autowired
     private TripCarServiceImpl tripCarServiceImpl;
+
+
+
 
     /**
      * @return
@@ -108,7 +113,7 @@ public class TripAreaController extends BaseController {
     @TimingLog
     @RequestMapping(value = "/findTrips", method = RequestMethod.GET)
     @ResponseBody
-    public AjaxResult findTrips(@RequestParam Integer tripAreaId,@RequestParam String data){
+    public AjaxResult findTrips(@RequestParam Integer tripAreaId,String data){
         try{
             List<Map> trips = tripAreaService.findTrips(tripAreaId, data);
             return AjaxResult.success(trips);
@@ -171,6 +176,41 @@ public class TripAreaController extends BaseController {
             return AjaxResult.error(e.getMessage());
         }
 
+    }
+
+    /**
+     * 上传文件
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/uploadImage", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult uploadImage(MultipartFile file){
+        try{
+            String url= tripAreaService.uploadImage(file);
+            return AjaxResult.success(url);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
+    /**
+     * 删除航线接口
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/deleteTripAreaDo", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult deleteTripAreaDo(@RequestBody TripAreaDo tripAreaDo){
+        try{
+            tripAreaService.editTripAreaDo(tripAreaDo);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
     }
 }
 

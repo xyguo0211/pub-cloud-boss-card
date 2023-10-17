@@ -3,6 +3,8 @@ package com.cn.school.controller;
 
 import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
+import com.baomidou.mybatisplus.core.conditions.Wrapper;
+import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.authority.AuthMenuKeyConstant;
 import com.cn.auth.config.Constant;
 import com.cn.auth.config.TimingLog;
@@ -242,6 +244,65 @@ public class UserController extends BaseController {
         }
 
     }
+    /**
+     * 获取邀请人列表
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/myInvitationUser", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult myInvitationUser(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byId = userService.getById(id);
+            QueryWrapper<UserDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            List<UserDo> list = userService.list(wq);
+            return AjaxResult.success(list);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
 
+    }
+    /**
+     * 修改用户积分
+     * @param req
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/addIntegral", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult addIntegral(@RequestBody UserDo req){
+        try{
+            userService.updateById(req);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 获取用户积分
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getIntegral", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult getIntegral(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byId = userService.getById(id);
+            String integral = byId.getIntegral();
+            return AjaxResult.success("成功",integral);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
 }
 

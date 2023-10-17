@@ -193,4 +193,22 @@ public class TripOrderDo extends Model<TripOrderDo> {
     //发车前通知  9 已通知  -1 未通知
     private  Integer noticeStatus;
 
+    /**
+     * 返现金额
+     */
+    private  String invitationFee;
+    /**
+     * 返现状态  1 初始化   9 成功  0失败
+     */
+    private  Integer invitationStatus;
+    /**
+     * 返现人的openid
+     */
+    private  String invitationOpenid;
+
+    /**
+     * 支付方式 1微信  2 积分
+     */
+    private Integer payType;
+
 }

@@ -3,6 +3,7 @@ package com.cn.school.service.impl;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.cn.school.config.FilePathOnlineConfig;
 import com.cn.school.entity.TripAreaDo;
 import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.TripProductCarRelationDo;
@@ -12,11 +13,14 @@ import com.cn.school.service.ITripAreaService;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.pub.core.exception.BusinessException;
 import com.pub.core.util.controller.BaseController;
+import com.pub.core.utils.DateUtils;
 import com.pub.core.utils.StringUtils;
 import org.apache.commons.collections.map.HashedMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.util.*;
 
 /**
@@ -138,6 +142,9 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
         }
         updateById(tripAreaDo);
     }
+    public void deleteTripAreaDo(TripAreaDo tripAreaDo) throws Exception{
+        updateById(tripAreaDo);
+    }
 
     public List<TripAreaDo> getCheckBox() {
         QueryWrapper<TripAreaDo> wq=new QueryWrapper<>();
@@ -156,4 +163,35 @@ public class TripAreaServiceImpl extends ServiceImpl<TripAreaMapper, TripAreaDo>
         }
         return list;
     }
+
+    @Autowired
+    private FilePathOnlineConfig filePathOnlineConfig;
+
+    public String uploadImage(MultipartFile file) throws Exception {
+        //存储文件路径
+        //存储文件路径
+        String root = filePathOnlineConfig.getRoot();
+        String baseUrl = filePathOnlineConfig.getBaseUrl();
+        String originalFilename = DateUtils.parseDateToStr(DateUtils.YYYYMMDDHHMMSS,new Date())+file.getOriginalFilename();
+        String absolutePath =root+"/"+originalFilename;
+        File extracted = extracted(file, root);
+        String[] split = absolutePath.split(root);
+        if(split.length>1){
+            return baseUrl+split[1];
+        }
+        return null;
+    }
+    public  File extracted(MultipartFile multipartFile, String path) throws Exception {
+        String originalFilename = DateUtils.parseDateToStr(DateUtils.YYYYMMDDHHMMSS,new Date())+multipartFile.getOriginalFilename();
+        File localFile = new File(path +"/"+ originalFilename);
+        if (!localFile.exists()) {
+            localFile.mkdirs();
+        }
+        multipartFile.transferTo(localFile);
+        if (multipartFile.isEmpty()) {
+            multipartFile.getInputStream().close();
+        }
+        return localFile;
+    }
+
 }
