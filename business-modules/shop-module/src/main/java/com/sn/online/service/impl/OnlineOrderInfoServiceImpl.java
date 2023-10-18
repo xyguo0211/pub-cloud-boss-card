@@ -149,6 +149,10 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
         onlineOrderInfoDo.setUserId(currentUser.getId());
         onlineOrderInfoDo.setUserName(currentUser.getLoginName());
         /**
+         * 默认未推送状态
+         */
+        onlineOrderInfoDo.setMsgStatus(0);
+        /**
          * 默认是初始化
          */
         onlineOrderInfoDo.setOrderStatus(OrderStatusEnum.TRACKING_STATUS_WAITING.getCode());

@@ -213,6 +213,27 @@
     <logger name="sendSmsTxLog" additivity="false" level="INFO">
         <appender-ref ref="sendSmsTxLogAppender"/>
     </logger>
+    <appender name="loginLogAppender" class="ch.qos.logback.core.rolling.RollingFileAppender">
+        <file>${LOG_HOME}/loginLog/loginLog.log</file>
+        <!-- 根据文件滚动最多50个文件数量 -->
+        <rollingPolicy class="ch.qos.logback.core.rolling.FixedWindowRollingPolicy">
+            <fileNamePattern>${LOG_HOME}/loginLog/loginLog-%i.log</fileNamePattern>
+            <minIndex>1</minIndex>
+            <maxIndex>50</maxIndex>
+        </rollingPolicy>
+        <!-- 指定文件最大尺寸，达到该尺寸，就触发rollingPolicy对应的策略，maxFileSize属性指定文件大小 -->
+        <triggeringPolicy class="ch.qos.logback.core.rolling.SizeBasedTriggeringPolicy">
+            <maxFileSize>40MB</maxFileSize>
+        </triggeringPolicy>
+        <encoder>
+            <pattern>%-4relative [%thread] %-5level %logger{50} - %msg%n</pattern>
+            <charset>UTF-8</charset>
+        </encoder>
+    </appender>
+
+    <logger name="loginLog" additivity="false" level="INFO">
+        <appender-ref ref="loginLogAppender"/>
+    </logger>
 
 
 

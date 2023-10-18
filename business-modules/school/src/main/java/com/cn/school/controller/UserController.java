@@ -5,14 +5,15 @@ import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
-import com.cn.auth.authority.AuthMenuKeyConstant;
-import com.cn.auth.config.Constant;
 import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
+import com.cn.school.config.Constant;
 import com.cn.school.entity.TripCarDo;
+import com.cn.school.entity.TripOrderDo;
 import com.cn.school.entity.UserDo;
+import com.cn.school.service.impl.TripOrderServiceImpl;
 import com.cn.school.service.impl.UserServiceImpl;
 import com.cn.school.util.RandomUtilSendMsg;
 import com.cn.school.util.RpcBaseResponseResult;
@@ -21,6 +22,8 @@ import com.cn.school.util.SmsSendServiceUtil;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
+import com.pub.core.utils.CalculateUtil;
+import com.pub.core.utils.DateUtils;
 import com.pub.core.utils.RandomUtil;
 import com.pub.redis.util.RedisCache;
 import com.tencentcloudapi.sms.v20210111.models.SendSmsResponse;
@@ -33,6 +36,8 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.stereotype.Controller;
 
 import javax.servlet.http.HttpServletRequest;
+import java.math.BigDecimal;
+import java.util.Date;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -60,6 +65,8 @@ public class UserController extends BaseController {
 
     @Autowired
     private SendSmsTx sendSmsTx;
+    @Autowired
+    private TripOrderServiceImpl  tripOrderServiceImpl;
 
     /**
      * 0是测试  1是正式
@@ -304,5 +311,100 @@ public class UserController extends BaseController {
         }
 
     }
+
+    /**
+     * 第一次下单实名认证接口提交信息
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "updateIdentity", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult updateIdentity(@RequestBody UserDo userDo){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            String phoneCode = userDo.getPhoneCode();
+            String phone = userDo.getPhone();
+            String stringCache = redisCache.getStringCache(phone);
+            if(!phoneCode.equals(stringCache)){
+                return AjaxResult.error("手机验证码错误");
+            }
+            UserDo byIUserDod = userService.getById(id);
+            if(StringUtils.isNotBlank(phone)){
+                byIUserDod.setPhone(phone);
+            }
+            byIUserDod.setSchool(userDo.getSchool());
+            byIUserDod.setIdentityName(userDo.getIdentityName());
+            userService.updateById(byIUserDod);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 获取今日预估收益 本月 上月预估收益
+     */
+
+    @TimingLog
+    @RequestMapping(value = "/getTotalFee", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getTotalFee(){
+        JSONObject jsonObject=new JSONObject();
+        jsonObject.put("day","0");
+        jsonObject.put("month","0");
+        jsonObject.put("lastmonth","0");
+        try{
+
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byIUserDod = userService.getById(id);
+            String openid = byIUserDod.getOpenid();
+            jsonObject.put("integral",byIUserDod.getIntegral());
+            //今日预估
+            BigDecimal day = getTimeTotal(openid, DateUtils.parseDateToStr(DateUtils.YYYY_MM_DD, new Date()));
+            if(day!=null){
+                jsonObject.put("day",day);
+            }
+            //本月预估
+            BigDecimal month = getTimeTotal(openid, DateUtils.parseDateToStr(DateUtils.YYYY_MM, new Date()));
+            if(month!=null){
+                jsonObject.put("month",month);
+            }
+            //上月预估
+            BigDecimal lastmonth = getTimeTotal(openid, DateUtils.parseDateToStr(DateUtils.YYYY_MM, DateUtils.addMonths(new Date(), -1)));
+            if(lastmonth!=null){
+                jsonObject.put("lastmonth",lastmonth);
+            }
+            return AjaxResult.success(jsonObject);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
+    public  BigDecimal getTimeTotal(String openid,String time ){
+        QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+        wq.eq("invitation_openid",openid);
+        wq.like("create_time", time);
+        wq.eq("status", Constant.InvitationStatus.SUCESS);
+        List<TripOrderDo> list = tripOrderServiceImpl.list(wq);
+        if(list!=null&&list.size()>0){
+            //计算今日预估积分费用
+            StringBuilder sb=new StringBuilder();
+            for (TripOrderDo tripOrderDo : list) {
+                String invitationFee = tripOrderDo.getInvitationFee();
+                sb.append(invitationFee).append("+");
+            }
+            if(sb.toString().endsWith("+")){
+                BigDecimal cal = CalculateUtil.cal(sb.append("0").toString());
+                return cal;
+            }
+        }
+        return null;
+    }
+
 }
 

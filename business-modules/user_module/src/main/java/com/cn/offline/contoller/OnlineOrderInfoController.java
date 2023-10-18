@@ -3,6 +3,8 @@ package com.cn.offline.contoller;
 
 import com.cn.auth.config.Authentication;
 import com.cn.auth.config.TimingLog;
+import com.cn.auth.entity.User;
+import com.cn.auth.util.UserContext;
 import com.cn.offline.config.OfflineAuthMenuKeyConstant;
 import com.cn.offline.entity.GoodFirstMeumDo;
 import com.cn.offline.entity.OnlineOrderInfoDo;
@@ -12,6 +14,7 @@ import com.pub.core.util.controller.BaseController;
 
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
+import org.apache.catalina.startup.UserConfig;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.web.bind.annotation.*;
@@ -89,6 +92,25 @@ public class OnlineOrderInfoController extends BaseController {
             return AjaxResult.error(e.getMessage());
         }
     }
+    /**
+     * 轮询获取订单消息接口
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getOrderMsg", method = RequestMethod.GET)
+    @ResponseBody
+    @Authentication(menu = OfflineAuthMenuKeyConstant.SELL_ORDER)
+    public AjaxResult getOrderMsg(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            onlineOrderInfoService.getOrderMsg(currentUser);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+
 
 }
 

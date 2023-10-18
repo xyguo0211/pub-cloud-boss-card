@@ -57,6 +57,7 @@ public class WxController extends BaseController {
 
     private Logger log= LoggerFactory.getLogger("wxLogger");
     private Logger callBackLog= LoggerFactory.getLogger("callBackLog");
+    private Logger loginLog= LoggerFactory.getLogger("loginLog");
 
     @Value("${short_token_redis_cache_time}")
     private  Long short_token_redis_cache_time ;
@@ -97,6 +98,7 @@ public class WxController extends BaseController {
     @RequestMapping(value = "/wxCallback", method = RequestMethod.GET)
     @ResponseBody
     public AjaxResult wxCallback(@RequestParam String code,@RequestParam(required = false)String invitationOpenid)  {
+        loginLog.info("登录的opendId={},邀请码={}",code,invitationOpenid);
         JSONObject jsonObject=new JSONObject();
         jsonObject.put("code",200);
         if (code == null || "".equals(code)) {
@@ -152,8 +154,8 @@ public class WxController extends BaseController {
             userDo.setIsDelete(9);
             userDo.setRoleId(3);
             userDo.setCreateTime(new Date());
+            userDo.setInvitationOpenid(invitationOpenid);
             if(StringUtils.isNotBlank(invitationOpenid)){
-                userDo.setInvitationOpenid(invitationOpenid);
                 userDo.setIntegral("0");
             }
             userServiceImpl.save(userDo);

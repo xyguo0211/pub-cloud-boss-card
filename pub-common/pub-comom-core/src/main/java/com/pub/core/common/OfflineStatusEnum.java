@@ -1,6 +1,5 @@
 package com.pub.core.common;
 
-import lombok.extern.slf4j.Slf4j;
 
 import java.util.Arrays;
 import java.util.Objects;
@@ -8,7 +7,6 @@ import java.util.Objects;
 /**
  * SaaS业务单状态枚举
  */
-@Slf4j
 public enum OfflineStatusEnum {
     BLACK_STATUS(-1, "黑名单", "black_status"),
     BLACK_STATUS_NORMAL(9, "正常", "black_status");

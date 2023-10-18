@@ -147,4 +147,9 @@ public class OnlineOrderInfoDo extends Model<OnlineOrderInfoDo> {
      * 最终交易金额
      */
     String transactionAmount;
+
+    /**
+     * 消息推送状态 0未推送  9推送成功
+     */
+    Integer msgStatus;
 }

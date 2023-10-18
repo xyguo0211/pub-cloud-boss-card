@@ -184,5 +184,39 @@ public class SysDataDictionaryController {
             return AjaxResult.error();
         }
     }
+
+    /**
+     * 提现积分配置
+     * @return
+     */
+    @RequestMapping(value = "/addIntegralManageNum", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult addIntegralManageNum(@RequestParam String num) {
+        try{
+            QueryWrapper<SysDataDictionaryDo> wq=new QueryWrapper<>();
+            wq.eq("param_key","integral_manage_num");
+            wq.eq("param_name","integral_manage_num");
+            SysDataDictionaryDo one = sysDataDictionaryServiceImpl.getOne(wq);
+            if(one==null){
+                one=new SysDataDictionaryDo();
+                one.setParamKey("integral_manage_num");
+                one.setParamName("integral_manage_num");
+                one.setParamValue(num);
+                one.setParamDesc("最小提现积分配置！");
+                one.setStatus(9);
+                one.setCreateDate(new Date());
+                sysDataDictionaryServiceImpl.save(one);
+            }else{
+                one.setCreateDate(new Date());
+                one.setParamValue(num);
+                sysDataDictionaryServiceImpl.updateById(one);
+            }
+            sysDataDictionaryServiceImpl.refreshCache();
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error();
+        }
+    }
 }
 

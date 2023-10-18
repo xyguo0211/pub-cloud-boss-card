@@ -2,6 +2,7 @@ package com.cn.offline.service.impl;
 
 import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
+import com.baomidou.mybatisplus.core.conditions.update.UpdateWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
@@ -14,6 +15,7 @@ import com.pub.core.common.OrderStatusEnum;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.utils.CalculateUtil;
 import com.pub.core.utils.StringUtils;
+import com.sun.org.apache.regexp.internal.RE;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -144,6 +146,27 @@ public class OnlineOrderInfoServiceImpl extends ServiceImpl<OnlineOrderInfoMappe
     }
 
 
+    public List<OnlineOrderInfoDo> getOrderMsg(User currentUser) {
+        Integer id = currentUser.getId();
+        QueryWrapper<OnlineOrderInfoDo> wq=new QueryWrapper<>();
+        wq.eq("offline_user_id",id);
+        wq.eq("msg_status",0);
+        List<OnlineOrderInfoDo> list = list(wq);
+        if(list==null||list.size()==0){
+            return null;
+        }
+        List<Integer> idList=new ArrayList<>();
+        for (OnlineOrderInfoDo onlineOrderInfoDo : list) {
+            idList.add(onlineOrderInfoDo.getId());
+        }
+        /*
+            推送后将数据状态流转为已推送
+         */
 
-
+        UpdateWrapper<OnlineOrderInfoDo> updateWp=new UpdateWrapper<>();
+        updateWp.in("id",idList);
+        updateWp.set("msg_status",9);
+        update(updateWp);
+        return list;
+    }
 }
