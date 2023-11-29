@@ -69,7 +69,7 @@ public class UserController extends BaseController {
     private TripOrderServiceImpl  tripOrderServiceImpl;
 
     /**
-     * 0是测试  1是正式
+     * 0是测试  1是正式myInvitationUser
      */
     @Value("${isTest}")
     private  Integer isTest ;
@@ -265,7 +265,12 @@ public class UserController extends BaseController {
             UserDo byId = userService.getById(id);
             QueryWrapper<UserDo> wq=new QueryWrapper<>();
             wq.eq("invitation_openid",byId.getOpenid());
+            wq.orderByDesc("create_time");
             List<UserDo> list = userService.list(wq);
+            for (UserDo userDo : list) {
+                userDo.setNoticeStatus(1);
+                userService.updateById(userDo);
+            }
             return AjaxResult.success(list);
         }catch (Exception e){
             e.printStackTrace();
@@ -404,6 +409,136 @@ public class UserController extends BaseController {
             }
         }
         return null;
+    }
+
+    /**
+     * 获取邀请人列表
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/myInvitationNewUserCount", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult myInvitationNewUserCount(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byId = userService.getById(id);
+            QueryWrapper<UserDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            wq.eq("notice_status",0);
+            List<UserDo> list = userService.list(wq);
+            if(list!=null){
+                return AjaxResult.success(list.size());
+            }else{
+                return AjaxResult.success(0);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 获取新邀请人列表
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/myInvitationNewUser", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult myInvitationNewUser(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byId = userService.getById(id);
+            QueryWrapper<UserDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            wq.eq("notice_status",0);
+            List<UserDo> list = userService.list(wq);
+            for (UserDo userDo : list) {
+                userDo.setNoticeStatus(1);
+                userService.updateById(userDo);
+            }
+            return AjaxResult.success(list);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+
+    /**
+     * 获取邀请人列表总数
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/myInvitationUserCount", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult myInvitationUserCount(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byId = userService.getById(id);
+            QueryWrapper<UserDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            List<UserDo> list = userService.list(wq);
+            if(list!=null){
+                return AjaxResult.success(list.size());
+            }else{
+                return AjaxResult.success(0);
+            }
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 编辑个人信息
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/editPersonInfo", method = RequestMethod.POST)
+    @ResponseBody
+    public AjaxResult editPersonInfo(@RequestBody UserDo userDo){
+        try{
+            String phone = userDo.getPhone();
+            String phoneCode = userDo.getPhoneCode();
+            String stringCache = redisCache.getStringCache(phone);
+            if(!phoneCode.equals(stringCache)){
+                return AjaxResult.error("手机验证码错误");
+            }
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byId = userService.getById(id);
+            userDo.setId(byId.getId());
+            userService.updateById(userDo);
+            return AjaxResult.success();
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 获取个人信息
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/getPersonInfo", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getPersonInfo(){
+        try{
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
+            UserDo byId = userService.getById(id);
+            return AjaxResult.success(byId);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
     }
 
 }

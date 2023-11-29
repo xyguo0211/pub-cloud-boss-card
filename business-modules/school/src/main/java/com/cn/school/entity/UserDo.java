@@ -70,5 +70,9 @@ public class UserDo extends Model<UserDo> {
      * 积分
      */
     private String integral;
+    /**
+     * 是否已通知  0 初始化  1 已通知
+     */
+    private Integer noticeStatus;
 
 }

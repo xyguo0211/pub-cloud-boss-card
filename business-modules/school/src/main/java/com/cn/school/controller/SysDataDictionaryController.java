@@ -218,5 +218,21 @@ public class SysDataDictionaryController {
             return AjaxResult.error();
         }
     }
+
+    /**
+     * 获取学校下拉框
+     * @return
+     */
+    @RequestMapping(value = "/getIntegralManageNum", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult getIntegralManageNum() {
+        try{
+            String integral_manage_num = sysDataDictionaryServiceImpl.getSysBaseParam("integral_manage_num", "integral_manage_num");
+            return AjaxResult.success("成功",integral_manage_num);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error();
+        }
+    }
 }
 

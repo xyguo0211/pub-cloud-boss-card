@@ -73,7 +73,7 @@ public class IntegralManageController extends BaseController {
              */
             String integral_manage_num = sysDataDictionaryServiceImpl.getSysBaseParam("integral_manage_num", "integral_manage_num");
             BigDecimal cal_integral_manage_num = CalculateUtil.cal(new StringBuilder().append(integral_manage_num).append("-").append(integralFee).toString());
-            if(cal_integral_manage_num.compareTo(BigDecimal.ZERO)<0){
+            if(cal_integral_manage_num.compareTo(BigDecimal.ZERO)>0){
                 return AjaxResult.error("提现积分必须大于"+integral_manage_num+"！");
             }
             String integral = byId.getIntegral();
@@ -87,7 +87,7 @@ public class IntegralManageController extends BaseController {
 
             String identityName = byId.getIdentityName();
             if(StringUtils.isNotBlank(identityName)){
-                integralManage.setPhone(identityName);
+                integralManage.setIdentityName(identityName);
             }
             integralManage.setUserId(id);
 

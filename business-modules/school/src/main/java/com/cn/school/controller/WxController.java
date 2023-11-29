@@ -153,6 +153,7 @@ public class WxController extends BaseController {
             userDo.setWxunionid(sesssoin_key);
             userDo.setIsDelete(9);
             userDo.setRoleId(3);
+            userDo.setNoticeStatus(0);
             userDo.setCreateTime(new Date());
             userDo.setInvitationOpenid(invitationOpenid);
             if(StringUtils.isNotBlank(invitationOpenid)){
