@@ -83,9 +83,10 @@ public class UserServiceImpl extends ServiceImpl<UserMapper, UserDo> implements 
         return jsonObject;
     }
 
-    public UserDo checkPhoneExit(String phone) {
+    public UserDo checkPhoneExit(String phone,Integer id) {
         QueryWrapper<UserDo> wq=new QueryWrapper<>();
         wq.eq("phone",phone);
+        wq.ne("id",id);
         UserDo one = getOne(wq);
        return one;
     }

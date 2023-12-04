@@ -166,8 +166,10 @@ public class UserController extends BaseController {
     public AjaxResult getMsg(@PathVariable String phone){
         JSONObject rtn=new JSONObject();
         try {
+            User currentUser = UserContext.getCurrentUser();
+            Integer id = currentUser.getId();
             //第一步校验这个手机号是否被使用
-            UserDo userDo = userService.checkPhoneExit(phone);
+            UserDo userDo = userService.checkPhoneExit(phone,id);
             if(userDo!=null){
                 return AjaxResult.error("手机号已被注册过！");
             }
@@ -481,12 +483,8 @@ public class UserController extends BaseController {
             UserDo byId = userService.getById(id);
             QueryWrapper<UserDo> wq=new QueryWrapper<>();
             wq.eq("invitation_openid",byId.getOpenid());
-            List<UserDo> list = userService.list(wq);
-            if(list!=null){
-                return AjaxResult.success(list.size());
-            }else{
-                return AjaxResult.success(0);
-            }
+            long count = userService.count(wq);
+            return AjaxResult.success(count);
 
         }catch (Exception e){
             e.printStackTrace();
@@ -540,6 +538,145 @@ public class UserController extends BaseController {
         }
 
     }
+
+
+    /**
+     * 管理员查看用户邀请人列表总数
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/adminInvitationUserCount", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult adminInvitationUserCount(@RequestParam Integer userId){
+        try{
+            UserDo byId = userService.getById(userId);
+            QueryWrapper<UserDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            long count = userService.count(wq);
+            return AjaxResult.success(count);
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 管理员查看用户的邀请人列表
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/adminInvitationUserList", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult adminInvitationUserList(@RequestParam Integer userId){
+        try{
+            UserDo byId = userService.getById(userId);
+            QueryWrapper<UserDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            List<UserDo> list = userService.list(wq);
+            return AjaxResult.success(list);
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+    }
+    /**
+     * 管理员查看用户总收益
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/adminInvitationUserTotalPrice", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult adminInvitationUserTotalPrice(@RequestParam Integer userId){
+        try{
+            UserDo byId = userService.getById(userId);
+            QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            wq.eq("status", Constant.InvitationStatus.SUCESS);
+            List<TripOrderDo> list = tripOrderServiceImpl.list(wq);
+            if(list!=null&&list.size()>0){
+                //计算今日预估积分费用
+                StringBuilder sb=new StringBuilder();
+                for (TripOrderDo tripOrderDo : list) {
+                    String invitationFee = tripOrderDo.getInvitationFee();
+                    sb.append(invitationFee).append("+");
+                }
+                if(sb.toString().endsWith("+")){
+                    BigDecimal cal = CalculateUtil.cal(sb.append("0").toString());
+                    return AjaxResult.success(cal);
+                }
+            }
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+        return AjaxResult.success(0);
+
+    }
+    /**
+     * 管理员查看用户么个邀请人的收益
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/adminInvitationUserOnePersonTotalPrice", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult adminInvitationUserOnePersonTotalPrice(@RequestParam Integer userId,@RequestParam Integer invitationUserId){
+        try{
+            UserDo byId = userService.getById(userId);
+            QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            wq.eq("user_id",invitationUserId);
+            wq.eq("status", Constant.InvitationStatus.SUCESS);
+            List<TripOrderDo> list = tripOrderServiceImpl.list(wq);
+            if(list!=null&&list.size()>0){
+                //计算今日预估积分费用
+                StringBuilder sb=new StringBuilder();
+                for (TripOrderDo tripOrderDo : list) {
+                    String invitationFee = tripOrderDo.getInvitationFee();
+                    sb.append(invitationFee).append("+");
+                }
+                if(sb.toString().endsWith("+")){
+                    BigDecimal cal = CalculateUtil.cal(sb.append("0").toString());
+                    return AjaxResult.success(cal);
+                }
+            }
+
+
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+
+        return AjaxResult.success(0);
+
+    }
+    /**
+     * 管理员查看用户么个邀请人的收益订单详情
+     * @return
+     */
+    @TimingLog
+    @RequestMapping(value = "/adminInvitationUserOnePersonList", method = RequestMethod.GET)
+    @ResponseBody
+    public AjaxResult adminInvitationUserOnePersonList(@RequestParam Integer userId,@RequestParam Integer invitationUserId){
+        try{
+            UserDo byId = userService.getById(userId);
+            QueryWrapper<TripOrderDo> wq=new QueryWrapper<>();
+            wq.eq("invitation_openid",byId.getOpenid());
+            wq.eq("user_id",invitationUserId);
+            wq.eq("status", Constant.InvitationStatus.SUCESS);
+            List<TripOrderDo> list = tripOrderServiceImpl.list(wq);
+            return AjaxResult.success(list);
+        }catch (Exception e){
+            e.printStackTrace();
+            return AjaxResult.error(e.getMessage());
+        }
+    }
+
 
 }
 
