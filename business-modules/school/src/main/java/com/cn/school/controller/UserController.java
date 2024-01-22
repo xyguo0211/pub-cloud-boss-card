@@ -1,30 +1,24 @@
 package com.cn.school.controller;
 
 
-import com.alibaba.fastjson.JSON;
 import com.alibaba.fastjson.JSONObject;
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.cn.auth.config.TimingLog;
 import com.cn.auth.config.jwt.TokenProvider;
 import com.cn.auth.entity.User;
 import com.cn.auth.util.UserContext;
 import com.cn.school.config.Constant;
-import com.cn.school.entity.TripCarDo;
 import com.cn.school.entity.TripOrderDo;
 import com.cn.school.entity.UserDo;
 import com.cn.school.service.impl.TripOrderServiceImpl;
 import com.cn.school.service.impl.UserServiceImpl;
 import com.cn.school.util.RandomUtilSendMsg;
-import com.cn.school.util.RpcBaseResponseResult;
 import com.cn.school.util.SendSmsTx;
-import com.cn.school.util.SmsSendServiceUtil;
 import com.pub.core.util.controller.BaseController;
 import com.pub.core.util.domain.AjaxResult;
 import com.pub.core.util.page.TableDataInfo;
 import com.pub.core.utils.CalculateUtil;
 import com.pub.core.utils.DateUtils;
-import com.pub.core.utils.RandomUtil;
 import com.pub.redis.util.RedisCache;
 import com.tencentcloudapi.sms.v20210111.models.SendSmsResponse;
 import com.tencentcloudapi.sms.v20210111.models.SendStatus;
@@ -39,7 +33,6 @@ import javax.servlet.http.HttpServletRequest;
 import java.math.BigDecimal;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.TimeUnit;
 
 /**
  * <p>
@@ -59,9 +52,6 @@ public class UserController extends BaseController {
 
     @Autowired
     private RedisCache redisCache;
-
-    @Autowired
-    private SmsSendServiceUtil smsSendServiceUtil;
 
     @Autowired
     private SendSmsTx sendSmsTx;
