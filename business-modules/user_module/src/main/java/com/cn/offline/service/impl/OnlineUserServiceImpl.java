@@ -58,6 +58,7 @@ public class OnlineUserServiceImpl extends ServiceImpl<OnlineUserMapper, OnlineU
             wq.eq("role",role);
         }
         wq.orderByDesc("update_time");
+        //测试提交
         List<OnlineUserDo> list = list(wq);
         for (OnlineUserDo userDo : list) {
             String randomCode = userDo.getRandomCode();
